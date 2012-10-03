@@ -1,0 +1,14 @@
+# Build and Release Folders
+bin-debug/
+bin-release/
+starling/doc/html/
+
+# Project property files
+.settings/
+.flexLibProperties
+
+# OS X folders
+.DS_Store
+
+# Windows
+Thumbs.db
