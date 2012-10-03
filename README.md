@@ -1,3 +1,6 @@
+Starling-Extension-Graphics
+===========================
+
 This extension adds [Jon Pace's](https://github.com/jonathanrpace) 'Fill' and 'Stroke' display objects, with support for adding arbitrary vertices that are then triangulated for rendering on the GPU.
 
 The aim is to reproduce Flash's graphics API as closely as possible via simplified lineTo, moveTo etc calls within Shape.graphics and Sprite.graphics. Once the basics have been reproduced, the API can be augmented with more powerful features.
