@@ -14,6 +14,8 @@ package starling.display
 	{
 		private var _currentFillColor	:uint;
 		private var _currentFillAlpha	:Number;
+		private var _currentX			:Number;
+		private var _currentY			:Number;
 		
 		private var _strokeThickness	:Number
 		private var _strokeColor		:uint;
@@ -43,6 +45,8 @@ package starling.display
 				child.dispose();
 				_container.removeChildAt(0);
 			}
+			_currentX = NaN;
+			_currentY = NaN;
 		}
 		
 		public function beginFill(color:uint, alpha:Number = 1.0):void
@@ -179,6 +183,27 @@ package starling.display
 					_currentFill.addVertex(x, y, _currentFillColor, _currentFillAlpha );
 				}
 			}
+			_currentX = x;
+			_currentY = y;
+		}
+		
+		public function curveTo(cx:Number, cy:Number, a2x:Number, a2y:Number):void
+		{
+			// A couple of improvements to this code:
+			// - Should be unified with 'lineTo' so there is prefix & postfix code, but the main code calls "addVertex" directly.
+			// - "8" subdivisions should be experimented with: 2-16 is about right, depending on the screen size of the curve.
+			
+			for ( var j:int = 1; j <= 8; ++j ) {
+				var t:Number = Number(j) / 8.0;
+				var oneMinusT:Number = (1.0 - t);
+				var bx:Number = oneMinusT * oneMinusT * _currentX + 2.0 * oneMinusT * t * cx + t * t * a2x;
+				var by:Number = oneMinusT * oneMinusT * _currentY + 2.0 * oneMinusT * t * cy + t * t * a2y;
+				
+				lineTo( bx, by );
+			}			
+			
+			_currentX = a2x;
+			_currentY = a2y;
 		}
 		
 		public function moveTo(x:Number, y:Number):void
@@ -202,6 +227,8 @@ package starling.display
 					_currentFill.addVertex(x, y, _currentFillColor, _currentFillAlpha );
 				}
 			}
+			_currentX = x;
+			_currentY = y;
 		}
 		
 		private function beginStroke():void
