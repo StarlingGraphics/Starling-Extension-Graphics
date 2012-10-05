@@ -112,17 +112,19 @@ package starling.display
 			var segmentSize:Number = 2;
 			var angle:Number = 270;
 			var startAngle:Number = angle;
-			
-			var xpos:Number = (Math.cos(deg2rad(startAngle)) * width) + x;
-			var ypos:Number = (Math.sin(deg2rad(startAngle)) * height) + y;
+			var radians:Number = deg2rad(startAngle);
+
+			var xpos:Number = (Math.cos(radians) * width) + x;
+			var ypos:Number = (Math.sin(radians) * height) + y;
 			moveTo(xpos, ypos);
 			
 			while (angle - 360 < startAngle) 
 			{
 				angle += segmentSize;
-				
-				xpos = (Math.cos(deg2rad(angle)) * width) + x;
-				ypos = (Math.sin(deg2rad(angle)) * height) + y;
+				radians = deg2rad(angle);
+
+				xpos = (Math.cos(radians) * width) + x;
+				ypos = (Math.sin(radians) * height) + y;
 				
 				lineTo(xpos,ypos);
 			}
