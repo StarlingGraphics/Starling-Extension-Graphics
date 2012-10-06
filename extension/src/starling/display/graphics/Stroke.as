@@ -158,7 +158,7 @@ package starling.display.graphics
 			var wy:Number = a0y - b0y;
 			
 			var D:Number = ux * vy - uy * vx
-			if (Math.abs(D) < EPSILON) return [a0x, a0y];
+			if ((D < 0 ? -D : D) < EPSILON) return [a0x, a0y];
 			var t:Number = (vx * wy - vy * wx) / D
 			return [ a0x + t * (a1x - a0x), a0y + t * (a1y - a0y) ];
 		}

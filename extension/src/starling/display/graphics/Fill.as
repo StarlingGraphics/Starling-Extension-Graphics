@@ -3,6 +3,7 @@ package starling.display.graphics
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.utils.getTimer;
+	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.textures.Texture;
@@ -141,6 +142,15 @@ package starling.display.graphics
 			super.render( renderSupport, alpha );
 		}
 		
+		/**
+		 * Takes a list of arbitrary vertices. It will first decompose this list into
+		 * non intersecting polygons, via convertToSimple. Then it uses an ear-clipping
+		 * algorithm to decompose the polygons into triangles.
+		 * @param vertices
+		 * @param _numVertices
+		 * @return 
+		 * 
+		 */		
 		private static function triangulate( vertices:VertexList, _numVertices:int ):Array
 		{
 			vertices = VertexList.clone(vertices);
@@ -250,9 +260,17 @@ package starling.display.graphics
 			return [outputVertices, outputIndices];
 		}
 		
+		/**
+		 * Decomposes a list of arbitrarily positioned vertices that may form self-intersecting
+		 * polygons, into a list of non-intersecting polygons. This is then used as input
+		 * for the triangulator. 
+		 * @param vertexList
+		 * @return 
+		 */		
 		private static function convertToSimple( vertexList:VertexList ):Vector.<VertexList>
 		{
 			var output:Vector.<VertexList> = new Vector.<VertexList>();
+			var outputLength:int = 0;
 			
 			var openList:Vector.<VertexList> = new Vector.<VertexList>();
 			openList.push(vertexList);
@@ -267,7 +285,7 @@ package starling.display.graphics
 				
 				if ( nodeA.next == nodeA || nodeA.next.next == nodeA || nodeA.next.next.next == nodeA )
 				{
-					output.push(headA);
+					output[outputLength++] = headA;
 					continue;
 				}
 				
@@ -321,7 +339,7 @@ package starling.display.graphics
 				
 				if ( isSimple )
 				{
-					output.push(headA);
+					output[outputLength++] = headA;
 				}
 			}
 			
@@ -354,7 +372,11 @@ package starling.display.graphics
 			var node:VertexList = vertexList.head;
 			do
 			{
-				wn += isLeft( node.vertex[0], node.vertex[1], node.next.vertex[0], node.next.vertex[1], node.next.next.vertex[0], node.next.next.vertex[1] ) ? -1 : 1;
+				//wn += isLeft( node.vertex[0], node.vertex[1], node.next.vertex[0], node.next.vertex[1], node.next.next.vertex[0], node.next.next.vertex[1] ) ? -1 : 1;
+				
+				// Inline version of above
+				wn += ((node.next.vertex[0] - node.vertex[0]) * (node.next.next.vertex[1] - node.vertex[1]) - (node.next.next.vertex[0] - node.vertex[0]) * (node.next.vertex[1] - node.vertex[1])) < 0 ? -1 : 1;
+				
 				node = node.next;
 			}
 			while ( node != vertexList.head )
@@ -369,16 +391,27 @@ package starling.display.graphics
 		
 		private static function isPointInTriangle(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
 		{
-			if ( isLeft( v0x, v0y, v1x, v1y, px, py ) ) return false;
-			if ( isLeft( v1x, v1y, v2x, v2y, px, py ) ) return false;
-			if ( isLeft( v2x, v2y, v0x, v0y, px, py ) ) return false;
+			//if ( isLeft( v0x, v0y, v1x, v1y, px, py ) ) return false;
+			//if ( isLeft( v1x, v1y, v2x, v2y, px, py ) ) return false;
+			//if ( isLeft( v2x, v2y, v0x, v0y, px, py ) ) return false;
+			
+			// Inline version of above
+			if ( ((v1x - v0x) * (py - v0y) - (px - v0x) * (v1y - v0y)) < 0 ) return false;
+			if ( ((v2x - v1x) * (py - v1y) - (px - v1x) * (v2y - v1y)) < 0 ) return false;
+			if ( ((v0x - v2x) * (py - v2y) - (px - v2x) * (v0y - v2y)) < 0 ) return false;
+			
 			return true;
 		}
 		
 		private static function isReflex( v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number ):Boolean
 		{
-			if ( isLeft( v0x, v0y, v1x, v1y, v2x, v2y ) ) return false;
-			if ( isLeft( v1x, v1y, v2x, v2y, v0x, v0y ) ) return false;
+			//if ( isLeft( v0x, v0y, v1x, v1y, v2x, v2y ) ) return false;
+			//if ( isLeft( v1x, v1y, v2x, v2y, v0x, v0y ) ) return false;
+			
+			// Inline version of above
+			if ( ((v1x - v0x) * (v2y - v0y) - (v2x - v0x) * (v1y - v0y)) < 0 ) return false;
+			if ( ((v2x - v1x) * (v0y - v1y) - (v0x - v1x) * (v2y - v1y)) < 0 ) return false;
+			
 			return true;
 		}
 		
@@ -395,7 +428,7 @@ package starling.display.graphics
 			var wy:Number = (a0.vertex[1]) - (b0.vertex[1]);
 			
 			var D:Number = ux * vy - uy * vx
-			if (Math.abs(D) < EPSILON) return null
+			if ((D < 0 ? -D : D) < EPSILON) return null
 			
 			var t:Number = (vx * wy - vy * wx) / D
 			if (t < 0 || t > 1) return null

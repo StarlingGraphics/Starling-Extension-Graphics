@@ -82,10 +82,13 @@ package starling.display.graphics
 		}
 		
 		private static var nodePool:Vector.<VertexList> = new Vector.<VertexList>();
+		private static var nodePoolLength:int = 0;
+		
 		static public function getNode():VertexList
 		{
-			if ( nodePool.length > 0 )
+			if ( nodePoolLength > 0 )
 			{
+				nodePoolLength--;
 				return nodePool.pop();
 			}
 			return new VertexList();
@@ -96,7 +99,7 @@ package starling.display.graphics
 			node.prev = node.next = node.head = null;
 			node.vertex = null;
 			node.index = -1;
-			nodePool.push(node);
+			nodePool[nodePoolLength++] = node;
 		}
 	}
 }
