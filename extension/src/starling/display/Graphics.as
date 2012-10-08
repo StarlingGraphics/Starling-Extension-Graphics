@@ -187,17 +187,60 @@ package starling.display
 			_currentY = y;
 		}
 		
+		private static const STEPS:int = 8;
+		private var subSteps:int = 0;
+		private static const ERROR:Number = 0.1;
+				
+		public function quadratic( t:Number, a1:Number, c:Number, a2:Number ):Number {
+			var oneMinusT:Number = (1.0 - t);
+			return oneMinusT * oneMinusT * a1 + 2.0 * oneMinusT * t * c + t * t * a2;
+		}
+		
+		private function subdivide( t0:Number, t1:Number, depth:int, a1x:Number, a1y:Number, cx:Number, cy:Number, a2x:Number, a2y:Number ):void
+		{
+			var quadX:Number = quadratic( (t0 + t1) * 0.5, a1x, cx, a2x );
+			var quadY:Number = quadratic( (t0 + t1) * 0.5, a1y, cy, a2y );
+			
+			var x0:Number = quadratic( t0, a1x, cx, a2x );
+			var y0:Number = quadratic( t0, a1y, cy, a2y );
+			var x1:Number = quadratic( t1, a1x, cx, a2x );
+			var y1:Number = quadratic( t1, a1y, cy, a2y );
+			var midX:Number = ( x0 + x1 ) * 0.5;
+			var midY:Number = ( y0 + y1 ) * 0.5;
+			
+			var dx:Number = quadX - midX;
+			var dy:Number = quadY - midY;
+			
+			var error2:Number = dx * dx + dy * dy;
+			
+			if ( depth < 2 ) { //error2 > (ERROR*ERROR) ) {
+				subdivide( t0, (t0 + t1) * 0.5, depth+1, a1x, a1y, cx, cy, a2x, a2y );	
+				subdivide( (t0 + t1) * 0.5, t1, depth+1, a1x, a1y, cx, cy, a2x, a2y );	
+			}
+			else {
+				++subSteps;
+				trace( subSteps, depth, x1, y1 )
+				lineTo( x1, y1 );
+			}
+		}
+		
 		public function curveTo(cx:Number, cy:Number, a2x:Number, a2y:Number):void
 		{
-			// A couple of improvements to this code:
-			// - Should be unified with 'lineTo' so there is prefix & postfix code, but the main code calls "addVertex" directly.
-			// - "8" subdivisions should be experimented with: 2-16 is about right, depending on the screen size of the curve.
+			/*
+			subSteps = 0;
+			subdivide( 0.0, 0.5, 0, _currentX, _currentY, cx, cy, a2x, a2y );
+			subdivide( 0.5, 1.0, 0, _currentX, _currentY, cx, cy, a2x, a2y );
+			trace( "subSteps", subSteps );
+			*/
+
+			var a1x:Number = _currentX;
+			var a1y:Number = _currentY;
 			
-			for ( var j:int = 1; j <= 8; ++j ) {
-				var t:Number = Number(j) / 8.0;
+			for ( var j:int = 1; j <= STEPS; ++j ) {
+				var t:Number = Number(j) / Number(STEPS);
 				var oneMinusT:Number = (1.0 - t);
-				var bx:Number = oneMinusT * oneMinusT * _currentX + 2.0 * oneMinusT * t * cx + t * t * a2x;
-				var by:Number = oneMinusT * oneMinusT * _currentY + 2.0 * oneMinusT * t * cy + t * t * a2y;
+				var bx:Number = (oneMinusT*oneMinusT*a1x) + (2.0*oneMinusT*t*cx) + (t*t*a2x);
+				var by:Number = (oneMinusT*oneMinusT*a1y) + (2.0*oneMinusT*t*cy) + (t*t*a2y);
 				
 				lineTo( bx, by );
 			}			
