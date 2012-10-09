@@ -1,10 +1,12 @@
 package starling.display.graphics
 {
+	import flash.display3D.Context3D;
 	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
+	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
@@ -13,6 +15,7 @@ package starling.display.graphics
 	import starling.display.shaders.fragment.TextureVertexColorFragmentShader;
 	import starling.display.shaders.fragment.VertexColorFragmentShader;
 	import starling.display.shaders.vertex.StandardVertexShader;
+	import starling.errors.MissingContextError;
 	import starling.textures.Texture;
 	
 	/**
@@ -64,6 +67,13 @@ package starling.display.graphics
 		
 		override public function render( renderSupport:RenderSupport, alpha:Number ):void
 		{
+			// always call this method when you write custom rendering code!
+			// it causes all previously batched quads/images to render.
+			renderSupport.finishQuadBatch();
+			
+			var context:Context3D = Starling.context;
+			if (context == null) throw new MissingContextError();
+			
 			var pma:Boolean = false;
 			if ( material.textures.length > 0 && material.textures[0].premultipliedAlpha )
 			{
@@ -71,6 +81,12 @@ package starling.display.graphics
 			}
 			RenderSupport.setDefaultBlendFactors(pma);
 			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer );
+			
+			context.setTextureAt(0, null);
+			context.setTextureAt(1, null);
+			context.setVertexBufferAt(0, null);
+			context.setVertexBufferAt(1, null);
+			context.setVertexBufferAt(2, null);
 		}
 	}
 }
