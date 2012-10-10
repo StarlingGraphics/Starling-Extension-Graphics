@@ -202,30 +202,44 @@ package starling.display
 		// State variables for quadratic subdivision.
 		private static const STEPS:int = 8;
 		private var _subSteps:int = 0;
-		public static const QUADRATIC_ERROR:Number = 0.75;
-		private var _quadraticError:Number = QUADRATIC_ERROR;
-		private var _quadA1:Point = new Point();
-		private var _quadC:Point  = new Point();
-		private var _quadA2:Point = new Point();
+		public static const BEZIER_ERROR:Number = 0.75;
+		private var _bezierError:Number = BEZIER_ERROR;
+		
+		// ax1, ay1, cx, cy, ax2, ay2 for quadratic, or
+		// ax1, ay1, cx1, cy1, cx2, cy2, ax2, ay2 for cubic
+		private var _terms:Vector.<Number> = new Vector.<Number>( 8, true );
 				
-		public function quadratic( t:Number, a1:Number, c:Number, a2:Number ):Number {
+		private function quadratic( t:Number, axis:int ):Number {
 			var oneMinusT:Number = (1.0 - t);
+			var a1:Number = _terms[0 + axis];
+			var c:Number  = _terms[2 + axis];
+			var a2:Number = _terms[4 + axis];
 			return (oneMinusT*oneMinusT*a1) + (2.0*oneMinusT*t*c) + t*t*a2;
 		}
 		
+		private function cubic( t:Number, axis:int ):Number {
+			var oneMinusT:Number = (1.0 - t);
+			
+			var a1:Number = _terms[0 + axis];
+			var c1:Number = _terms[2 + axis];
+			var c2:Number = _terms[4 + axis];
+			var a2:Number = _terms[6 + axis];
+			return (oneMinusT*oneMinusT*oneMinusT*a1) + (3.0*oneMinusT*oneMinusT*t*c1) + (3.0*oneMinusT*t*t*c2) + t*t*t*a2;
+		}
+
 		/* Subdivide until an error metric is hit.
 		 * Uses depth first recursion, so that lineTo() can be called directory,
 		 * and the calls will be in the currect order.
 		 */
-		private function subdivide( t0:Number, t1:Number, depth:int ):void
+		private function subdivide( t0:Number, t1:Number, depth:int, equation:Function ):void
 		{
-			var quadX:Number = quadratic( (t0 + t1) * 0.5, _quadA1.x, _quadC.x, _quadA2.x );
-			var quadY:Number = quadratic( (t0 + t1) * 0.5, _quadA1.y, _quadC.y, _quadA2.y );
+			var quadX:Number = equation( (t0 + t1) * 0.5, 0 );
+			var quadY:Number = equation( (t0 + t1) * 0.5, 1 );
 			
-			var x0:Number = quadratic( t0, _quadA1.x, _quadC.x, _quadA2.x );
-			var y0:Number = quadratic( t0, _quadA1.y, _quadC.y, _quadA2.y );
-			var x1:Number = quadratic( t1, _quadA1.x, _quadC.x, _quadA2.x );
-			var y1:Number = quadratic( t1, _quadA1.y, _quadC.y, _quadA2.y );
+			var x0:Number = equation( t0, 0 );
+			var y0:Number = equation( t0, 1 );
+			var x1:Number = equation( t1, 0 );
+			var y1:Number = equation( t1, 1 );
 			
 			var midX:Number = ( x0 + x1 ) * 0.5;
 			var midY:Number = ( y0 + y1 ) * 0.5;
@@ -235,9 +249,9 @@ package starling.display
 			
 			var error2:Number = dx * dx + dy * dy;
 			
-			if ( error2 > (_quadraticError*_quadraticError) ) {
-				subdivide( t0, (t0 + t1)*0.5, depth+1 );	
-				subdivide( (t0 + t1)*0.5, t1, depth+1 );	
+			if ( error2 > (_bezierError*_bezierError) ) {
+				subdivide( t0, (t0 + t1)*0.5, depth+1, equation );	
+				subdivide( (t0 + t1)*0.5, t1, depth+1, equation );	
 			}
 			else {
 				++_subSteps;
@@ -246,7 +260,7 @@ package starling.display
 			}
 		}
 		
-		public function curveTo(cx:Number, cy:Number, a2x:Number, a2y:Number, error:Number = QUADRATIC_ERROR ):void
+		public function curveTo(cx:Number, cy:Number, a2x:Number, a2y:Number, error:Number = BEZIER_ERROR ):void
 		{
 			if ( isNaN(_currentX) )
 			{
@@ -254,15 +268,18 @@ package starling.display
 			}
 			
 			_subSteps = 0;
-			_quadraticError = error;
+			_bezierError = error;
 			
-			_quadA1.setTo( _currentX, _currentY );
-			_quadC.setTo( cx, cy );
-			_quadA2.setTo( a2x, a2y );
+			_terms[0] = _currentX;
+			_terms[1] = _currentY;
+			_terms[2] = cx;
+			_terms[3] = cy;
+			_terms[4] = a2x;
+			_terms[5] = a2y;
 			
-			subdivide( 0.0, 0.5, 0 );
-			subdivide( 0.5, 1.0, 0 );
-			//trace( "subSteps", _subSteps );
+			subdivide( 0.0, 0.5, 0, quadratic );
+			subdivide( 0.5, 1.0, 0, quadratic );
+			//trace( "quadratic subSteps", _subSteps );
 
 			/* 
 			// Straight subdivision. Useful for testing.
@@ -282,6 +299,34 @@ package starling.display
 			_currentX = a2x;
 			_currentY = a2y;
 		}
+		
+		public function cubicCurveTo(c1x:Number, c1y:Number, c2x:Number, c2y:Number, a2x:Number, a2y:Number, error:Number = BEZIER_ERROR ):void
+		{
+			if ( isNaN(_currentX) )
+			{
+				moveTo(0,0);
+			}
+			
+			_subSteps = 0;
+			_bezierError = error;
+			
+			_terms[0] = _currentX;
+			_terms[1] = _currentY;
+			_terms[2] = c1x;
+			_terms[3] = c1y;
+			_terms[4] = c2x;
+			_terms[5] = c2y;
+			_terms[6] = a2x;
+			_terms[7] = a2y;
+			
+			subdivide( 0.0, 0.5, 0, cubic );
+			subdivide( 0.5, 1.0, 0, cubic );
+			//trace( "cubic subSteps", _subSteps );
+
+			_currentX = a2x;
+			_currentY = a2y;
+		}
+
 		
 		public function moveTo(x:Number, y:Number):void
 		{
