@@ -7,6 +7,7 @@ package starling.display
 	import starling.display.graphics.Fill;
 	import starling.display.graphics.Stroke;
 	import starling.display.materials.StandardMaterial;
+	import starling.display.shaders.IShader;
 	import starling.display.shaders.fragment.TextureVertexColorFragmentShader;
 	import starling.display.shaders.vertex.StandardVertexShader;
 	import starling.textures.Texture;
@@ -27,6 +28,7 @@ package starling.display
 		private var _currentFillIsBitmapFill		:Boolean;
 		private var _currentStrokeIsBitmapStroke	:Boolean;
 		private var _currentStrokeTexture			:Texture;
+		private var _currentStrokeVertexShader		:IShader;
 		
 		private var _container			:DisplayObjectContainer;
 		
@@ -145,36 +147,45 @@ package starling.display
 			lineTo(x, y);
 		}
 		
-		public function lineStyle(thickness:Number = NaN, color:uint = 0, alpha:Number = 1.0):void//, pixelHinting:Boolean = false, scaleMode:String = "normal", caps:String = null, joints:String = null, miterLimit:Number = 3):void
+		public function lineStyle(thickness:Number = NaN, color:uint = 0, alpha:Number = 1.0, vertexShader:IShader = null):void//, pixelHinting:Boolean = false, scaleMode:String = "normal", caps:String = null, joints:String = null, miterLimit:Number = 3):void
 		{
 			_strokeThickness		= thickness;
 			_strokeColor			= color;
 			_strokeAlpha			= alpha;
 			_currentStrokeTexture 	= null;
+			_currentStrokeVertexShader = vertexShader;
 		}
 		
-		public function lineTexture(thickness:Number = NaN, texture:Texture = null):void//, pixelHinting:Boolean = false, scaleMode:String = "normal", caps:String = null, joints:String = null, miterLimit:Number = 3):void
+		public function lineTexture(thickness:Number = NaN, texture:Texture = null, vertexShader:IShader = null):void//, pixelHinting:Boolean = false, scaleMode:String = "normal", caps:String = null, joints:String = null, miterLimit:Number = 3):void
 		{
-			_strokeThickness		= thickness;
-			_strokeColor			= NaN;
-			_strokeAlpha			= NaN;
-			_currentStrokeTexture 	= texture;
+			_strokeThickness			= thickness;
+			_strokeColor				= NaN;
+			_strokeAlpha				= NaN;
+			_currentStrokeTexture 		= texture;
+			_currentStrokeVertexShader = vertexShader;
 		}
 		
 		public function lineTo(x:Number, y:Number):void
 		{
-			if (!_currentStroke) {
-				if (_currentStrokeTexture) {
+			if (!_currentStroke && _strokeThickness > 0) 
+			{
+				if (_currentStrokeTexture) 
+				{
 					beginTextureStroke();
-				} else {
+				} 
+				else
+				{
 					beginStroke();
 				}
 			}
 			
-			if (_currentStrokeIsBitmapStroke) {
-				_currentStroke.addVertex( x, y, _strokeThickness);
-			} else {
-				_currentStroke.addVertex( x, y, _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor );
+			if ( _currentStroke )
+			{
+				if (_currentStrokeIsBitmapStroke) {
+					_currentStroke.addVertex( x, y, _strokeThickness);
+				} else {
+					_currentStroke.addVertex( x, y, _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor );
+				}
 			}
 			
 			if (_currentFill) {
@@ -237,6 +248,11 @@ package starling.display
 		
 		public function curveTo(cx:Number, cy:Number, a2x:Number, a2y:Number, error:Number = QUADRATIC_ERROR ):void
 		{
+			if ( isNaN(_currentX) )
+			{
+				moveTo(0,0);
+			}
+			
 			_subSteps = 0;
 			_quadraticError = error;
 			
@@ -269,16 +285,9 @@ package starling.display
 		
 		public function moveTo(x:Number, y:Number):void
 		{
-			if (_currentStrokeTexture) {
-				beginTextureStroke();
-			} else {
-				beginStroke();
-			}
-			
-			if (_currentStrokeIsBitmapStroke) {
-				_currentStroke.addVertex( x, y, _strokeThickness);
-			} else {
-				_currentStroke.addVertex( x, y, _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor );
+			if ( _currentStroke )
+			{
+				endStroke();
 			}
 			
 			if (_currentFill) {
@@ -304,6 +313,11 @@ package starling.display
 			_container.addChild(_currentStroke);
 		}
 		
+		private function endStroke():void
+		{
+			_currentStroke = null;
+		}
+		
 		private function beginTextureStroke():Stroke
 		{
 			_currentStrokeIsBitmapStroke = true;
@@ -313,6 +327,10 @@ package starling.display
 			}
 			
 			_currentStroke = new Stroke();
+			if ( _currentStrokeVertexShader )
+			{
+				_currentStroke.material.vertexShader = _currentStrokeVertexShader;
+			}
 			_currentStroke.material.fragmentShader = new TextureVertexColorFragmentShader();
 			_currentStroke.material.textures[0] = _currentStrokeTexture;
 			_container.addChild(_currentStroke);
