@@ -9,14 +9,10 @@ package
 		
 	*/
 	
-	import flash.geom.Matrix;
-	
+	import starling.display.Image;
 	import starling.display.Shape;
 	import starling.display.Sprite;
-	import starling.display.graphics.Graphic;
-	import starling.display.graphics.Stroke;
 	import starling.display.shaders.vertex.AnimateUVVertexShader;
-	import starling.display.shaders.vertex.RippleVertexShader;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
@@ -34,11 +30,6 @@ package
 		[Embed( source = "/assets/GlowTiled.png" )]
 		private var GlowTiledBMP		:Class;
 		
-		private var lavaTexture			:Texture;
-		private var banksTexture		:Texture;
-		private var backgroundTexture	:Texture;
-		private var rockTexture			:Texture;
-		
 		public function FlowingLavaExample()
 		{
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
@@ -50,42 +41,34 @@ package
 			var lavaThickness:Number = 90;
 			var bankThickness:Number = lavaThickness*2.2;
 			
-			lavaTexture = Texture.fromBitmap( new LavaTiledBMP(), false );
-			banksTexture = Texture.fromBitmap( new BanksTiledBMP(), false );
-			backgroundTexture = Texture.fromBitmap( new FinalBackgroundBMP(), false );
-			rockTexture = Texture.fromBitmap( new FinalRockBMP(), false );
-			
-			var w:Number = stage.stageWidth;
-			var h:Number = stage.stageHeight;
+			var background:Image = new Image(Texture.fromBitmap(new FinalBackgroundBMP()));
+			background.width = stage.stageWidth;
+			background.height = stage.stageHeight;
+			addChild(background);
 			
 			var shape:Shape = new Shape();
 			addChild(shape);
 			
-			var m:Matrix = new Matrix();
-			m.scale( w/backgroundTexture.width, h/backgroundTexture.height);
-			shape.graphics.beginTextureFill( backgroundTexture, m );
-			shape.graphics.drawRect(0,0,w,h);
-			shape.graphics.endFill();
-			
 			var shader:AnimateUVVertexShader = new AnimateUVVertexShader();
 			shader.uSpeed = 0.1;
 			shader.vSpeed = 0.0;
+			var lavaTexture:Texture = Texture.fromBitmap( new LavaTiledBMP(), false );
 			shape.graphics.lineTexture( lavaThickness, lavaTexture, shader );
 			shape.graphics.moveTo( 150, 0 );
 			shape.graphics.curveTo( 500, 100, 500, 300 );
 			shape.graphics.curveTo( 500, 500, 700, 650 );
 			
+			var banksTexture:Texture = Texture.fromBitmap( new BanksTiledBMP(), false );
 			shape.graphics.lineTexture( bankThickness, banksTexture );
 			shape.graphics.moveTo( 150, 0 );
 			shape.graphics.curveTo( 500, 100, 500, 300 );
 			shape.graphics.curveTo( 500, 500, 700, 650 );
 			shape.graphics.lineStyle(0);
 			
-			m.identity();
-			m.scale( w/rockTexture.width, (h/rockTexture.height)*1.6);
-			shape.graphics.beginTextureFill( rockTexture, m );
-			shape.graphics.drawRect(0,0,w,h);
-			shape.graphics.endFill();
+			var foreground:Image = new Image(Texture.fromBitmap(new FinalRockBMP()));
+			foreground.width = stage.stageWidth;
+			foreground.height = stage.stageHeight*1.6;
+			addChild(foreground);
 		}
 	}
 }
