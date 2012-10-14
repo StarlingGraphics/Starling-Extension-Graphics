@@ -1,10 +1,6 @@
 package starling.display.materials
 {
 	import com.adobe.utils.AGALMiniAssembler;
-	import starling.display.shaders.fragment.VertexColorFragmentShader;
-	import starling.display.shaders.IShader;
-	import starling.display.shaders.vertex.StandardVertexShader;
-	import starling.textures.Texture;
 	
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
@@ -13,6 +9,11 @@ package starling.display.materials
 	import flash.display3D.Program3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix3D;
+	
+	import starling.display.shaders.IShader;
+	import starling.display.shaders.fragment.VertexColorFragmentShader;
+	import starling.display.shaders.vertex.StandardVertexShader;
+	import starling.textures.Texture;
 
 	public class StandardMaterial implements IMaterial
 	{
@@ -20,6 +21,7 @@ package starling.display.materials
 		
 		private var _vertexShader	:IShader;
 		private var _fragmentShader	:IShader;
+		private var _alpha			:Number = 1;
 		private var _textures		:Vector.<Texture>;
 		
 		public function StandardMaterial( vertexShader:IShader = null, fragmentShader:IShader = null )
@@ -69,6 +71,18 @@ package starling.display.materials
 			return _fragmentShader;
 		}
 		
+		
+		public function get alpha():Number
+		{
+			return _alpha;
+		}
+		
+		public function set alpha(value:Number):void
+		{
+			_alpha = value;
+		}
+
+		
 		public function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D ):void
 		{
 			context.setVertexBufferAt( 0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3 );
@@ -89,8 +103,8 @@ package starling.display.materials
 			
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			_vertexShader.setConstants(context, 4);
-			
-			_fragmentShader.setConstants(context, 0);
+			context.setProgramConstantsFromVector( Context3DProgramType.FRAGMENT, 0, Vector.<Number>( [1, 1, 1, _alpha] ) );
+			_fragmentShader.setConstants(context, 1);
 			
 			context.drawTriangles(indexBuffer);
 		}

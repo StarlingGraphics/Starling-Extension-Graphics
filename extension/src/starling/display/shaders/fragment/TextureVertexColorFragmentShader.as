@@ -3,6 +3,7 @@ package starling.display.shaders.fragment
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.textures.Texture;
+	
 	import starling.display.shaders.AbstractShader;
 	
 	public class TextureVertexColorFragmentShader extends AbstractShader
@@ -11,7 +12,8 @@ package starling.display.shaders.fragment
 		{
 			var agal:String =
 			"tex ft1, v1, fs0 <2d, repeat, linear> \n" +
-			"mul oc, ft1, v0"
+			"mul ft2, v0, fc0 \n" +
+			"mul oc, ft1, ft2"
 			
 			compileAGAL( Context3DProgramType.FRAGMENT, agal );
 		}

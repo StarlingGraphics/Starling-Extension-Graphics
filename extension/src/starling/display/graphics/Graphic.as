@@ -9,6 +9,7 @@ package starling.display.graphics
 	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
+	import starling.display.BlendMode;
 	import starling.display.DisplayObject;
 	import starling.display.materials.IMaterial;
 	import starling.display.materials.StandardMaterial;
@@ -74,12 +75,8 @@ package starling.display.graphics
 			var context:Context3D = Starling.context;
 			if (context == null) throw new MissingContextError();
 			
-			var pma:Boolean = false;
-			if ( material.textures.length > 0 && material.textures[0].premultipliedAlpha )
-			{
-				pma = true;
-			}
-			RenderSupport.setDefaultBlendFactors(pma);
+			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
+			_material.alpha = alpha;
 			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer );
 			
 			context.setTextureAt(0, null);
