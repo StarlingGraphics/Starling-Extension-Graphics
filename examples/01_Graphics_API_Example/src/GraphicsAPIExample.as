@@ -104,7 +104,7 @@ package
 			shape.graphics.drawEllipse(0, 0, 75, 50);
 			
 			
-			// Triangle
+			// 2 Triangles in one Shape
 			shape = new Shape();
 			addChild(shape);
 			
@@ -120,6 +120,30 @@ package
 			
 			shape.graphics.endFill();
 			
+			var xOffset:uint = 140;
+			shape.graphics.beginFill(fillColor, 0.2);
+			shape.graphics.lineStyle(2, 0xFF0000, 0.5);
+			shape.graphics.moveTo(left + xOffset, top);
+			shape.graphics.lineTo(right + xOffset, bottom);
+			shape.graphics.lineTo(left + xOffset, bottom);
+			shape.graphics.lineTo(left + xOffset, top);
+			
+			shape.graphics.endFill();
+			
+			
+			// Multiple moveTo() test
+			shape = new Shape();
+			addChild(shape);
+			
+			shape.x = 500;
+			shape.y = 250;
+			
+			shape.graphics.lineStyle(2, 0x000000, 0.5);
+			shape.graphics.lineTo(100, 0);
+			shape.graphics.moveTo(0,30);
+			shape.graphics.lineTo(100, 30);
+			shape.graphics.moveTo(0,60);
+			shape.graphics.lineTo(100, 60);		
 			
 			// Triangle with CheckerBMP
 			shape = new Shape();

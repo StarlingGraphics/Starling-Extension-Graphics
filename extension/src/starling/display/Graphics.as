@@ -179,6 +179,11 @@ package starling.display
 				}
 			}
 			
+			if ( isNaN(_currentX) )
+			{
+				moveTo(0,0);
+			}
+			
 			if ( _currentStroke )
 			{
 				if (_currentStrokeIsBitmapStroke) {
@@ -330,10 +335,21 @@ package starling.display
 		
 		public function moveTo(x:Number, y:Number):void
 		{
-			if ( _currentStroke )
-			{
-				endStroke();
+			if (_currentStrokeTexture) {
+				beginTextureStroke();
+			} else {  	
+				beginStroke();  	
 			}
+			
+			if (_currentStrokeIsBitmapStroke) {
+				_currentStroke.addVertex( x, y, _strokeThickness);  	
+			} else {
+				_currentStroke.addVertex( x, y, _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor );
+			}
+//			if ( _currentStroke )
+//			{
+//				endStroke();
+//			}
 			
 			if (_currentFill) {
 				if (_currentFillIsBitmapFill) {
