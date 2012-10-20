@@ -13,6 +13,17 @@ package starling.display.graphics
 			
 		}
 		
+		static public function insertAfter( nodeA:VertexList, nodeB:VertexList ):VertexList
+		{
+			var temp:VertexList = nodeA.next;
+			nodeA.next = nodeB;
+			nodeB.next = temp;
+			nodeB.prev = nodeA;
+			nodeB.head = nodeA.head;
+			
+			return nodeB;
+		}
+		
 		static public function clone( vertexList:VertexList ):VertexList
 		{
 			var newHead:VertexList;

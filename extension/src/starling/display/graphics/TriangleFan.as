@@ -10,7 +10,6 @@ package starling.display.graphics
 		
 		protected var vertices		:Vector.<Number>;
 		protected var indices		:Vector.<uint>;
-		protected var numVertices	:uint = 0;
 		protected var _closed 		:Boolean = false;
 		
 		public function TriangleFan()
@@ -38,26 +37,31 @@ package starling.display.graphics
 			var b:Number = (color & 0x0000FF) / 255;
 			
 			vertices.push( x, y, 0, r, g, b, alpha, u, v );
-			numVertices++;
+			_numVertices++;
 			
-			if ( numVertices < 3 )
+			if ( _numVertices < 3 )
 			{
-				indices.push( numVertices-1 );
+				indices.push( _numVertices-1 );
 			}
 			else
 			{
-				indices.push( 0, numVertices - 2, numVertices - 1 );
+				indices.push( 0, _numVertices - 2, _numVertices - 1 );
 			}
+			
+			minBounds.x = x < minBounds.x ? x : minBounds.x;
+			minBounds.y = y < minBounds.y ? y : minBounds.y;
+			maxBounds.x = x > maxBounds.x ? x : maxBounds.x;
+			maxBounds.y = y > maxBounds.y ? y : maxBounds.y;
 		}
 		
 		override public function render( renderSupport:RenderSupport, alpha:Number ):void
 		{
-			if ( numVertices < 3 ) return;
+			if ( _numVertices < 3 ) return;
 			
 			if ( vertexBuffer == null )
 			{
-				vertexBuffer = Starling.context.createVertexBuffer( numVertices, VERTEX_STRIDE );
-				vertexBuffer.uploadFromVector( vertices, 0, numVertices )
+				vertexBuffer = Starling.context.createVertexBuffer( _numVertices, VERTEX_STRIDE );
+				vertexBuffer.uploadFromVector( vertices, 0, _numVertices )
 				indexBuffer = Starling.context.createIndexBuffer( indices.length );
 				indexBuffer.uploadFromVector( indices, 0, indices.length );
 			}

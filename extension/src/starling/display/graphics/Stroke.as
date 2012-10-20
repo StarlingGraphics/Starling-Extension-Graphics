@@ -13,7 +13,15 @@ package starling.display.graphics
 		
 		public function Stroke()
 		{
+			clear();
+		}
+		
+		public function clear():void
+		{
+			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
+			maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
 			vertices = new Vector.<StrokeVertex>();
+			_numVertices = 0;
 		}
 		
 		public function addVertex( 	x:Number, y:Number, thickness:Number = 1,
@@ -51,6 +59,12 @@ package starling.display.graphics
 			var b1:Number = (color1 & 0x0000FF) / 255;
 			
 			vertices.push( new StrokeVertex( x, y, 0, r0, g0, b0, alpha0, r1, g1, b1, alpha1, u, 0, thickness ) );
+			_numVertices++;
+			
+			minBounds.x = x < minBounds.x ? x : minBounds.x;
+			minBounds.y = y < minBounds.y ? y : minBounds.y;
+			maxBounds.x = x > maxBounds.x ? x : maxBounds.x;
+			maxBounds.y = y > maxBounds.y ? y : maxBounds.y;
 		}
 		
 		override public function render( renderSupport:RenderSupport, alpha:Number ):void
@@ -74,6 +88,18 @@ package starling.display.graphics
 			super.render( renderSupport, alpha );
 		}
 		
+		public function get closed():Boolean 
+		{
+			return _closed;
+		}
+		public function set closed(value:Boolean):void 
+		{
+			_closed = value;
+		}
+		
+		///////////////////////////////////
+		// Static helper methods
+		///////////////////////////////////
 		private static function createPolyLine( vertices:Vector.<StrokeVertex>, closed:Boolean, outputVertices:Vector.<Number>, outputIndices:Vector.<uint> ):void
 		{
 			var numVertices:int = vertices.length;
@@ -118,19 +144,18 @@ package starling.display.graphics
 				n1x /= n1m;
 				n1y /= n1m;
 				
-				
-				
-				var p0x:Number = v1.x + n0x * v1.thickness * 0.5;
-				var p0y:Number = v1.y + n0y * v1.thickness * 0.5;
-				var p2x:Number = v1.x + n1x * v1.thickness * 0.5;
-				var p2y:Number = v1.y + n1y * v1.thickness * 0.5;
+				var thickness:Number = v1.thickness * 0.5;
+				var p0x:Number = v1.x + n0x * thickness;
+				var p0y:Number = v1.y + n0y * thickness;
+				var p2x:Number = v1.x + n1x * thickness;
+				var p2y:Number = v1.y + n1y * thickness;
 				
 				var i0:Array = intersection(p0x, p0y, p0x +d0x, p0y + d0y, p2x, p2y, p2x + d1x, p2y + d1y );
 				
-				var p1x:Number = v1.x - n0x * v1.thickness * 0.5;
-				var p1y:Number = v1.y - n0y * v1.thickness * 0.5;
-				var p3x:Number = v1.x - n1x * v1.thickness * 0.5;
-				var p3y:Number = v1.y - n1y * v1.thickness * 0.5;
+				var p1x:Number = v1.x - n0x * thickness;
+				var p1y:Number = v1.y - n0y * thickness;
+				var p3x:Number = v1.x - n1x * thickness;
+				var p3y:Number = v1.y - n1y * thickness;
 				
 				var i1:Array = intersection(p1x, p1y, p1x +d0x, p1y + d0y, p3x, p3y, p3x + d1x, p3y + d1y );
 				
@@ -161,18 +186,6 @@ package starling.display.graphics
 			if ((D < 0 ? -D : D) < EPSILON) return [a0x, a0y];
 			var t:Number = (vx * wy - vy * wx) / D
 			return [ a0x + t * (a1x - a0x), a0y + t * (a1y - a0y) ];
-		}
-		
-		public function get closed():Boolean {
-			return _closed;
-		}
-		public function set closed(value:Boolean):void {
-			_closed = value;
-		}
-		
-		public function get numVertices():int
-		{
-			return vertices.length;
 		}
 	}
 }

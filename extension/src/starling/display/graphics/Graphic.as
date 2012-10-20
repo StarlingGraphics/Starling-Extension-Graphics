@@ -5,6 +5,7 @@ package starling.display.graphics
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix;
+	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	
 	import starling.core.RenderSupport;
@@ -25,13 +26,31 @@ package starling.display.graphics
 	 */
 	public class Graphic extends DisplayObject
 	{
+		protected static var sHelperMatrix:Matrix = new Matrix();
+		protected static var defaultVertexShader	:StandardVertexShader;
+		protected static var defaultFragmentShader	:VertexColorFragmentShader;
+		
 		protected var _material		:IMaterial;
 		protected var vertexBuffer	:VertexBuffer3D;
 		protected var indexBuffer	:IndexBuffer3D;
 		
+		protected var _numVertices	:int;
+		
+		// Filled-out with min/max vertex positions
+		// during addVertex(). Used during getBounds().
+		protected var minBounds			:Point;
+		protected var maxBounds			:Point;
+		
 		public function Graphic()
 		{
-			_material = new StandardMaterial( new StandardVertexShader(), new VertexColorFragmentShader() );
+			if ( defaultVertexShader == null )
+			{
+				defaultVertexShader = new StandardVertexShader();
+				defaultFragmentShader = new VertexColorFragmentShader();
+			}
+			_material = new StandardMaterial( defaultVertexShader, defaultFragmentShader );
+			minBounds = new Point();
+			maxBounds = new Point();
 		}
 		
 		override public function dispose():void
@@ -51,11 +70,6 @@ package starling.display.graphics
 			}
 		}
 		
-		override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
-		{
-			return new Rectangle();
-		}
-		
 		public function set material( value:IMaterial ):void
 		{
 			_material = value;
@@ -64,6 +78,42 @@ package starling.display.graphics
 		public function get material():IMaterial
 		{
 			return _material;
+		}
+		
+		public function get numVertices():int
+		{
+			return _numVertices;
+		}
+		
+		override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
+		{
+			if (resultRect == null) resultRect = new Rectangle();
+			
+			if ( _numVertices == 0 )
+			{
+				resultRect.x = resultRect.y = resultRect.width = resultRect.height = 0;
+				return resultRect;
+			}
+			
+			if (targetSpace == this) // optimization
+			{
+				resultRect.x = minBounds.x;
+				resultRect.y = minBounds.y;
+				resultRect.right = maxBounds.x;
+				resultRect.bottom = maxBounds.y;
+				return resultRect;
+			}
+			
+			getTransformationMatrix(targetSpace, sHelperMatrix);
+			
+			var TL:Point = sHelperMatrix.transformPoint(minBounds.clone());
+			var BR:Point = sHelperMatrix.transformPoint(maxBounds.clone());
+			resultRect.x = TL.x;
+			resultRect.y = TL.y;
+			resultRect.right = BR.x;
+			resultRect.bottom = BR.y;
+			
+			return resultRect;
 		}
 		
 		override public function render( renderSupport:RenderSupport, alpha:Number ):void
