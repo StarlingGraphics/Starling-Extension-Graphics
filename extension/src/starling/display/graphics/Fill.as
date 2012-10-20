@@ -2,10 +2,12 @@ package starling.display.graphics
 {
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.utils.getTimer;
 	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.textures.Texture;
 	
 	public class Fill extends Graphic
@@ -14,7 +16,6 @@ package starling.display.graphics
 		
 		protected var vertices		:VertexList;
 		protected var _uvMatrix		:Matrix;
-		protected var _numVertices	:int = 0;
 		
 		public var showProfiling	:Boolean;
 		
@@ -22,15 +23,13 @@ package starling.display.graphics
 		{
 			_uvMatrix = new Matrix();
 			this.showProfiling = showProfiling;
-		}
-		
-		public function get numVertices():int
-		{
-			return _numVertices;
+			clear();
 		}
 		
 		public function clear():void
 		{
+			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
+			maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
 			_numVertices = 0;
 			VertexList.dispose(vertices);
 			vertices = null;
@@ -99,6 +98,11 @@ package starling.display.graphics
 			node.index = _numVertices;
 			node.vertex = vertex;
 			
+			minBounds.x = x < minBounds.x ? x : minBounds.x;
+			minBounds.y = y < minBounds.y ? y : minBounds.y;
+			maxBounds.x = x > maxBounds.x ? x : maxBounds.x;
+			maxBounds.y = y > maxBounds.y ? y : maxBounds.y;
+			
 			_numVertices++;
 		}
 		
@@ -106,8 +110,7 @@ package starling.display.graphics
 		override public function render( renderSupport:RenderSupport, alpha:Number ):void
 		{
 			if ( _numVertices < 3) return;
-			
-			if ( vertexBuffer == null )
+			if ( vertexBuffer  == null )
 			{
 				var startTime:int = getTimer();
 				var triangulatedData:Array = triangulate(vertices, _numVertices);
@@ -140,6 +143,18 @@ package starling.display.graphics
 			}
 			
 			super.render( renderSupport, alpha );
+		}
+		
+		public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
+		{
+			var pt:Point = globalToLocal(new Point(stageX,stageY));
+			var direction:int = windingNumber(vertices);
+			var wn:int = windingNumberAroundPoint(vertices, pt.x, pt.y);
+			if ( direction < 0 )
+			{
+				return wn == 0;
+			}
+			return wn != 0;
 		}
 		
 		/**
@@ -366,6 +381,40 @@ package starling.display.graphics
 			return output;
 		}
 		
+		private static function windingNumberAroundPoint( vertexList:VertexList, x:Number, y:Number ):int
+		{
+			var wn:int = 0;
+			var node:VertexList = vertexList.head;
+			do
+			{
+				var v0y:Number = node.vertex[1];
+				var v1y:Number = node.next.vertex[1];
+				if ( (y > v0y && y < v1y) || (y > v1y && y < v0y)  )
+				{
+					var v0x:Number = node.vertex[0];
+					var v1x:Number = node.next.vertex[0];
+					
+					var isUp:Boolean = v1y < y;
+					if ( isUp )
+					{
+						//wn += isLeft( v0x, v0y, v1x, v1y, x, y ) ? 1 : 0;
+						// Inline version of above
+						wn += ((v1x - v0x) * (y - v0y) - (v1y - v0y) * (x - v0x)) < 0 ? 1 : 0
+					}
+					else
+					{
+						//wn += isLeft( v0x, v0y, v1x, v1y, x, y ) ? 0 : -1
+						// Inline version of above
+						wn += ((v1x - v0x) * (y - v0y) - (v1y - v0y) * (x - v0x)) < 0 ? 0 : -1;
+					}
+				}
+				
+				node = node.next;
+			}
+			while ( node != vertexList.head )
+			return wn;
+		}
+		
 		private static function windingNumber( vertexList:VertexList ):int
 		{
 			var wn:int = 0;
@@ -386,7 +435,7 @@ package starling.display.graphics
 		
 		private static function isLeft(v0x:Number, v0y:Number, v1x:Number, v1y:Number, px:Number, py:Number):Boolean
 		{
-			return ((v1x - v0x) * (py - v0y) - (px - v0x) * (v1y - v0y)) < 0;
+			return ((v1x - v0x) * (py - v0y) - (v1y - v0y) * (px - v0x)) < 0;
 		}
 		
 		private static function isPointInTriangle(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
@@ -439,14 +488,14 @@ package starling.display.graphics
 			var vertexB:Vector.<Number> = a1.vertex;
 			
 			return Vector.<Number>( [ 	vertexA[0] + t * (vertexB[0] - vertexA[0]),
-										vertexA[1] + t * (vertexB[1] - vertexA[1]),
-										0,
-										vertexA[3] + t * (vertexB[3] - vertexA[3]),
-										vertexA[4] + t * (vertexB[4] - vertexA[4]),
-										vertexA[5] + t * (vertexB[5] - vertexA[5]),
-										vertexA[6] + t * (vertexB[6] - vertexA[6]),
-										vertexA[7] + t * (vertexB[7] - vertexA[7]),
-										vertexA[8] + t * (vertexB[8] - vertexA[8]) ] );
+				vertexA[1] + t * (vertexB[1] - vertexA[1]),
+				0,
+				vertexA[3] + t * (vertexB[3] - vertexA[3]),
+				vertexA[4] + t * (vertexB[4] - vertexA[4]),
+				vertexA[5] + t * (vertexB[5] - vertexA[5]),
+				vertexA[6] + t * (vertexB[6] - vertexA[6]),
+				vertexA[7] + t * (vertexB[7] - vertexA[7]),
+				vertexA[8] + t * (vertexB[8] - vertexA[8]) ] );
 		}
 	}
 }
