@@ -155,7 +155,7 @@ package
 			shape.x = 100;
 			shape.y = 400;
 			
-			shape.graphics.beginBitmapFill(new CheckerBMP(), m);
+			shape.graphics.beginBitmapFill(new CheckerBMP().bitmapData, m);
 			shape.graphics.lineStyle(2, 0xFF0000, 0.5);
 			shape.graphics.moveTo(left, top);
 			shape.graphics.lineTo(right, bottom);
@@ -173,7 +173,7 @@ package
 			
 			m = new Matrix();
 			m.translate(-25, -25);
-			shape.graphics.beginBitmapFill(new MarbleBMP(), m, false);
+			shape.graphics.beginBitmapFill(new MarbleBMP().bitmapData, m);
 			shape.graphics.lineStyle(2, 0xFF0000, strokeAlpha);
 			shape.graphics.drawCircle(0, 0, 25);
 			shape.graphics.endFill();

@@ -1,22 +1,19 @@
 package starling.display
 {
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-	
-	import starling.core.RenderSupport;
+	import starling.display.Graphics;
 	
 	public class Shape extends DisplayObjectContainer
 	{
-		public var graphics			:Graphics;
+		private var _graphics :Graphics;
 		
-		public function Shape( showProfiling:Boolean = false )
+		public function Shape()
 		{
-			graphics = new Graphics(this, showProfiling);
+			_graphics = new Graphics(this);
 		}
 		
-		override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
-        {
-            return new Rectangle();
-        }
+		public function get graphics():Graphics
+		{
+			return _graphics;
+		}
 	}
 }

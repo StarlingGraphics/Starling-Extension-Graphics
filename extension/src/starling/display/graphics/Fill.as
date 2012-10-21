@@ -14,8 +14,9 @@ package starling.display.graphics
 	{
 		public static const VERTEX_STRIDE	:int = 9;
 		
-		protected var vertices		:VertexList;
-		protected var _uvMatrix		:Matrix;
+		private var vertices		:VertexList;
+		private var _numVertices	:int;
+		private var _uvMatrix		:Matrix;
 		
 		public var showProfiling	:Boolean;
 		
@@ -26,6 +27,11 @@ package starling.display.graphics
 			clear();
 		}
 		
+		public function get numVertices():int
+		{
+			return _numVertices;
+		}
+
 		public function clear():void
 		{
 			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 

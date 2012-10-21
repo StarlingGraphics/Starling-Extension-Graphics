@@ -8,14 +8,20 @@ package starling.display.graphics
 	{
 		public static const VERTEX_STRIDE	:int = 9;
 		
-		protected var vertices	:Vector.<StrokeVertex>;
-		protected var _closed 	:Boolean = false;
+		private var vertices	:Vector.<StrokeVertex>;
+		private var _numVertices:int;
+		private var _closed 	:Boolean = false;
 		
 		public function Stroke()
 		{
 			clear();
 		}
 		
+		public function get numVertices():int
+		{
+			return _numVertices;
+		}
+
 		public function clear():void
 		{
 			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 

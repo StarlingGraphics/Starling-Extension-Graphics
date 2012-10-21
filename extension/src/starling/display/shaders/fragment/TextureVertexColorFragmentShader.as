@@ -6,6 +6,9 @@ package starling.display.shaders.fragment
 	
 	import starling.display.shaders.AbstractShader;
 	
+	/*
+	* A pixel shader that multiplies a single texture with constants (the color transform) and vertex color
+	*/
 	public class TextureVertexColorFragmentShader extends AbstractShader
 	{
 		public function TextureVertexColorFragmentShader()

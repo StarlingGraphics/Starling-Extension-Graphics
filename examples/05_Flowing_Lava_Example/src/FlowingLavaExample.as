@@ -12,6 +12,8 @@ package
 	import starling.display.Image;
 	import starling.display.Shape;
 	import starling.display.Sprite;
+	import starling.display.materials.StandardMaterial;
+	import starling.display.shaders.fragment.TextureFragmentShader;
 	import starling.display.shaders.vertex.AnimateUVVertexShader;
 	import starling.events.Event;
 	import starling.textures.Texture;
@@ -49,11 +51,11 @@ package
 			var shape:Shape = new Shape();
 			addChild(shape);
 			
-			var shader:AnimateUVVertexShader = new AnimateUVVertexShader();
-			shader.uSpeed = 0.1;
-			shader.vSpeed = 0.0;
-			var lavaTexture:Texture = Texture.fromBitmap( new LavaTiledBMP(), false );
-			shape.graphics.lineTexture( lavaThickness, lavaTexture, shader );
+			var lavaMaterial:StandardMaterial = new StandardMaterial(  );
+			lavaMaterial.vertexShader = new AnimateUVVertexShader( 0.1, 0 );
+			lavaMaterial.fragmentShader = new TextureFragmentShader();
+			lavaMaterial.textures[0] = Texture.fromBitmap( new LavaTiledBMP(), false );
+			shape.graphics.lineMaterial( lavaThickness, lavaMaterial );
 			shape.graphics.moveTo( 150, 0 );
 			shape.graphics.curveTo( 500, 100, 500, 300 );
 			shape.graphics.curveTo( 500, 500, 700, 650 );

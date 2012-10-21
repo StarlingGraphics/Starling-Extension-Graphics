@@ -4,6 +4,9 @@ package starling.display.shaders.fragment
 	
 	import starling.display.shaders.AbstractShader;
 	
+	/*
+	* A pixel shader that multiplies the vertex color by the material color transform.
+	*/
 	public class VertexColorFragmentShader extends AbstractShader
 	{
 		public function VertexColorFragmentShader()

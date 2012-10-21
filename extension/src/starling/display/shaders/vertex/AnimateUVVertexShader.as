@@ -11,8 +11,11 @@ package starling.display.shaders.vertex
 		public var uSpeed	:Number = 1;
 		public var vSpeed	:Number = 1;
 		
-		public function AnimateUVVertexShader()
+		public function AnimateUVVertexShader( uSpeed:Number = 1, vSpeed:Number = 1 )
 		{
+			this.uSpeed = uSpeed;
+			this.vSpeed = vSpeed;
+			
 			var agal:String =
 				"m44 op, va0, vc0 \n" +			// Apply matrix
 				"mov v0, va1 \n" +				// Copy color to v0

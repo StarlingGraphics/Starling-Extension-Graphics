@@ -23,7 +23,7 @@ package
 		
 		private function onAdded ( e:Event ):void
 		{
-			shape = new Shape(true);
+			shape = new Shape();
 			addChild(shape);
 			
 			checkerBMP = new CheckerBMP();
@@ -36,7 +36,7 @@ package
 		{
 			shape.graphics.clear();
 			
-			shape.graphics.beginBitmapFill( checkerBMP );
+			shape.graphics.beginBitmapFill( checkerBMP.bitmapData );
 			for ( var i:int = 0; i < 3 * 100; i++ )
 			{
 				shape.graphics.lineTo( Math.random() * Starling.current.nativeStage.stageWidth, Math.random() * Starling.current.nativeStage.stageHeight );

@@ -6,11 +6,11 @@ package starling.display.graphics
 	
 	public class TriangleFan extends Graphic
 	{
-		public static const VERTEX_STRIDE	:int = 9;
+		private static const VERTEX_STRIDE	:int = 9;
 		
-		protected var vertices		:Vector.<Number>;
-		protected var indices		:Vector.<uint>;
-		protected var _closed 		:Boolean = false;
+		private var vertices		:Vector.<Number>;
+		private var _numVertices	:int;
+		private var indices			:Vector.<uint>;
 		
 		public function TriangleFan()
 		{

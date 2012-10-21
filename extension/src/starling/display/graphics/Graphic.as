@@ -1,7 +1,6 @@
 package starling.display.graphics
 {
 	import flash.display3D.Context3D;
-	import flash.display3D.Context3DBlendFactor;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix;
@@ -14,11 +13,9 @@ package starling.display.graphics
 	import starling.display.DisplayObject;
 	import starling.display.materials.IMaterial;
 	import starling.display.materials.StandardMaterial;
-	import starling.display.shaders.fragment.TextureVertexColorFragmentShader;
 	import starling.display.shaders.fragment.VertexColorFragmentShader;
 	import starling.display.shaders.vertex.StandardVertexShader;
 	import starling.errors.MissingContextError;
-	import starling.textures.Texture;
 	
 	/**
 	 * Abstract, do not instantiate directly
@@ -33,8 +30,6 @@ package starling.display.graphics
 		protected var _material		:IMaterial;
 		protected var vertexBuffer	:VertexBuffer3D;
 		protected var indexBuffer	:IndexBuffer3D;
-		
-		protected var _numVertices	:int;
 		
 		// Filled-out with min/max vertex positions
 		// during addVertex(). Used during getBounds().
@@ -80,20 +75,9 @@ package starling.display.graphics
 			return _material;
 		}
 		
-		public function get numVertices():int
-		{
-			return _numVertices;
-		}
-		
 		override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
 		{
 			if (resultRect == null) resultRect = new Rectangle();
-			
-			if ( _numVertices == 0 )
-			{
-				resultRect.x = resultRect.y = resultRect.width = resultRect.height = 0;
-				return resultRect;
-			}
 			
 			if (targetSpace == this) // optimization
 			{
@@ -116,7 +100,7 @@ package starling.display.graphics
 			return resultRect;
 		}
 		
-		override public function render( renderSupport:RenderSupport, alpha:Number ):void
+		override public function render( renderSupport:RenderSupport, parentAlpha:Number ):void
 		{
 			// always call this method when you write custom rendering code!
 			// it causes all previously batched quads/images to render.
@@ -126,8 +110,7 @@ package starling.display.graphics
 			if (context == null) throw new MissingContextError();
 			
 			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-			_material.alpha = alpha;
-			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer );
+			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha );
 			
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);
