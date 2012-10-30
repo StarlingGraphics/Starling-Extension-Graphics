@@ -19,7 +19,7 @@ package starling.display.graphics
 		
 		private var isInvalid		:Boolean;
 		
-		public function Plane( width:Number = 1, height:Number = 1, numVerticesX:uint = 2, numVerticesY:uint = 2 )
+		public function Plane( width:Number = 100, height:Number = 100, numVerticesX:uint = 2, numVerticesY:uint = 2 )
 		{
 			_width = width;
 			_height = height;
