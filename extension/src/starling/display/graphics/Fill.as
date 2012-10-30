@@ -151,7 +151,7 @@ package starling.display.graphics
 			super.render( renderSupport, alpha );
 		}
 		
-		public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
+		override public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
 		{
 			var pt:Point = globalToLocal(new Point(stageX,stageY));
 			var direction:int = windingNumber(vertices);

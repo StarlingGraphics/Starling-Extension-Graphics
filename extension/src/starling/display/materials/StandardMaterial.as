@@ -35,6 +35,15 @@ package starling.display.materials
 			color = 0xFFFFFF;
 		}
 		
+		public function dispose():void
+		{
+			if ( program )
+			{
+				Program3DCache.releaseProgram3D(program);
+				program = null;
+			}
+		}
+		
 		public function set textures( value:Vector.<Texture> ):void
 		{
 			_textures = value;
@@ -50,7 +59,7 @@ package starling.display.materials
 			_vertexShader = value;
 			if ( program )
 			{
-				program.dispose();
+				Program3DCache.releaseProgram3D(program);
 				program = null;
 			}
 		}
@@ -65,7 +74,7 @@ package starling.display.materials
 			_fragmentShader = value;
 			if ( program )
 			{
-				program.dispose();
+				Program3DCache.releaseProgram3D(program);
 				program = null;
 			}
 		}
@@ -108,8 +117,7 @@ package starling.display.materials
 			
 			if ( program == null && _vertexShader && _fragmentShader )
 			{
-				program = context.createProgram();
-				program.upload( _vertexShader.opCode, _fragmentShader.opCode );
+				program = Program3DCache.getProgram3D(context, _vertexShader, _fragmentShader);
 			}
 			context.setProgram(program);
 			

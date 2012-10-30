@@ -7,11 +7,15 @@ package starling.display
 	import starling.display.graphics.Fill;
 	import starling.display.graphics.Stroke;
 	import starling.display.materials.IMaterial;
+	import starling.display.shaders.fragment.TextureFragmentShader;
 	import starling.display.shaders.fragment.TextureVertexColorFragmentShader;
 	import starling.textures.Texture;
 
 	public class Graphics
 	{
+		// Shared texture fragment shader used across all graphics drawn via graphics API.
+		private static var textureFragmentShader	:TextureFragmentShader = new TextureFragmentShader();
+		
 		private var _currentX				:Number;
 		private var _currentY				:Number;
 		private var _currentStroke			:Stroke;
@@ -59,7 +63,7 @@ package starling.display
 			_fillAlpha = 1;
 			
 			_currentFill = new Fill();
-			_currentFill.material.fragmentShader = new TextureVertexColorFragmentShader();
+			_currentFill.material.fragmentShader = textureFragmentShader;
 			_currentFill.material.textures[0] = Texture.fromBitmapData( bitmap, false );
 			
 			if ( uvMatrix )
@@ -76,7 +80,7 @@ package starling.display
 			_fillAlpha = 1;
 			
 			_currentFill = new Fill();
-			_currentFill.material.fragmentShader = new TextureVertexColorFragmentShader();
+			_currentFill.material.fragmentShader = textureFragmentShader;
 			_currentFill.material.textures[0] = texture;
 			
 			if ( uvMatrix ) {
@@ -185,7 +189,7 @@ package starling.display
 			{
 				beginMaterialStroke();
 			}
-			else 
+			else if ( _strokeThickness > 0 )
 			{  	
 				beginStroke();
 			}
@@ -328,7 +332,7 @@ package starling.display
 			}
 			
 			_currentStroke = new Stroke();
-			_currentStroke.material.fragmentShader = new TextureVertexColorFragmentShader();
+			_currentStroke.material.fragmentShader = textureFragmentShader;
 			_currentStroke.material.textures[0] = _strokeTexture;
 			_container.addChild(_currentStroke);
 		}

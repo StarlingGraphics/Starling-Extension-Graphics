@@ -63,6 +63,12 @@ package starling.display.graphics
 				indexBuffer.dispose();
 				indexBuffer = null;
 			}
+			
+			if ( material )
+			{
+				material.dispose();
+				material = null;
+			}
 		}
 		
 		public function set material( value:IMaterial ):void
@@ -73,6 +79,12 @@ package starling.display.graphics
 		public function get material():IMaterial
 		{
 			return _material;
+		}
+		
+		public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
+		{
+			var pt:Point = globalToLocal(new Point(stageX,stageY));
+			return pt.x >= minBounds.x && pt.x <= maxBounds.x && pt.y >= minBounds.y && pt.y <= maxBounds.y;
 		}
 		
 		override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
