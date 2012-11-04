@@ -19,6 +19,7 @@ package starling.display.graphics
 		private var _numVerticesX	:uint;
 		private var _numVerticesY	:uint;
 		private var _uvMatrix		:Matrix;
+		private var _vertexFunction	:Function;
 		
 		private var isInvalid		:Boolean;
 		
@@ -28,7 +29,48 @@ package starling.display.graphics
 			_height = height;
 			_numVerticesX = numVerticesX;
 			_numVerticesY = numVerticesY;
+			_vertexFunction = defaultVertexFunction;
 			isInvalid = true;
+		}
+		
+		public static function defaultVertexFunction( column:int, row:int, width:Number, height:Number, numVerticesX:int, numVerticesY:int, output:Vector.<Number>, uvMatrix:Matrix = null ):void
+		{
+			var segmentWidth:Number = width / (numVerticesX-1);
+			var segmentHeight:Number = height / (numVerticesY-1);
+			
+			var x:Number = segmentWidth * column;
+			var y:Number = segmentHeight * row;
+			
+			var uv:Point = new Point();
+			if ( uvMatrix )
+			{
+				uv.x = x;
+				uv.y = y;
+				uv = uvMatrix.transformPoint(uv);
+			}
+			else
+			{
+				uv.x = column / (numVerticesX-1);
+				uv.y = row / (numVerticesY-1);
+			}
+			
+			output.push( x,y,0,1,1,1,1,uv.x,uv.y );
+		}
+		
+		public function set vertexFunction( value:Function ):void
+		{
+			if ( value == null )
+			{
+				throw( new Error( "Value must not be null" ) );
+				return;
+			}
+			_vertexFunction = value;
+			isInvalid = true;
+		}
+		
+		public function get vertexFunction():Function
+		{
+			return _vertexFunction
 		}
 		
 		public function get uvMatrix():Matrix
@@ -53,38 +95,27 @@ package starling.display.graphics
 			// Generate vertices
 			var numVertices:int = _numVerticesX * _numVerticesY;
 			vertices = new Vector.<Number>();
-			var segmentWidth:Number = _width / (_numVerticesX-1);
-			var segmentHeight:Number = _height / (_numVerticesY-1);
-			var halfWidth:Number = _width * 0.5;
-			var halfHeight:Number = _height * 0.5;
-			var uv:Point = new Point();
 			for ( var i:int = 0; i < numVertices; i++ )
 			{
 				var column:int = i % _numVerticesX;
 				var row:int = i / _numVerticesX;
-				var x:Number = segmentWidth * column;
-				var y:Number = segmentHeight * row;
-				if ( _uvMatrix )
-				{
-					uv.x = x;
-					uv.y = y;
-					uv = _uvMatrix.transformPoint(uv);
-				}
-				else
-				{
-					uv.x = column / (_numVerticesX-1);
-					uv.y = row / (_numVerticesY-1);
-				}
-				
-				vertices.push( x, y, 0, 1, 1, 1, 1, uv.x, uv.y );
+				_vertexFunction( column, row, _width, _height, _numVerticesX, _numVerticesY, vertices, _uvMatrix );
 			}
 			
 			// Generate indices
 			indices = new Vector.<uint>();
-			var numQuads:int = (_numVerticesX-1) * (_numVerticesY-1);
-			for ( i = 0; i < numQuads; i++ )
-			{
-				indices.push( i, i+1, i+_numVerticesX+1, i+_numVerticesX+1, i+_numVerticesX, i );
+			var qn:int = 0; //quad number
+			for (var n:int = 0; n <_numVerticesX-1; n++) //create quads out of the vertices
+			{               
+				for (var m:int = 0; m <_numVerticesY - 1; m++)
+				{
+					
+					indices.push(qn, qn + 1, qn + _numVerticesX ); //upper face
+					indices.push(qn + _numVerticesX, qn + _numVerticesX  + 1, qn+1); //lower face
+					
+					qn++; //jumps to next quad
+				}
+				qn++; // jumps to next row
 			}
 			
 			// Upload vertex/index buffers.
