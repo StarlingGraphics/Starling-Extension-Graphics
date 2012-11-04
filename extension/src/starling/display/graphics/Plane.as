@@ -1,5 +1,7 @@
 package starling.display.graphics
 {
+	import flash.geom.Matrix;
+	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	
 	import starling.core.RenderSupport;
@@ -16,6 +18,7 @@ package starling.display.graphics
 		private var _height			:Number;
 		private var _numVerticesX	:uint;
 		private var _numVerticesY	:uint;
+		private var _uvMatrix		:Matrix;
 		
 		private var isInvalid		:Boolean;
 		
@@ -28,6 +31,17 @@ package starling.display.graphics
 			isInvalid = true;
 		}
 		
+		public function get uvMatrix():Matrix
+		{
+			return _uvMatrix;
+		}
+
+		public function set uvMatrix(value:Matrix):void
+		{
+			_uvMatrix = value;
+			isInvalid = true;
+		}
+
 		public function validate():void
 		{
 			if ( vertexBuffer )
@@ -43,15 +57,26 @@ package starling.display.graphics
 			var segmentHeight:Number = _height / (_numVerticesY-1);
 			var halfWidth:Number = _width * 0.5;
 			var halfHeight:Number = _height * 0.5;
+			var uv:Point = new Point();
 			for ( var i:int = 0; i < numVertices; i++ )
 			{
 				var column:int = i % _numVerticesX;
 				var row:int = i / _numVerticesX;
-				var u:Number = column / (_numVerticesX-1);
-				var v:Number = row / (_numVerticesY-1);
 				var x:Number = segmentWidth * column;
 				var y:Number = segmentHeight * row;
-				vertices.push( x, y, 0, 1, 1, 1, 1, u, v );
+				if ( _uvMatrix )
+				{
+					uv.x = x;
+					uv.y = y;
+					uv = _uvMatrix.transformPoint(uv);
+				}
+				else
+				{
+					uv.x = column / (_numVerticesX-1);
+					uv.y = row / (_numVerticesY-1);
+				}
+				
+				vertices.push( x, y, 0, 1, 1, 1, 1, uv.x, uv.y );
 			}
 			
 			// Generate indices
