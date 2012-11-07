@@ -56,7 +56,8 @@ package
 			var m:Matrix = new Matrix();
 			m.createGradientBox( 1, 4, Math.PI*0.5 );
 			var skyGradientTexture:Texture = GradientTexture.create( 2, 4, GradientType.LINEAR, [ 0x8ac9d2, 0xf4a886, 0xfec28c ], [1, 1, 1], [0, 128, 255], m );
-			skyFill.uvMatrix.scale( w / skyGradientTexture.width, h / skyGradientTexture.height );
+			skyFill.uvMatrix = new Matrix();
+			skyFill.uvMatrix.scale( 1 / w, 1 / h );
 			skyFill.material.fragmentShader = new TextureVertexColorFragmentShader();
 			skyFill.material.textures[0] = skyGradientTexture;
 			skyFill.addVertex( 0, 0 );

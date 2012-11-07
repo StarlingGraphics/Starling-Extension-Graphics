@@ -48,6 +48,9 @@ package
 			var strokeAlpha:Number = 1;
 			var strokeThickness:int = 3;
 			
+			var rockTexture:Texture = Texture.fromBitmap( new RockBMP(), false );
+			var grassTexture:Texture = Texture.fromBitmap( new GrassBMP(), false );
+			var checkerTexture:Texture = Texture.fromBitmap( new CheckerBMP(), false );
 			
 			// Rect drawn with drawRect()
 			var shape:Shape = new Shape();
@@ -61,6 +64,7 @@ package
 			shape.graphics.drawRect(top, left, right, bottom);
 			shape.graphics.endFill();
 			
+			var m:Matrix = new Matrix();
 			
 			// Rect drawn with lineTo()
 			shape = new Shape();
@@ -111,7 +115,11 @@ package
 			shape.x = 500;
 			shape.y = 100;
 			
-			shape.graphics.beginFill(fillColor, 0.2);
+			m.identity();
+			m.translate(1,5);
+			m.scale(2,2);
+			m.rotate(25)
+			shape.graphics.beginTextureFill(checkerTexture,m);
 			shape.graphics.lineStyle(2, 0xFF0000, 0.5);
 			shape.graphics.moveTo(left, top);
 			shape.graphics.lineTo(right, bottom);
@@ -149,8 +157,7 @@ package
 			shape = new Shape();
 			addChild(shape);
 			
-			var m:Matrix = new Matrix();
-			m.translate(0, 0);
+			
 			
 			shape.x = 100;
 			shape.y = 400;
@@ -182,17 +189,10 @@ package
 			// Rect drawn with textured fill and stroke
 			shape = new Shape();
 			addChild(shape);
-			
-			m = new Matrix();
-			m.translate(0, 0);
-			
 			shape.x = 500;
 			shape.y = 400;
 			
-			var rockTexture:Texture = Texture.fromBitmap( new RockBMP(), false );
-			var grassTexture:Texture = Texture.fromBitmap( new GrassBMP(), false );
-			
-			shape.graphics.beginTextureFill(rockTexture, m);
+			shape.graphics.beginTextureFill(rockTexture);
 			shape.graphics.lineTexture(20, grassTexture);
 			shape.graphics.drawRect(top, left, right, bottom);
 			shape.graphics.endFill();

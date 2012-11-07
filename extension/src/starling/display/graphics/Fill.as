@@ -22,7 +22,6 @@ package starling.display.graphics
 		
 		public function Fill( showProfiling:Boolean = false )
 		{
-			_uvMatrix = new Matrix();
 			this.showProfiling = showProfiling;
 			clear();
 		}
@@ -47,6 +46,11 @@ package starling.display.graphics
 			clear();
 		}
 		
+		/**
+		 * Matrix to convert vertex x/y position into u/v.
+		 * If null, will default to u=x/256, v=y/256 
+		 * @param value
+		 */		
 		public function set uvMatrix( value:Matrix ):void
 		{
 			_uvMatrix = value;
@@ -72,16 +76,14 @@ package starling.display.graphics
 			}
 			
 			var textureCoordinate:Point = new Point(x, y)
-			
-			var textures:Vector.<Texture> = _material.textures;
-			if ( textures.length > 0 )
+			if ( _uvMatrix )
 			{				
-				var invert:Matrix = _uvMatrix.clone();
-				invert.invert();
-				textureCoordinate = invert.transformPoint(textureCoordinate);
-				
-				textureCoordinate.x /= textures[0].width;
-				textureCoordinate.y /= textures[0].height;				
+				textureCoordinate = _uvMatrix.transformPoint(textureCoordinate);			
+			}
+			else
+			{
+				textureCoordinate.x /= 256;
+				textureCoordinate.y /= 256;
 			}
 			
 			var r:Number = (color >> 16) / 255;

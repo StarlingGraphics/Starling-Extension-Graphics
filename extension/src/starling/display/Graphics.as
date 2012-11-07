@@ -73,12 +73,21 @@ package starling.display
 			
 			_currentFill = new Fill();
 			_currentFill.material.fragmentShader = textureFragmentShader;
-			_currentFill.material.textures[0] = Texture.fromBitmapData( bitmap, false );
+			var texture:Texture = Texture.fromBitmapData( bitmap, false );
+			_currentFill.material.textures[0] = texture;
 			
+			var m:Matrix;
 			if ( uvMatrix )
 			{
-				_currentFill.uvMatrix = uvMatrix;
+				m = uvMatrix.clone();
+				m.invert();
 			}
+			else
+			{
+				m = new Matrix();
+			}
+			m.scale(1/texture.width, 1/texture.height);
+			_currentFill.uvMatrix = m;
 			
 			_container.addChild(_currentFill);
 		}
@@ -92,9 +101,18 @@ package starling.display
 			_currentFill.material.fragmentShader = textureFragmentShader;
 			_currentFill.material.textures[0] = texture;
 			
-			if ( uvMatrix ) {
-				_currentFill.uvMatrix = uvMatrix;
+			var m:Matrix;
+			if ( uvMatrix )
+			{
+				m = uvMatrix.clone();
+				m.invert();
 			}
+			else
+			{
+				m = new Matrix();
+			}
+			m.scale(1/texture.width, 1/texture.height);
+			_currentFill.uvMatrix = m;
 			
 			_container.addChild(_currentFill);
 		}
@@ -107,9 +125,22 @@ package starling.display
 			_currentFill = new Fill();
 			_currentFill.material = material;
 			
-			if ( uvMatrix ) {
-				_currentFill.uvMatrix = uvMatrix;
+			var m:Matrix;
+			if ( uvMatrix )
+			{
+				m = uvMatrix.clone();
+				m.invert();
 			}
+			else
+			{
+				m = new Matrix();
+			}
+			if ( material.textures.length > 0 )
+			{
+				m.scale(1/material.textures[0].width, 1/material.textures[0].height);
+			}
+			
+			_currentFill.uvMatrix = m;
 			
 			_container.addChild(_currentFill);
 		}
@@ -200,13 +231,7 @@ package starling.display
 				var plane:Plane = new Plane(width, height);
 				plane.material = _currentFill.material;
 				
-				var uvMatrix:Matrix = _currentFill.uvMatrix.clone();
-				uvMatrix.invert();
-				if ( plane.material.textures.length > 0 )
-				{
-					uvMatrix.scale( 1/_currentFill.material.textures[0].width, 1/_currentFill.material.textures[0].height );
-				}
-				plane.uvMatrix = uvMatrix;
+				plane.uvMatrix = _currentFill.uvMatrix.clone();
 				plane.x = x;
 				plane.y = y;
 				_container.addChild(plane);
