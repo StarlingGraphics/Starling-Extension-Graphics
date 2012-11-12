@@ -175,15 +175,17 @@ package starling.display
 				nGon.y = y;
 				nGon.scaleY = height/width;
 				nGon.material = _currentFill.material;
-				
-				var uvMatrix:Matrix = _currentFill.uvMatrix.clone();
-				uvMatrix.invert();
-				if ( nGon.material.textures.length > 0 )
+				nGon.color = _fillColor;
+				nGon.alpha = _fillAlpha;
+				var uvMatrix:Matrix = _currentFill.uvMatrix ? _currentFill.uvMatrix.clone() : new Matrix();
+				if ( _currentFill.material.textures.length > 0 )
 				{
-					uvMatrix.scale( 1/_currentFill.material.textures[0].width, (1/_currentFill.material.textures[0].height) * nGon.scaleY );
-					//uvMatrix.translate( -
+					var temp:Matrix = new Matrix(_currentFill.material.textures[0].width, 0, 0, _currentFill.material.textures[0].height)
+					temp.concat(uvMatrix);
+					uvMatrix = temp;
 				}
 				nGon.uvMatrix = uvMatrix;
+				
 				_container.addChild(nGon);
 				_currentFill = null;
 			}
@@ -231,7 +233,10 @@ package starling.display
 				var plane:Plane = new Plane(width, height);
 				plane.material = _currentFill.material;
 				
-				plane.uvMatrix = _currentFill.uvMatrix.clone();
+				if ( _currentFill.uvMatrix )
+				{
+					plane.uvMatrix = _currentFill.uvMatrix.clone();
+				}
 				plane.x = x;
 				plane.y = y;
 				_container.addChild(plane);

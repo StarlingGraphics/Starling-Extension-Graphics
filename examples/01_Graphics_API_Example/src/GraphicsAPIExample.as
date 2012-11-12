@@ -178,11 +178,9 @@ package
 			shape.x = 350;
 			shape.y = 450;
 			
-			m = new Matrix();
-			m.translate(-25, -25);
-			shape.graphics.beginBitmapFill(new MarbleBMP().bitmapData, m);
-			shape.graphics.lineStyle(2, 0xFF0000, strokeAlpha);
-			shape.graphics.drawCircle(0, 0, 25);
+			shape.graphics.beginBitmapFill(new MarbleBMP().bitmapData);
+			shape.graphics.lineStyle(2, 0x0000FF, strokeAlpha);
+			shape.graphics.drawCircle(0, 0, 32);
 			shape.graphics.endFill();
 			
 			

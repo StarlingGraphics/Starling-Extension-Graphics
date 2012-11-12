@@ -1,3 +1,5 @@
+Re-use two materials, one for texture, one for flat fills.
+
 NGon
 	Add shapeHittest()
 	Calculate more accurate bounds
