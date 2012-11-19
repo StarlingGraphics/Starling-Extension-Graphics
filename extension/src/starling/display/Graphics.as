@@ -202,15 +202,15 @@ package starling.display
 				
 				for ( var i:int = 0; i <= numSides; i++ )
 				{
-					var x:Number = s * width;
-					var y:Number = -c * height;
+					var sx:Number = s * width + x;
+					var sy:Number = -c * height + y;
 					if ( i == 0 )
 					{
-						moveTo(x,y);
+						moveTo(sx,sy);
 					}
 					else
 					{
-						lineTo(x,y);
+						lineTo(sx,sy);
 					}
 					
 					const ns:Number = b*c + a*s;
