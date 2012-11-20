@@ -1,18 +1,9 @@
 package
 {
-	import flash.display.Bitmap;
-	import flash.display.GradientType;
-	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
-	import flash.geom.Point;
 	
 	import starling.display.Shape;
 	import starling.display.Sprite;
-	import starling.display.graphics.Fill;
-	import starling.display.graphics.Stroke;
-	import starling.display.materials.StandardMaterial;
-	import starling.display.shaders.fragment.TextureVertexColorFragmentShader;
-	import starling.display.shaders.vertex.StandardVertexShader;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
