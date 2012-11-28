@@ -59,6 +59,8 @@ package starling.display
 			_fillAlpha = alpha;
 			
 			_currentFill = new Fill();
+			_currentFill.material.color = color;
+			_currentFill.material.alpha = 1;
 			_container.addChild(_currentFill);
 		}
 		
@@ -294,12 +296,12 @@ package starling.display
 			
 			if ( _currentStroke )
 			{
-				_currentStroke.addVertex( x, y, _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor, _strokeAlpha );
+				_currentStroke.addVertex( x, y, _strokeThickness );
 			}
 			
 			if (_currentFill) 
 			{
-				_currentFill.addVertex(x, y, _fillColor, _fillAlpha );
+				_currentFill.addVertex( x, y );
 			}
 			
 			_currentX = x;
@@ -331,12 +333,12 @@ package starling.display
 			
 			if ( _currentStroke )
 			{
-				_currentStroke.addVertex( x, y, _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor, _strokeAlpha );
+				_currentStroke.addVertex( x, y, _strokeThickness );
 			}
 			
 			if (_currentFill) 
 			{
-				_currentFill.addVertex(x, y, _fillColor, _fillAlpha );
+				_currentFill.addVertex( x, y );
 			}
 			_currentX = x;
 			_currentY = y;
@@ -418,6 +420,8 @@ package starling.display
 			}
 			
 			_currentStroke = new Stroke();
+			_currentStroke.material.color = _strokeColor;
+			_currentStroke.material.alpha = _strokeAlpha;
 			_container.addChild(_currentStroke);
 		}
 		
@@ -430,6 +434,8 @@ package starling.display
 			_currentStroke = new Stroke();
 			_currentStroke.material.fragmentShader = textureFragmentShader;
 			_currentStroke.material.textures[0] = _strokeTexture;
+			_currentStroke.material.color = _strokeColor;
+			_currentStroke.material.alpha = _strokeAlpha;
 			_container.addChild(_currentStroke);
 		}
 		
