@@ -177,7 +177,7 @@ package starling.display
 				nGon.y = y;
 				nGon.scaleY = height/width;
 				nGon.material = _currentFill.material;
-				nGon.color = _fillColor;
+				nGon.material.color = _fillColor;
 				nGon.alpha = _fillAlpha;
 				var uvMatrix:Matrix = _currentFill.uvMatrix ? _currentFill.uvMatrix.clone() : new Matrix();
 				if ( _currentFill.material.textures.length > 0 )
