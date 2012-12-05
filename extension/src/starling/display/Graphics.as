@@ -60,7 +60,7 @@ package starling.display
 			
 			_currentFill = new Fill();
 			_currentFill.material.color = color;
-			_currentFill.material.alpha = 1;
+			_currentFill.material.alpha = alpha;
 			_container.addChild(_currentFill);
 		}
 		
@@ -167,6 +167,7 @@ package starling.display
 		{
 			// Pretty crude, but works.
 			var numSides:int = Math.sqrt(width*width+height*height) * 0.5;
+			numSides = Math.max(numSides, 10);
 			
 			// Use an NGon primitive instead of fill to bypass triangulation.
 			var cachedFill:Fill = _currentFill;
