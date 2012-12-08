@@ -14,16 +14,15 @@ package starling.display.graphics
 	{
 		public static const VERTEX_STRIDE	:int = 9;
 		
-		private var vertices		:VertexList;
+		private var fillVertices	:VertexList;
 		private var _numVertices	:int;
-		private var _uvMatrix		:Matrix;
 		
-		public var showProfiling	:Boolean;
-		
-		public function Fill( showProfiling:Boolean = false )
+		public function Fill()
 		{
-			this.showProfiling = showProfiling;
 			clear();
+			
+			_uvMatrix = new Matrix();
+			_uvMatrix.scale(1/256, 1/256);
 		}
 		
 		public function get numVertices():int
@@ -36,8 +35,9 @@ package starling.display.graphics
 			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
 			maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
 			_numVertices = 0;
-			VertexList.dispose(vertices);
-			vertices = null;
+			VertexList.dispose(fillVertices);
+			fillVertices = null;
+			isInvalid = true;
 		}
 		
 		override public function dispose():void
@@ -46,61 +46,23 @@ package starling.display.graphics
 			clear();
 		}
 		
-		/**
-		 * Matrix to convert vertex x/y position into u/v.
-		 * If null, will default to u=x/256, v=y/256 
-		 * @param value
-		 */		
-		public function set uvMatrix( value:Matrix ):void
-		{
-			_uvMatrix = value;
-		}
-		
-		public function get uvMatrix():Matrix
-		{
-			return _uvMatrix;
-		}
-		
 		public function addVertex( x:Number, y:Number, color:uint = 0xFFFFFF, alpha:Number = 1 ):void
 		{
-			if ( vertexBuffer )
-			{
-				vertexBuffer.dispose();
-				vertexBuffer = null;
-			}
-			
-			if ( indexBuffer )
-			{
-				indexBuffer.dispose();
-				indexBuffer = null;
-			}
-			
-			var textureCoordinate:Point = new Point(x, y)
-			if ( _uvMatrix )
-			{				
-				textureCoordinate = _uvMatrix.transformPoint(textureCoordinate);			
-			}
-			else
-			{
-				textureCoordinate.x /= 256;
-				textureCoordinate.y /= 256;
-			}
-			
 			var r:Number = (color >> 16) / 255;
 			var g:Number = ((color & 0x00FF00) >> 8) / 255;
 			var b:Number = (color & 0x0000FF) / 255;
 			
-			var vertex:Vector.<Number> = Vector.<Number>( [ x, y, 0, r, g, b, alpha, textureCoordinate.x, textureCoordinate.y ]);
+			var vertex:Vector.<Number> = Vector.<Number>( [ x, y, 0, r, g, b, alpha, x, y ]);
 			var node:VertexList = VertexList.getNode();
 			if ( _numVertices == 0 )
 			{
-				vertices = node;
+				fillVertices = node;
 				node.head = node;
 				node.prev = node;
 			}
 			
-			node.next = vertices.head;
-			node.prev = vertices.head.prev;
+			node.next = fillVertices.head;
+			node.prev = fillVertices.head.prev;
 			node.prev.next = node;
 			node.next.prev = node;
 			node.index = _numVertices;
@@ -112,52 +74,25 @@ package starling.display.graphics
 			maxBounds.y = y > maxBounds.y ? y : maxBounds.y;
 			
 			_numVertices++;
+			
+			isInvalid = true;
 		}
 		
-		private static var times:Vector.<int> = new Vector.<int>();
-		override public function render( renderSupport:RenderSupport, alpha:Number ):void
+		override protected function buildGeometry():void
 		{
 			if ( _numVertices < 3) return;
-			if ( vertexBuffer  == null )
-			{
-				var startTime:int = getTimer();
-				var triangulatedData:Array = triangulate(vertices, _numVertices);
-				if ( showProfiling )
-				{
-					var timeTaken:int = getTimer() - startTime;
-					times.push(timeTaken);
-					if ( times.length > 1000 )
-					{
-						times.shift();
-					}
-					var average:Number = 0;
-					for each ( var time:int in times )
-					{
-						average += time;
-					}
-					average /= times.length;
-					trace("Fill.triangulate() - average : " + int(average))
-				}
-				
-				var renderVertices:Vector.<Number> = triangulatedData[0];
-				var indices:Vector.<uint> = triangulatedData[1];
-				
-				if ( indices.length < 3 ) return;
-				var numRenderVertices:int = renderVertices.length / VERTEX_STRIDE;
-				vertexBuffer = Starling.context.createVertexBuffer( numRenderVertices, VERTEX_STRIDE );
-				vertexBuffer.uploadFromVector( renderVertices, 0, numRenderVertices )
-				indexBuffer = Starling.context.createIndexBuffer( indices.length );
-				indexBuffer.uploadFromVector( indices, 0, indices.length );
-			}
 			
-			super.render( renderSupport, alpha );
+			vertices = new Vector.<Number>();
+			indices = new Vector.<uint>();
+			
+			triangulate(fillVertices, _numVertices, vertices, indices);
 		}
 		
 		override public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
 		{
 			var pt:Point = globalToLocal(new Point(stageX,stageY));
-			var direction:int = windingNumber(vertices);
-			var wn:int = windingNumberAroundPoint(vertices, pt.x, pt.y);
+			var direction:int = windingNumber(fillVertices);
+			var wn:int = windingNumberAroundPoint(fillVertices, pt.x, pt.y);
 			if ( direction < 0 )
 			{
 				return wn == 0;
@@ -174,12 +109,11 @@ package starling.display.graphics
 		 * @return 
 		 * 
 		 */		
-		private static function triangulate( vertices:VertexList, _numVertices:int ):Array
+		private static function triangulate( vertices:VertexList, _numVertices:int, outputVertices:Vector.<Number>, outputIndices:Vector.<uint> ):void
 		{
 			vertices = VertexList.clone(vertices);
 			var openList:Vector.<VertexList> = convertToSimple(vertices);
-			var outputVertices:Vector.<Number> = flatten( openList );
-			var outputIndices:Vector.<uint> = new Vector.<uint>();
+			flatten(openList, outputVertices);
 			
 			while ( openList.length > 0 )
 			{
@@ -276,11 +210,6 @@ package starling.display.graphics
 				
 				VertexList.dispose(currentList);
 			}
-			
-			//trace("finished");
-			//trace("");
-			
-			return [outputVertices, outputIndices];
 		}
 		
 		/**
@@ -369,9 +298,8 @@ package starling.display.graphics
 			return output;
 		}
 		
-		private static function flatten( vertexLists:Vector.<VertexList> ):Vector.<Number>
+		private static function flatten( vertexLists:Vector.<VertexList>, output:Vector.<Number> ):void
 		{
-			var output:Vector.<Number> = new Vector.<Number>();
 			var L:int = vertexLists.length;
 			var index:int = 0;
 			for ( var i:int = 0; i < L; i++ )
@@ -381,12 +309,11 @@ package starling.display.graphics
 				do
 				{
 					node.index = index++;
-					output = output.concat( node.vertex );
+					output.push(node.vertex[0], node.vertex[1], node.vertex[2], node.vertex[3], node.vertex[4], node.vertex[5], node.vertex[6], node.vertex[7], node.vertex[8]);
 					node = node.next;
 				}
 				while ( node != node.head )
 			}
-			return output;
 		}
 		
 		private static function windingNumberAroundPoint( vertexList:VertexList, x:Number, y:Number ):int

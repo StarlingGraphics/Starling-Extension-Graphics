@@ -9,13 +9,13 @@ package
 	
 	public class GraphicsAPIExample extends Sprite
 	{
-		[Embed( source = "/assets/Rock2.png" )]
+		[Embed( source = "/assets/Rock.png" )]
 		private var RockBMP			:Class;
 		
 		[Embed( source = "/assets/Checker.png" )]
 		private var CheckerBMP		:Class;
 		
-		[Embed( source = "/assets/marble_80x80.png" )]
+		[Embed( source = "/assets/Marble.png" )]
 		private var MarbleBMP		:Class;
 		
 		[Embed( source = "/assets/Grass.png" )]
@@ -28,164 +28,79 @@ package
 		
 		private function onAdded ( e:Event ):void
 		{
-			var top:int = 0;
-			var left:int = 0;
-			var right:int = 100;
-			var bottom:int = 100;
-			
-			var fillColor:uint = 0x08acff;
-			var fillAlpha:Number = 1;
-			var strokeColor:int = 0xc07732;
-			var strokeAlpha:Number = 1;
-			var strokeThickness:int = 3;
-			
 			var rockTexture:Texture = Texture.fromBitmap( new RockBMP(), false );
 			var grassTexture:Texture = Texture.fromBitmap( new GrassBMP(), false );
 			var checkerTexture:Texture = Texture.fromBitmap( new CheckerBMP(), false );
+			var marbleTexture:Texture = Texture.fromBitmap( new MarbleBMP(), false );
 			
-			// Rect drawn with drawRect()
 			var shape:Shape = new Shape();
 			addChild(shape);
+			shape.x = 20;
+			shape.y = 20;
 			
-			shape.x = 100;
-			shape.y = 100;
-			
-			shape.graphics.beginFill(fillColor, fillAlpha);
-			shape.graphics.lineStyle(strokeThickness, strokeColor, strokeAlpha);
-			shape.graphics.drawRect(top, left, right, bottom);
+			// Rect drawn with drawRect()
+			shape.graphics.beginFill(0x8dc63f);
+			shape.graphics.drawRect(0, 0, 100, 100);
 			shape.graphics.endFill();
-			
-			var m:Matrix = new Matrix();
 			
 			// Rect drawn with lineTo()
-			shape = new Shape();
-			addChild(shape);
-			
-			shape.x = 300;
-			shape.y = 100;
-			
-			shape.graphics.beginFill(fillColor, 0.2);
-			shape.graphics.lineStyle(5, 0xFF0000, strokeAlpha);
-			shape.graphics.moveTo(left, top);
-			shape.graphics.lineTo(right, top);
-			shape.graphics.lineTo(right, bottom);
-			shape.graphics.lineTo(left, bottom);
-			shape.graphics.lineTo(left, top);
-			
+			shape.graphics.beginFill(0xc72046);
+			shape.graphics.moveTo(110, 0);
+			shape.graphics.lineTo(210, 0);
+			shape.graphics.lineTo(210, 100);
+			shape.graphics.lineTo(110, 100);
+			shape.graphics.lineTo(110, 0);
 			shape.graphics.endFill();
 			
+			// Rounded rect
+			shape.graphics.lineStyle(2,0xFFFFFF);
+			shape.graphics.beginFill(0x0957c0);
+			shape.graphics.drawRoundRect( 220, 0, 100, 100, 20 );
+			shape.graphics.endFill();
+			shape.graphics.lineStyle();
 			
 			// Filled Circle
-			shape = new Shape();
-			addChild(shape);
-			
-			shape.x = 150;
-			shape.y = 300;
-			
-			shape.graphics.beginFill(fillColor, 0.2);
-			shape.graphics.lineStyle(5, 0x00FF00, strokeAlpha);
-			shape.graphics.drawCircle(0, 0, 50);
+			shape.graphics.beginFill(0xfcc738);
+			shape.graphics.drawCircle(380, 50, 50);
 			shape.graphics.endFill();
 			
-			
-			// Line Ellipse
-			shape = new Shape();
-			addChild(shape);
-			
-			shape.x = 350;
-			shape.y = 300;
-			
-			shape.graphics.lineStyle(3, 0x0000FF, strokeAlpha);
-			shape.graphics.drawEllipse(0, 0, 75, 50);
-			
-			
-			// 2 Triangles in one Shape
-			shape = new Shape();
-			addChild(shape);
-			
-			shape.x = 500;
-			shape.y = 100;
-			
-			m.identity();
-			m.translate(1,5);
-			m.scale(2,2);
-			m.rotate(25)
-			shape.graphics.beginTextureFill(checkerTexture,m);
-			shape.graphics.lineStyle(2, 0xFF0000, 0.5);
-			shape.graphics.moveTo(left, top);
-			shape.graphics.lineTo(right, bottom);
-			shape.graphics.lineTo(left, bottom);
-			shape.graphics.lineTo(left, top);
-			
+			// Complex rounded rect
+			shape.graphics.beginFill(0xff7b00);
+			shape.graphics.drawRoundRectComplex( 0, 110, 430, 100, 0, 20, 40, 80 );
 			shape.graphics.endFill();
 			
-			var xOffset:uint = 140;
-			shape.graphics.beginFill(fillColor, 0.2);
-			shape.graphics.lineStyle(2, 0xFF0000, 0.5);
-			shape.graphics.moveTo(left + xOffset, top);
-			shape.graphics.lineTo(right + xOffset, bottom);
-			shape.graphics.lineTo(left + xOffset, bottom);
-			shape.graphics.lineTo(left + xOffset, top);
-			
-			shape.graphics.endFill();
-			
+			// Stroked ellipse
+			shape.graphics.lineStyle(6, 0x00bff3);
+			shape.graphics.drawEllipse(490, 105, 100, 200);
 			
 			// Multiple moveTo() test
-			shape = new Shape();
-			addChild(shape);
+			shape.graphics.lineStyle(2, 0xFFFFFF, 1);
+			for ( var i:int = 0; i < 4; i++ )
+			{
+				shape.graphics.moveTo(0, 220+i*20);
+				shape.graphics.lineTo(550, 220+i*20);
+			}		
 			
-			shape.x = 500;
-			shape.y = 250;
-			
-			shape.graphics.lineStyle(2, 0x000000, 0.5);
-			shape.graphics.lineTo(100, 0);
-			shape.graphics.moveTo(0,30);
-			shape.graphics.lineTo(100, 30);
-			shape.graphics.moveTo(0,60);
-			shape.graphics.lineTo(100, 60);		
-			
-			// Triangle with CheckerBMP
-			shape = new Shape();
-			addChild(shape);
-			
-			
-			
-			shape.x = 100;
-			shape.y = 400;
-			
-			shape.graphics.beginBitmapFill(new CheckerBMP().bitmapData, m);
-			shape.graphics.lineStyle(2, 0xFF0000, 0.5);
-			shape.graphics.moveTo(left, top);
-			shape.graphics.lineTo(right, bottom);
-			shape.graphics.lineTo(left, bottom);
-			shape.graphics.lineTo(left, top);
+			// Textured fill
+			shape.graphics.lineStyle(-1);
+			shape.graphics.beginTextureFill(checkerTexture);
+			shape.graphics.moveTo(0, 300);
+			shape.graphics.lineTo(100, 400);
+			shape.graphics.lineTo(0, 400);
+			shape.graphics.lineTo(0, 300);
 			shape.graphics.endFill();
-			
 			
 			// Marble
-			shape = new Shape();
-			addChild(shape);
-			
-			shape.x = 350;
-			shape.y = 450;
-			
-			shape.graphics.beginBitmapFill(new MarbleBMP().bitmapData);
-			shape.graphics.lineStyle(2, 0x0000FF, strokeAlpha);
-			shape.graphics.drawCircle(0, 0, 32);
+			shape.graphics.beginTextureFill(marbleTexture);
+			shape.graphics.lineStyle(2, 0xFFFFFF, 1);
+			shape.graphics.drawCircle(150, 364, 32);
 			shape.graphics.endFill();
-			
 			
 			// Rect drawn with textured fill and stroke
-			shape = new Shape();
-			addChild(shape);
-			shape.x = 500;
-			shape.y = 400;
-			
 			shape.graphics.beginTextureFill(rockTexture);
 			shape.graphics.lineTexture(20, grassTexture);
-			shape.graphics.drawRect(top, left, right, bottom);
+			shape.graphics.drawRect(0, 450, 550, 100);
 			shape.graphics.endFill();
-			
 		}
 	}
 }

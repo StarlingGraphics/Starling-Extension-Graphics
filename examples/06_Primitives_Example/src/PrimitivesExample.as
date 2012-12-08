@@ -6,7 +6,9 @@ package
 	import starling.display.Sprite;
 	import starling.display.graphics.NGon;
 	import starling.display.graphics.Plane;
+	import starling.display.graphics.RoundedRectangle;
 	import starling.display.materials.StandardMaterial;
+	import starling.display.materials.TextureMaterial;
 	import starling.display.shaders.fragment.TextureFragmentShader;
 	import starling.display.shaders.fragment.VertexColorFragmentShader;
 	import starling.display.shaders.vertex.StandardVertexShader;
@@ -46,12 +48,18 @@ package
 			addChild(nGonB);
 			
 			nGonC = new NGon(100, 50, 50, -5, 356);
-			nGonC.x = 300;
+			nGonC.x = 340;
 			nGonC.y = 200;
 			nGonC.material = new StandardMaterial( new StandardVertexShader(), new TextureFragmentShader() );
 			nGonC.material.textures[0] = Texture.fromBitmap( new CheckerBMP() );
 			nGonC.material.color = 0x9900FF;
 			addChild(nGonC);
+			
+			var roundedRect:RoundedRectangle = new RoundedRectangle(200, 100, 10, 20, 30, 40);
+			roundedRect.material = new TextureMaterial( Texture.fromBitmap( new CheckerBMP() ) );
+			roundedRect.x = 20;
+			roundedRect.y = 140;
+			addChild(roundedRect);
 			
 			Starling.current.nativeStage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 		}

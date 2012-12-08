@@ -6,11 +6,9 @@ package starling.display.graphics
 	
 	public class Stroke extends Graphic
 	{
-		public static const VERTEX_STRIDE	:int = 9;
-		
-		private var vertices	:Vector.<StrokeVertex>;
-		private var _numVertices:int;
-		private var _closed 	:Boolean = false;
+		private var strokeVertices	:Vector.<StrokeVertex>;
+		private var _numVertices	:int;
+		private var _closed 		:Boolean = false;
 		
 		public function Stroke()
 		{
@@ -26,31 +24,20 @@ package starling.display.graphics
 		{
 			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
 			maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
-			vertices = new Vector.<StrokeVertex>();
+			strokeVertices = new Vector.<StrokeVertex>();
 			_numVertices = 0;
+			isInvalid = true;
 		}
 		
 		public function addVertex( 	x:Number, y:Number, thickness:Number = 1,
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
-			if ( vertexBuffer )
-			{
-				vertexBuffer.dispose();
-				vertexBuffer = null;
-			}
-			
-			if ( indexBuffer )
-			{
-				indexBuffer.dispose();
-				indexBuffer = null;
-			}
-			
 			var u:Number = 0;
 			var textures:Vector.<Texture> = _material.textures;
-			if ( vertices.length > 0 && textures.length > 0 )
+			if ( strokeVertices.length > 0 && textures.length > 0 )
 			{
-				var prevVertex:StrokeVertex = vertices[vertices.length - 1];
+				var prevVertex:StrokeVertex = strokeVertices[strokeVertices.length - 1];
 				var dx:Number = x - prevVertex.x;
 				var dy:Number = y - prevVertex.y;
 				var d:Number = Math.sqrt(dx*dx+dy*dy);
@@ -64,34 +51,15 @@ package starling.display.graphics
 			var g1:Number = ((color1 & 0x00FF00) >> 8) / 255;
 			var b1:Number = (color1 & 0x0000FF) / 255;
 			
-			vertices.push( new StrokeVertex( x, y, 0, r0, g0, b0, alpha0, r1, g1, b1, alpha1, u, 0, thickness ) );
+			strokeVertices.push( new StrokeVertex( x, y, 0, r0, g0, b0, alpha0, r1, g1, b1, alpha1, u, 0, thickness ) );
 			_numVertices++;
 			
 			minBounds.x = x < minBounds.x ? x : minBounds.x;
 			minBounds.y = y < minBounds.y ? y : minBounds.y;
 			maxBounds.x = x > maxBounds.x ? x : maxBounds.x;
 			maxBounds.y = y > maxBounds.y ? y : maxBounds.y;
-		}
-		
-		override public function render( renderSupport:RenderSupport, alpha:Number ):void
-		{
-			if ( vertices.length < 2 ) return;
 			
-			if ( vertexBuffer == null )
-			{
-				var indices:Vector.<uint> = new Vector.<uint>();
-				var renderVertices:Vector.<Number> = new Vector.<Number>();
-				
-				createPolyLine(vertices, _closed, renderVertices, indices );
-				
-				if ( indices.length < 3 ) return;
-				vertexBuffer = Starling.context.createVertexBuffer( renderVertices.length / VERTEX_STRIDE, VERTEX_STRIDE );
-				vertexBuffer.uploadFromVector( renderVertices, 0, renderVertices.length / VERTEX_STRIDE )
-				indexBuffer = Starling.context.createIndexBuffer( indices.length );
-				indexBuffer.uploadFromVector( indices, 0, indices.length );
-			}
-			
-			super.render( renderSupport, alpha );
+			isInvalid = true;
 		}
 		
 		public function get closed():Boolean 
@@ -101,6 +69,13 @@ package starling.display.graphics
 		public function set closed(value:Boolean):void 
 		{
 			_closed = value;
+		}
+		
+		override protected function buildGeometry():void
+		{
+			vertices = new Vector.<Number>();
+			indices = new Vector.<uint>();
+			createPolyLine(strokeVertices, _closed, vertices, indices );
 		}
 		
 		///////////////////////////////////

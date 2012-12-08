@@ -10,18 +10,11 @@ package starling.display.graphics
 
 	public class Plane extends Graphic
 	{
-		private static const VERTEX_STRIDE	:int = 9;
-		
-		private var vertices		:Vector.<Number>;
-		private var indices			:Vector.<uint>
 		private var _width			:Number;
 		private var _height			:Number;
 		private var _numVerticesX	:uint;
 		private var _numVerticesY	:uint;
-		private var _uvMatrix		:Matrix;
 		private var _vertexFunction	:Function;
-		
-		private var isInvalid		:Boolean;
 		
 		public function Plane( width:Number = 100, height:Number = 100, numVerticesX:uint = 2, numVerticesY:uint = 2 )
 		{
@@ -38,23 +31,12 @@ package starling.display.graphics
 			var segmentWidth:Number = width / (numVerticesX-1);
 			var segmentHeight:Number = height / (numVerticesY-1);
 			
-			var x:Number = segmentWidth * column;
-			var y:Number = segmentHeight * row;
-			
-			var uv:Point = new Point();
-			if ( uvMatrix )
-			{
-				uv.x = x;
-				uv.y = y;
-				uv = uvMatrix.transformPoint(uv);
-			}
-			else
-			{
-				uv.x = column / (numVerticesX-1);
-				uv.y = row / (numVerticesY-1);
-			}
-			
-			output.push( x,y,0,1,1,1,1,uv.x,uv.y );
+			output.push( 	segmentWidth * column, 		// x
+							segmentHeight * row,		// y
+							0,							// z
+							1,1,1,1,					// rgba
+							column / (numVerticesX-1), 	// u
+							row / (numVerticesY-1) );	// v
 		}
 		
 		public function set vertexFunction( value:Function ):void
@@ -73,28 +55,13 @@ package starling.display.graphics
 			return _vertexFunction
 		}
 		
-		public function get uvMatrix():Matrix
+		override protected function buildGeometry():void
 		{
-			return _uvMatrix;
-		}
-
-		public function set uvMatrix(value:Matrix):void
-		{
-			_uvMatrix = value;
-			isInvalid = true;
-		}
-
-		public function validate():void
-		{
-			if ( vertexBuffer )
-			{
-				vertexBuffer.dispose();
-				indexBuffer.dispose();
-			}
+			vertices = new Vector.<Number>();
+			indices = new Vector.<uint>();
 			
 			// Generate vertices
 			var numVertices:int = _numVerticesX * _numVerticesY;
-			vertices = new Vector.<Number>();
 			for ( var i:int = 0; i < numVertices; i++ )
 			{
 				var column:int = i % _numVerticesX;
@@ -103,7 +70,6 @@ package starling.display.graphics
 			}
 			
 			// Generate indices
-			indices = new Vector.<uint>();
 			var qn:int = 0; //quad number
 			for (var n:int = 0; n <_numVerticesX-1; n++) //create quads out of the vertices
 			{               
@@ -117,12 +83,6 @@ package starling.display.graphics
 				}
 				qn++; // jumps to next row
 			}
-			
-			// Upload vertex/index buffers.
-			vertexBuffer = Starling.context.createVertexBuffer( numVertices, VERTEX_STRIDE );
-			vertexBuffer.uploadFromVector( vertices, 0, numVertices )
-			indexBuffer = Starling.context.createIndexBuffer( indices.length );
-			indexBuffer.uploadFromVector( indices, 0, indices.length );
 		}
 		
 		public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
@@ -132,17 +92,6 @@ package starling.display.graphics
 			maxBounds.x = _width;
 			maxBounds.y = _height;
 			return super.getBounds(targetSpace, resultRect);
-		}
-		
-		override public function render( renderSupport:RenderSupport, alpha:Number ):void
-		{
-			if ( isInvalid )
-			{
-				validate();
-				isInvalid = false;
-			}
-			
-			super.render( renderSupport, alpha );
 		}
 	}
 }

@@ -7,6 +7,7 @@ package starling.display
 	import starling.display.graphics.Fill;
 	import starling.display.graphics.NGon;
 	import starling.display.graphics.Plane;
+	import starling.display.graphics.RoundedRectangle;
 	import starling.display.graphics.Stroke;
 	import starling.display.materials.IMaterial;
 	import starling.display.shaders.fragment.TextureFragmentShader;
@@ -78,17 +79,12 @@ package starling.display
 			var texture:Texture = Texture.fromBitmapData( bitmap, false );
 			_currentFill.material.textures[0] = texture;
 			
-			var m:Matrix;
+			var m:Matrix = new Matrix();
+			m.scale(1/texture.width, 1/texture.height);
 			if ( uvMatrix )
 			{
-				m = uvMatrix.clone();
-				m.invert();
+				m.concat(uvMatrix);
 			}
-			else
-			{
-				m = new Matrix();
-			}
-			m.scale(1/texture.width, 1/texture.height);
 			_currentFill.uvMatrix = m;
 			
 			_container.addChild(_currentFill);
@@ -103,17 +99,12 @@ package starling.display
 			_currentFill.material.fragmentShader = textureFragmentShader;
 			_currentFill.material.textures[0] = texture;
 			
-			var m:Matrix;
+			var m:Matrix = new Matrix();
+			m.scale(1/texture.width, 1/texture.height);
 			if ( uvMatrix )
 			{
-				m = uvMatrix.clone();
-				m.invert();
+				m.concat(uvMatrix);
 			}
-			else
-			{
-				m = new Matrix();
-			}
-			m.scale(1/texture.width, 1/texture.height);
 			_currentFill.uvMatrix = m;
 			
 			_container.addChild(_currentFill);
@@ -160,34 +151,35 @@ package starling.display
 		
 		public function drawCircle(x:Number, y:Number, radius:Number):void
 		{
-			drawEllipse(x, y, radius, radius);
+			drawEllipse(x, y, radius*2, radius*2);
 		}
 		
 		public function drawEllipse(x:Number, y:Number, width:Number, height:Number):void
 		{
-			// Pretty crude, but works.
-			var numSides:int = Math.sqrt(width*width+height*height) * 0.5;
-			numSides = Math.max(numSides, 10);
+			// Calculate num-sides based on a blend between circumference of width and circumference of height.
+			// Should provide good results for ellipses with similar widths/heights.
+			// Will look bad on very thin ellipses.
+			var numSides:int = Math.PI * ((width*0.5) + (height*0.5)) * 0.25;
+			numSides = numSides < 6 ? 6 : numSides;
 			
 			// Use an NGon primitive instead of fill to bypass triangulation.
 			var cachedFill:Fill = _currentFill;
 			if ( _currentFill )
 			{
-				var nGon:NGon = new NGon(width, numSides);
+				var nGon:NGon = new NGon(width*0.5, numSides);
 				nGon.x = x;
 				nGon.y = y;
 				nGon.scaleY = height/width;
 				nGon.material = _currentFill.material;
 				nGon.material.color = _fillColor;
 				nGon.alpha = _fillAlpha;
-				var uvMatrix:Matrix = _currentFill.uvMatrix ? _currentFill.uvMatrix.clone() : new Matrix();
-				if ( _currentFill.material.textures.length > 0 )
+				var m:Matrix = new Matrix();
+				m.scale(width, height);
+				if ( cachedFill.uvMatrix )
 				{
-					var temp:Matrix = new Matrix(_currentFill.material.textures[0].width, 0, 0, _currentFill.material.textures[0].height)
-					temp.concat(uvMatrix);
-					uvMatrix = temp;
+					m.concat(cachedFill.uvMatrix);
 				}
-				nGon.uvMatrix = uvMatrix;
+				nGon.uvMatrix = m;
 				
 				_container.addChild(nGon);
 				_currentFill = null;
@@ -197,6 +189,8 @@ package starling.display
 			// Draw the stroke
 			if ( isNaN(_strokeThickness) == false )
 			{
+				var halfWidth:Number = width*0.5;
+				var halfHeight:Number = height*0.5;
 				var anglePerSide:Number = (Math.PI * 2) / numSides;
 				var a:Number = Math.cos(anglePerSide);
 				var b:Number = Math.sin(anglePerSide);
@@ -205,8 +199,8 @@ package starling.display
 				
 				for ( var i:int = 0; i <= numSides; i++ )
 				{
-					var sx:Number = s * width + x;
-					var sy:Number = -c * height + y;
+					var sx:Number = s * halfWidth + x;
+					var sy:Number = -c * halfHeight + y;
 					if ( i == 0 )
 					{
 						moveTo(sx,sy);
@@ -229,28 +223,94 @@ package starling.display
 		
 		public function drawRect(x:Number, y:Number, width:Number, height:Number):void
 		{
+			var storedFill:Fill;
+			
 			// Use a Plane primitive instead of fill to side-step triangulation.
-			var cachedFill:Fill = _currentFill;
 			if ( _currentFill )
 			{
-				var plane:Plane = new Plane(width, height);
-				plane.material = _currentFill.material;
+				// Store fill to we can draw stroke without fill.
+				storedFill = _currentFill;
+				_currentFill = null;
 				
-				if ( _currentFill.uvMatrix )
+				var plane:Plane = new Plane(width, height);
+				plane.material = storedFill.material;
+				
+				var m:Matrix = new Matrix();
+				m.scale(width, height);
+				if ( storedFill.uvMatrix )
 				{
-					plane.uvMatrix = _currentFill.uvMatrix.clone();
+					m.concat(storedFill.uvMatrix);
 				}
+				plane.uvMatrix = m;
 				plane.x = x;
 				plane.y = y;
 				_container.addChild(plane);
-				_currentFill = null;
+				
 			}
+			
+			// Draw stroke
 			moveTo(x, y);
 			lineTo(x + width, y);
 			lineTo(x + width, y + height);
 			lineTo(x, y + height);
 			lineTo(x, y);
-			_currentFill = cachedFill;
+			_currentFill = storedFill;
+		}
+		
+		public function drawRoundRect( x:Number, y:Number, width:Number, height:Number, radius:Number ):void
+		{
+			drawRoundRectComplex(x,y,width,height,radius,radius,radius,radius);
+		}
+		
+		public function drawRoundRectComplex( x:Number, y:Number, width:Number, height:Number, topLeftRadius:Number, topRightRadius:Number, bottomLeftRadius:Number, bottomRightRadius:Number ):void
+		{
+			if ( !_currentFill && _strokeThickness <= 0 ) return;
+			
+			var storedFill:Fill;
+			var roundedRect:RoundedRectangle = new RoundedRectangle( width, height, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius );
+			
+			// Draw fill
+			if ( _currentFill )
+			{
+				// Store fill to we can draw stroke without fill.
+				storedFill = _currentFill;
+				_currentFill = null;
+				roundedRect.material = storedFill.material;
+				
+				var m:Matrix = new Matrix();
+				m.scale(width, height);
+				if ( storedFill.uvMatrix )
+				{
+					m.concat(storedFill.uvMatrix);
+				}
+				roundedRect.uvMatrix = m;
+				roundedRect.x = x;
+				roundedRect.y = y;
+				_container.addChild(roundedRect);
+			}
+			_currentFill = storedFill;
+			
+			// Draw stroke
+			if ( _strokeTexture ) 
+			{
+				beginTextureStroke();
+			} 
+			else if ( _strokeMaterial )
+			{
+				beginMaterialStroke();
+			}
+			else if ( _strokeThickness > 0 )
+			{  	
+				beginStroke();
+			}
+			if ( _currentStroke )
+			{
+				var strokePoints:Vector.<Number> = roundedRect.getStrokePoints();
+				for ( var i:int = 0; i < strokePoints.length; i+=2 )
+				{
+					_currentStroke.addVertex( x+strokePoints[i],y+strokePoints[i+1], _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor, _strokeAlpha );
+				}
+			}
 		}
 		
 		public function lineStyle(thickness:Number = NaN, color:uint = 0, alpha:Number = 1.0):void
@@ -259,7 +319,7 @@ package starling.display
 			_strokeColor			= color;
 			_strokeAlpha			= alpha;
 			_strokeTexture 			= null;
-			_strokeMaterial				= null;
+			_strokeMaterial			= null;
 		}
 		
 		public function lineTexture(thickness:Number = NaN, texture:Texture = null):void
@@ -295,7 +355,7 @@ package starling.display
 				beginStroke();
 			}
 			
-			if ( _currentStroke )
+			if ( _currentStroke && _strokeThickness > 0 )
 			{
 				_currentStroke.addVertex( x, y, _strokeThickness );
 			}
@@ -332,7 +392,7 @@ package starling.display
 				moveTo(0,0);
 			}
 			
-			if ( _currentStroke )
+			if ( _currentStroke && _strokeThickness > 0 )
 			{
 				_currentStroke.addVertex( x, y, _strokeThickness );
 			}

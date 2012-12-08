@@ -6,7 +6,7 @@ package
 	
 	import starling.core.Starling;
 	
-	[SWF( width="800", height="600", backgroundColor="#CCCCCC", frameRate="60" )]
+	[SWF( width="600", height="600", backgroundColor="#232323", frameRate="60" )]
 	public class Main extends Sprite 
 	{
 		private var starling	:Starling;
@@ -18,7 +18,7 @@ package
 			
 			starling = new Starling( GraphicsAPIExample, stage );
 			
-			starling.antiAliasing = 1;
+			starling.antiAliasing = 0;
 			starling.start();
 		}
 		

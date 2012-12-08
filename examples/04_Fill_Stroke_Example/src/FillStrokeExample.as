@@ -156,7 +156,7 @@ package
 					triangleFan.y = y2;
 					triangleFan.rotation = Math.random() * 360;
 					leaves.push(triangleFan);
-					triangleFan.addVertex(0, 0, 0xFFFFFF, 1, 0, 1);
+					triangleFan.addVertex(0, 0, 0, 1);
 					var radius:Number = 30 + Math.random() * 30;
 					var numBumps:int = 2 + Math.random() * 1;
 					var bumpSize:Number = 5 + Math.random() * 5;
@@ -172,7 +172,7 @@ package
 						trace(Math.sin( (angle * 2) % Math.PI ));
 						//currRadius += Math.random() * 5;
 						
-						triangleFan.addVertex( nx * currRadius, ny * currRadius, 0xFFFFFF, 1, ratio, 0 );
+						triangleFan.addVertex( nx * currRadius, ny * currRadius, ratio, 0 );
 					}
 					
 					continue;

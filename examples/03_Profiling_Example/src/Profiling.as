@@ -1,6 +1,7 @@
 package
 {
 	import flash.display.Bitmap;
+	import flash.utils.getTimer;
 	
 	import starling.core.Starling;
 	import starling.display.Shape;
@@ -16,6 +17,8 @@ package
 		
 		private var checkerBMP		:Bitmap;
 		
+		private var startTime		:int;
+		
 		public function Profiling()
 		{
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
@@ -28,6 +31,7 @@ package
 			
 			checkerBMP = new CheckerBMP();
 			
+			startTime = getTimer();
 			addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 		}
 		
@@ -45,7 +49,7 @@ package
 			numFrames++;
 			if ( numFrames == 500 )
 			{
-				trace("Finished");
+				trace("Total time: " + String(getTimer()-startTime));
 				removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 			}
 		}
