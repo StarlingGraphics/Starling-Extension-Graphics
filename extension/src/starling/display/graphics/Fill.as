@@ -32,6 +32,8 @@ package starling.display.graphics
 
 		public function clear():void
 		{
+			indices = new Vector.<uint>();
+			vertices = new Vector.<Number>();
 			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
 			maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
 			_numVertices = 0;
@@ -90,13 +92,16 @@ package starling.display.graphics
 		
 		override public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
 		{
+			if ( vertices == null ) return false;
+			if ( numVertices < 3 ) return false;
+			
 			var pt:Point = globalToLocal(new Point(stageX,stageY));
 			var wn:int = windingNumberAroundPoint(fillVertices, pt.x, pt.y);
-			if ( isClockWise(vertices) )
+			if ( isClockWise(fillVertices) )
 			{
-				return wn != 0;
+				return  wn != 0;
 			}
-			return wn 0= 0;
+			return wn == 0;
 		}
 		
 		/**
@@ -118,7 +123,7 @@ package starling.display.graphics
 			{
 				var currentList:VertexList = openList.pop();
 				
-				if ( isClockWise(currentList) )
+				if ( isClockWise(currentList) == false )
 				{
 					VertexList.reverse(currentList);
 				}
@@ -349,10 +354,10 @@ package starling.display.graphics
 			return wn;
 		}
 		
-		public static function isClockWise( vertexList:VertexNode ):Boolean
+		public static function isClockWise( vertexList:VertexList ):Boolean
 		{
 			var wn:Number = 0;
-			var node:VertexNode = vertexList.head;
+			var node:VertexList = vertexList.head;
 			do
 			{
 				wn += (node.next.vertex[0]-node.vertex[0]) * (node.next.vertex[1]+node.vertex[1]);
