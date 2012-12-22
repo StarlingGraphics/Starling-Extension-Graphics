@@ -91,13 +91,12 @@ package starling.display.graphics
 		override public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
 		{
 			var pt:Point = globalToLocal(new Point(stageX,stageY));
-			var direction:int = windingNumber(fillVertices);
 			var wn:int = windingNumberAroundPoint(fillVertices, pt.x, pt.y);
-			if ( direction < 0 )
+			if ( isClockWise(vertices) )
 			{
-				return wn == 0;
+				return wn != 0;
 			}
-			return wn != 0;
+			return wn 0= 0;
 		}
 		
 		/**
@@ -119,7 +118,7 @@ package starling.display.graphics
 			{
 				var currentList:VertexList = openList.pop();
 				
-				if ( windingNumber(currentList) < 0 )
+				if ( isClockWise(currentList) )
 				{
 					VertexList.reverse(currentList);
 				}
@@ -348,6 +347,20 @@ package starling.display.graphics
 			}
 			while ( node != vertexList.head )
 			return wn;
+		}
+		
+		public static function isClockWise( vertexList:VertexNode ):Boolean
+		{
+			var wn:Number = 0;
+			var node:VertexNode = vertexList.head;
+			do
+			{
+				wn += (node.next.vertex[0]-node.vertex[0]) * (node.next.vertex[1]+node.vertex[1]);
+				node = node.next;
+			}
+			while ( node != vertexList.head )
+			
+			return wn <= 0;
 		}
 		
 		private static function windingNumber( vertexList:VertexList ):int
