@@ -60,7 +60,7 @@ package starling.display
 			_fillAlpha = alpha;
 			
 			_currentFill = new Fill();
-			_currentFill.alpha = _fillAlpha;
+			_currentFill.material.alpha = _fillAlpha;
 			_currentFill.material.color = color;
 			_container.addChild(_currentFill);
 		}
