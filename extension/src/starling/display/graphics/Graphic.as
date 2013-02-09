@@ -18,6 +18,7 @@ package starling.display.graphics
 	import starling.errors.AbstractClassError;
 	import starling.errors.AbstractMethodError;
 	import starling.errors.MissingContextError;
+	import starling.events.Event;
 	
 	/**
 	 * Abstract, do not instantiate directly
@@ -57,6 +58,15 @@ package starling.display.graphics
 			_material = new StandardMaterial( defaultVertexShader, defaultFragmentShader );
 			minBounds = new Point();
 			maxBounds = new Point();
+			
+			Starling.current.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+		}
+		
+		private function onContextCreated( event:Event ):void
+		{
+			isInvalid = true;
+			uvsInvalid = true;
+			_material.dispose();
 		}
 		
 		override public function dispose():void
