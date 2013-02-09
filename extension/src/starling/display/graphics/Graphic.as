@@ -133,13 +133,20 @@ package starling.display.graphics
 			}
 			
 			getTransformationMatrix(targetSpace, sHelperMatrix);
+			var m:Matrix = sHelperMatrix;
+			
+			var tr:Point = new Point( minBounds.x + (maxBounds.x-minBounds.x), minBounds.y )
+			var bl:Point = new Point( minBounds.x, minBounds.y + (maxBounds.y-minBounds.y) )
 			
 			var TL:Point = sHelperMatrix.transformPoint(minBounds.clone());
+			tr = sHelperMatrix.transformPoint(tr);
 			var BR:Point = sHelperMatrix.transformPoint(maxBounds.clone());
-			resultRect.x = TL.x;
-			resultRect.y = TL.y;
-			resultRect.right = BR.x;
-			resultRect.bottom = BR.y;
+			bl = sHelperMatrix.transformPoint(bl);
+				
+			resultRect.x = Math.min(TL.x, BR.x, tr.x, bl.x);
+			resultRect.y = Math.min(TL.y, BR.y, tr.y, bl.y);
+			resultRect.right = Math.max(TL.x, BR.x, tr.x, bl.x);
+			resultRect.bottom = Math.max(TL.x, BR.x, tr.y, bl.y);
 			
 			return resultRect;
 		}
