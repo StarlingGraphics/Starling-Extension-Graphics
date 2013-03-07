@@ -2,13 +2,6 @@ package starling.display.graphics
 {
 	import flash.geom.Matrix;
 	import flash.geom.Point;
-	import flash.geom.Rectangle;
-	import flash.utils.getTimer;
-	
-	import starling.core.RenderSupport;
-	import starling.core.Starling;
-	import starling.display.DisplayObject;
-	import starling.textures.Texture;
 	
 	public class Fill extends Graphic
 	{
@@ -44,8 +37,9 @@ package starling.display.graphics
 		
 		override public function dispose():void
 		{
-			super.dispose();
 			clear();
+			fillVertices = null;
+			super.dispose();
 		}
 		
 		public function addVertex( x:Number, y:Number, color:uint = 0xFFFFFF, alpha:Number = 1 ):void

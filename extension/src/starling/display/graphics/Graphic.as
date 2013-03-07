@@ -90,6 +90,12 @@ package starling.display.graphics
 				material.dispose();
 				material = null;
 			}
+			
+			vertices = null;
+			indices = null;
+			_uvMatrix = null;
+			minBounds = null;
+			maxBounds = null;
 		}
 		
 		public function set material( value:IMaterial ):void

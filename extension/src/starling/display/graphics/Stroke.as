@@ -1,7 +1,5 @@
 package starling.display.graphics
 {
-	import starling.core.RenderSupport;
-	import starling.core.Starling;
 	import starling.textures.Texture;
 	
 	public class Stroke extends Graphic
@@ -18,6 +16,13 @@ package starling.display.graphics
 		public function get numVertices():int
 		{
 			return _numVertices;
+		}
+		
+		override public function dispose():void
+		{
+			clear();
+			strokeVertices = null;
+			super.dispose();
 		}
 
 		public function clear():void
