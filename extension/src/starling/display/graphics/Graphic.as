@@ -152,7 +152,7 @@ package starling.display.graphics
 			resultRect.x = Math.min(TL.x, BR.x, tr.x, bl.x);
 			resultRect.y = Math.min(TL.y, BR.y, tr.y, bl.y);
 			resultRect.right = Math.max(TL.x, BR.x, tr.x, bl.x);
-			resultRect.bottom = Math.max(TL.x, BR.x, tr.y, bl.y);
+			resultRect.bottom = Math.max(TL.y, BR.y, tr.y, bl.y);
 			
 			return resultRect;
 		}
