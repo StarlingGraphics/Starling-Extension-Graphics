@@ -15,7 +15,6 @@ package starling.display.graphics
 	import starling.display.materials.StandardMaterial;
 	import starling.display.shaders.fragment.VertexColorFragmentShader;
 	import starling.display.shaders.vertex.StandardVertexShader;
-	import starling.errors.AbstractClassError;
 	import starling.errors.AbstractMethodError;
 	import starling.errors.MissingContextError;
 	import starling.events.Event;
@@ -71,6 +70,7 @@ package starling.display.graphics
 		
 		override public function dispose():void
 		{
+			Starling.current.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
 			super.dispose();
 			
 			if ( vertexBuffer )

@@ -27,8 +27,12 @@ package starling.display.graphics
 		{
 			indices = new Vector.<uint>();
 			vertices = new Vector.<Number>();
-			minBounds.x = minBounds.y = 0; 
-			maxBounds.x = maxBounds.y = 0;
+			if(minBounds)
+			{
+				minBounds.x = minBounds.y = 0; 
+				maxBounds.x = maxBounds.y = 0;
+			}
+			
 			_numVertices = 0;
 			VertexList.dispose(fillVertices);
 			fillVertices = null;

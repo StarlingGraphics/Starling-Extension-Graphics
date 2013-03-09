@@ -27,8 +27,12 @@ package starling.display.graphics
 
 		public function clear():void
 		{
-			minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
-			maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
+			if(minBounds)
+			{
+				minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
+				maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
+			}
+			
 			strokeVertices = new Vector.<StrokeVertex>();
 			_numVertices = 0;
 			isInvalid = true;

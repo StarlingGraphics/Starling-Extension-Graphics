@@ -1,7 +1,5 @@
 package starling.display.materials
 {
-	import com.adobe.utils.AGALMiniAssembler;
-	
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
@@ -35,13 +33,24 @@ package starling.display.materials
 			color = 0xFFFFFF;
 		}
 		
-		public function dispose():void
+		public function dispose( disposeTextures:Boolean = false ):void
 		{
 			if ( program )
 			{
 				Program3DCache.releaseProgram3D(program);
 				program = null;
 			}
+			_vertexShader= null;
+			_fragmentShader = null;
+			
+			if (disposeTextures)
+			{
+				for each ( var texture:Texture in _textures )
+				{
+					texture.dispose();
+				}
+			}
+			_textures = null;
 		}
 		
 		public function set textures( value:Vector.<Texture> ):void

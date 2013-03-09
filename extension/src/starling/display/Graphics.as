@@ -1,17 +1,16 @@
 package starling.display
 {
-	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Matrix;
 	
 	import starling.display.graphics.Fill;
+	import starling.display.graphics.Graphic;
 	import starling.display.graphics.NGon;
 	import starling.display.graphics.Plane;
 	import starling.display.graphics.RoundedRectangle;
 	import starling.display.graphics.Stroke;
 	import starling.display.materials.IMaterial;
 	import starling.display.shaders.fragment.TextureFragmentShader;
-	import starling.display.shaders.fragment.TextureVertexColorFragmentShader;
 	import starling.display.util.CurveUtil;
 	import starling.textures.Texture;
 
@@ -48,10 +47,23 @@ package starling.display
 			{
 				var child:DisplayObject = _container.getChildAt(0);
 				child.dispose();
+				if ( child is Graphic )
+				{
+					var graphic:Graphic = Graphic(child);
+					if ( graphic.material )
+					{
+						graphic.material.dispose(true);
+					}
+				}
 				_container.removeChildAt(0);
 			}
 			_currentX = NaN;
 			_currentY = NaN;
+			
+			_fillColor 	= NaN;
+			_fillAlpha 	= NaN;
+			_currentFill= null;
+			_currentStroke = null;
 		}
 		
 		public function beginFill(color:uint, alpha:Number = 1.0):void
@@ -502,18 +514,12 @@ package starling.display
 		
 		private function beginMaterialStroke():void
 		{
-			if ( _currentStroke && _currentStroke.numVertices < 2 ) 
-			{
+			if ( _currentStroke && _currentStroke.numVertices < 2 ) {
 				_container.removeChild(_currentStroke);
 			}
-			
 			_currentStroke = new Stroke();
 			_currentStroke.material = _strokeMaterial;
 			_container.addChild(_currentStroke);
-		}
-		
-		private function deg2rad (deg:Number):Number {
-			return deg * Math.PI / 180;
 		}
 	}
 }
