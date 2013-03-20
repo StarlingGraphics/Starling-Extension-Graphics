@@ -16,7 +16,7 @@ package
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
 			
-			starling = new Starling( GraphicsAPIExample_Dynamic, stage );
+			starling = new Starling( GraphicsAPIExample, stage );
 			
 			starling.antiAliasing = 0;
 			starling.start();
