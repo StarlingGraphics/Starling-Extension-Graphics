@@ -22,6 +22,7 @@ package starling.display.materials
 		function get textures():Vector.<Texture>;
 		function set textures(value:Vector.<Texture>):void;
 		function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1 ):void;
+		function restoreOnLostContext():void;
 	}
 	
 }

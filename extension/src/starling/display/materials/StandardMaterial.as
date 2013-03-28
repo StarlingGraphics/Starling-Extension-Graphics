@@ -53,6 +53,15 @@ package starling.display.materials
 			_textures = null;
 		}
 		
+		public function restoreOnLostContext():void
+		{
+			if ( program )
+			{
+				Program3DCache.releaseProgram3D(program);
+				program = null;
+			}
+		}
+		
 		public function set textures( value:Vector.<Texture> ):void
 		{
 			_textures = value;

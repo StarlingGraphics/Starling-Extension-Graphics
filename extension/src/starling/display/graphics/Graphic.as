@@ -65,7 +65,7 @@ package starling.display.graphics
 		{
 			isInvalid = true;
 			uvsInvalid = true;
-			_material.dispose();
+			_material.restoreOnLostContext();
 		}
 		
 		override public function dispose():void
