@@ -68,10 +68,23 @@ package starling.display.graphics
 			node.index = _numVertices;
 			node.vertex = vertex;
 			
-			minBounds.x = x < minBounds.x ? x : minBounds.x;
-			minBounds.y = y < minBounds.y ? y : minBounds.y;
-			maxBounds.x = x > maxBounds.x ? x : maxBounds.x;
-			maxBounds.y = y > maxBounds.y ? y : maxBounds.y;
+			if(x < minBounds.x) 
+			{
+				minBounds.x = x;
+			}
+			else if(x > maxBounds.x)
+			{
+				maxBounds.x = x;
+			}
+
+			if(y < minBounds.y)
+			{
+				minBounds.y = y;
+			}
+			else if(y > maxBounds.y)
+			{
+				maxBounds.y = y;
+			}
 			
 			_numVertices++;
 			

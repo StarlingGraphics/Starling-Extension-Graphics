@@ -63,10 +63,23 @@ package starling.display.graphics
 			strokeVertices.push( new StrokeVertex( x, y, 0, r0, g0, b0, alpha0, r1, g1, b1, alpha1, u, 0, thickness ) );
 			_numVertices++;
 			
-			minBounds.x = x < minBounds.x ? x : minBounds.x;
-			minBounds.y = y < minBounds.y ? y : minBounds.y;
-			maxBounds.x = x > maxBounds.x ? x : maxBounds.x;
-			maxBounds.y = y > maxBounds.y ? y : maxBounds.y;
+			if(x < minBounds.x) 
+			{
+				minBounds.x = x;
+			}
+			else if(x > maxBounds.x)
+			{
+				maxBounds.x = x;
+			}
+			
+			if(y < minBounds.y)
+			{
+				minBounds.y = y;
+			}
+			else if(y > maxBounds.y)
+			{
+				maxBounds.y = y;
+			}
 			
 			isInvalid = true;
 		}
