@@ -28,6 +28,7 @@
           <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/automation_agent.swc" useDefaultLinkType="false"/>
         </excludedEntries>
       </libraryPathEntry>
+      <libraryPathEntry kind="3" linkType="1" path="/Starling-Framework/bin-debug/Starling-Framework.swc" useDefaultLinkType="false"/>
       <libraryPathEntry kind="3" linkType="1" path="/Starling-Extension-Graphics/bin/Starling-Extension-Graphics.swc" useDefaultLinkType="false"/>
     </libraryPath>
     <sourceAttachmentPath/>
@@ -40,4 +41,3 @@
   <buildCSSFiles/>
   <flashCatalyst validateFlashCatalystCompatibility="false"/>
 </actionScriptProperties>
-

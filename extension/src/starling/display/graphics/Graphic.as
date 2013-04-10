@@ -178,7 +178,7 @@ package starling.display.graphics
 			}
 		}
 		
-		protected function validateNow():void
+		public function validateNow():void
 		{
 			if ( vertexBuffer && (isInvalid || uvsInvalid) )
 			{

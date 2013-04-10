@@ -7,9 +7,8 @@ package
 	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.events.Event;
-	import starling.textures.Texture;
 	
-	public class Profiling extends Sprite
+	public class FillProfiling extends Sprite
 	{
 		[Embed( source = "/assets/Checker.png" )]
 		private var CheckerBMP		:Class;
@@ -19,7 +18,7 @@ package
 		
 		private var startTime		:int;
 		
-		public function Profiling()
+		public function FillProfiling()
 		{
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
 		}
