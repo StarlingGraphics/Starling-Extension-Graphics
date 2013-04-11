@@ -1,7 +1,5 @@
 package starling.display.graphics
 {
-	import flash.geom.Point;
-	
 	import starling.textures.Texture;
 	
 	public class Stroke extends Graphic
@@ -9,13 +7,9 @@ package starling.display.graphics
 		private var lines				:Vector.<Vector.<StrokeVertex>>;
 		private var _currLine			:Vector.<StrokeVertex>;
 		private var _numVertices		:int;
-		private var isectPointA			:Point;
-		private var isectPointB			:Point;
 		
 		public function Stroke()
 		{
-			isectPointA = new Point();
-			isectPointB = new Point();
 			clear();
 		}
 		
@@ -134,7 +128,7 @@ package starling.display.graphics
 			for ( var i:int = 0; i < L; i++ )
 			{
 				var oldVerticesLength:int = vertices.length;
-				createPolyLine( lines[i], vertices, indices, isectPointA, isectPointB, indexOffset );
+				createPolyLine( lines[i], vertices, indices, indexOffset );
 				indexOffset += (vertices.length-oldVerticesLength) * oneOverVertexStride;
 			}
 		}
@@ -146,13 +140,13 @@ package starling.display.graphics
 		private static function createPolyLine( vertices:Vector.<StrokeVertex>, 
 												outputVertices:Vector.<Number>, 
 												outputIndices:Vector.<uint>, 
-												isectPointA:Point,
-												isectPointB:Point,
 												indexOffset:int ):void
 		{
 			
 			var sqrt:Function = Math.sqrt;
+			var sin:Function = Math.sin;
 			const numVertices:int = vertices.length;
+			const PI:Number = Math.PI;
 			
 			for ( var i:int = 0; i < numVertices; i++ )
 			{
@@ -206,34 +200,31 @@ package starling.display.graphics
 					d0y = v1y - v0y;
 				}
 				
-				var thickness:Number = v1.thickness * 0.5;
+				var d0:Number = sqrt( d0x*d0x + d0y*d0y );
+				var d1:Number = sqrt( d1x*d1x + d1y*d1y );
 				
-				var n0x:Number = -d0y
-				var n0y:Number =  d0x;
-				var n0m:Number = (1/sqrt(n0x * n0x + n0y * n0y)) * thickness;
-				n0x *= n0m;
-				n0y *= n0m;
+				var elbowThickness:Number = v1.thickness*0.5;
+				if ( i > 0 && i < numVertices-1 )
+				{
+					// Thanks to Tom Clapham for spotting this relationship.
+					var dot:Number = (d0x*d1x+d0y*d1y) / (d0*d1);
+					elbowThickness /= sin((PI-Math.acos(dot)) * 0.5);
+				}
 				
-				var n1x:Number = -d1y
-				var n1y:Number =  d1x;
-				var n1m:Number = (1/sqrt(n1x * n1x + n1y * n1y)) * thickness;
-				n1x *= n1m;
-				n1y *= n1m;
+				var n0x:Number = -d0y / d0;
+				var n0y:Number =  d0x / d0;
+				var n1x:Number = -d1y / d1;
+				var n1y:Number =  d1x / d1;
 				
-				var p0x:Number = v1x + n0x;
-				var p0y:Number = v1y + n0y;
-				var p2x:Number = v1x + n1x;
-				var p2y:Number = v1y + n1y;
-				var p1x:Number = v1x - n0x;
-				var p1y:Number = v1y - n0y;
-				var p3x:Number = v1x - n1x;
-				var p3y:Number = v1y - n1y;
+				var cnx:Number = n0x + n1x;
+				var cny:Number = n0y + n1y;
+				var c:Number = (1/sqrt( cnx*cnx + cny*cny )) * elbowThickness;
+				cnx *= c;
+				cny *= c;
 				
-				intersection( isectPointA, p0x, p0y, p0x+d0x, p0y+d0y, p2x, p2y, p2x+d1x, p2y+d1y );
-				intersection( isectPointB, p1x, p1y, p1x+d0x, p1y+d0y, p3x, p3y, p3x+d1x, p3y+d1y );
-				
-				outputVertices.push( isectPointA.x, isectPointA.y, 0, v1.r2, v1.g2, v1.b2, v1.a2, v1.u, 1,
-									 isectPointB.x, isectPointB.y, 0, v1.r1, v1.g1, v1.b1, v1.a1, v1.u, 0 );
+				outputVertices.push( v1x + cnx, v1y + cny, 0, v1.r2, v1.g2, v1.b2, v1.a2, v1.u, 1,
+									 v1x - cnx, v1y - cny, 0, v1.r1, v1.g1, v1.b1, v1.a1, v1.u, 0 );
+			
 				
 				if ( i < numVertices - 1 )
 				{
@@ -241,27 +232,6 @@ package starling.display.graphics
 					outputIndices.push(i2, i2 + 2, i2 + 1, i2 + 1, i2 + 2, i2 + 3);
 				}
 			}
-		}
-		
-		[inline]
-		private static function intersection( output:Point, a0x:Number, a0y:Number, a1x:Number, a1y:Number, b0x:Number, b0y:Number, b1x:Number, b1y:Number ):void
-		{
-			const EPSILON:Number = 0.0000001;
-			
-			var vx:Number = b1x - b0x;
-			var vy:Number = b1y - b0y;
-			
-			var D:Number = (a1x - a0x) * vy - (a1y - a0y) * vx
-			if ((D < 0 ? -D : D) < EPSILON)
-			{
-				output.x = a0x;
-				output.y = a0y;
-				return;
-			}
-			
-			var t:Number = (vx * (a0y - b0y) - vy * (a0x - b0x)) / D;
-			output.x = a0x + t * (a1x - a0x);
-			output.y = a0y + t * (a1y - a0y);
 		}
 	}
 }

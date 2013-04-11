@@ -32,13 +32,14 @@ package
 			startTime = getTimer();
 			stroke.clear();
 			const STAGE_HEIGHT:Number = Starling.current.nativeStage.stageHeight;
-			for ( var i:int = 0; i < 400; i++ )
+			for ( var i:int = 0; i < 100; i++ )
 			{
-				var ratio:Number = i/400;
-				var x:Number = ratio * Starling.current.nativeStage.stageWidth;
+				var L:int = 2 + Math.random() * 20;
 				stroke.addBreak();
-				stroke.addVertex( x, 0 );
-				stroke.addVertex( x, STAGE_HEIGHT );
+				for ( var j:int = 0; j < L; j++ )
+				{
+					stroke.addVertex( Math.random() * Starling.current.nativeStage.stageWidth, Math.random() * Starling.current.nativeStage.stageHeight );
+				}
 			}
 			stroke.validateNow();
 			trace(getTimer()-startTime);
