@@ -18,8 +18,7 @@ package starling.display
 	{
 		// Shared texture fragment shader used across all graphics drawn via graphics API.
 		private static var textureFragmentShader	:TextureFragmentShader = new TextureFragmentShader();
-		public static const BEZIER_ERROR:Number = 0.75;
-		private static const DEG_TO_RAD:Number = Math.PI / 180;
+		private const BEZIER_ERROR:Number = 0.75;
 		
 		private var _currentX				:Number;
 		private var _currentY				:Number;
@@ -332,6 +331,8 @@ package starling.display
 			_strokeAlpha			= alpha;
 			_strokeTexture 			= null;
 			_strokeMaterial			= null;
+			
+			disposeCurrentStroke();
 		}
 		
 		public function lineTexture(thickness:Number = NaN, texture:Texture = null):void
@@ -341,6 +342,8 @@ package starling.display
 			_strokeAlpha			= 1;
 			_strokeTexture 			= texture;
 			_strokeMaterial			= null;
+			
+			disposeCurrentStroke();
 		}
 		
 		public function lineMaterial(thickness:Number = NaN, material:IMaterial = null):void
@@ -350,26 +353,15 @@ package starling.display
 			_strokeAlpha			= 1;
 			_strokeTexture			= null;
 			_strokeMaterial			= material;
+			
+			disposeCurrentStroke();
 		}
 		
 		public function moveTo(x:Number, y:Number):void
 		{
-			if ( _strokeTexture ) 
-			{
-				beginTextureStroke();
-			} 
-			else if ( _strokeMaterial )
-			{
-				beginMaterialStroke();
-			}
-			else if ( _strokeThickness > 0 )
-			{  	
-				beginStroke();
-			}
-			
 			if ( _currentStroke && _strokeThickness > 0 )
 			{
-				_currentStroke.addVertex( x, y, _strokeThickness );
+				_currentStroke.addBreak();
 			}
 			
 			if (_currentFill) 
@@ -397,6 +389,11 @@ package starling.display
 				{
 					beginStroke();
 				}
+			}
+			
+			if ( _currentStroke && _currentStroke.numVertices == 0 && isNaN(_currentX) == false )
+			{
+				_currentStroke.addVertex( _currentX, _currentY, _strokeThickness );
 			}
 			
 			if ( isNaN(_currentX) )
@@ -488,10 +485,7 @@ package starling.display
 		
 		private function beginStroke():void
 		{
-			if ( _currentStroke && _currentStroke.numVertices < 2 ) {
-				_container.removeChild(_currentStroke);
-			}
-			
+			disposeCurrentStroke();
 			_currentStroke = new Stroke();
 			_currentStroke.material.color = _strokeColor;
 			_currentStroke.material.alpha = _strokeAlpha;
@@ -500,10 +494,7 @@ package starling.display
 		
 		private function beginTextureStroke():void
 		{
-			if ( _currentStroke && _currentStroke.numVertices < 2 ) {
-				_container.removeChild(_currentStroke);
-			}
-			
+			disposeCurrentStroke();
 			_currentStroke = new Stroke();
 			_currentStroke.material.fragmentShader = textureFragmentShader;
 			_currentStroke.material.textures[0] = _strokeTexture;
@@ -514,12 +505,23 @@ package starling.display
 		
 		private function beginMaterialStroke():void
 		{
-			if ( _currentStroke && _currentStroke.numVertices < 2 ) {
-				_container.removeChild(_currentStroke);
-			}
+			disposeCurrentStroke();
 			_currentStroke = new Stroke();
 			_currentStroke.material = _strokeMaterial;
 			_container.addChild(_currentStroke);
+		}
+		
+		private function disposeCurrentStroke():void
+		{
+			if ( _currentStroke )
+			{
+				if ( _currentStroke.numVertices < 2 )
+				{
+					_currentStroke.dispose();
+					_container.removeChild(_currentStroke);
+				}
+				_currentStroke = null;
+			}
 		}
 	}
 }

@@ -6,12 +6,11 @@ package starling.display.graphics
 	
 	public class Stroke extends Graphic
 	{
-		private var lines			:Vector.<Vector.<StrokeVertex>>;
-		private var currStrokeVertices:Vector.<StrokeVertex>;
-		private var _numVertices	:int;
-		
-		private var isectPointA		:Point;
-		private var isectPointB		:Point;
+		private var lines				:Vector.<Vector.<StrokeVertex>>;
+		private var _currLine			:Vector.<StrokeVertex>;
+		private var _numVertices		:int;
+		private var isectPointA			:Point;
+		private var isectPointB			:Point;
 		
 		public function Stroke()
 		{
@@ -49,31 +48,32 @@ package starling.display.graphics
 				}
 			}
 			lines = new Vector.<Vector.<StrokeVertex>>();
-			currStrokeVertices = null;
+			_currLine = null;
 			_numVertices = 0;
 			isInvalid = true;
 		}
 		
 		public function addBreak():void
 		{
-			currStrokeVertices = null;
+			_currLine = null;
+			_numVertices = 0;
 		}
 		
 		public function addVertex( 	x:Number, y:Number, thickness:Number = 1,
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
-			if ( currStrokeVertices == null )
+			if ( _currLine == null )
 			{
-				currStrokeVertices = lines[lines.length] = new Vector.<StrokeVertex>();
+				_currLine = lines[lines.length] = new Vector.<StrokeVertex>();
 				_numVertices = 0;
 			}
 			
 			var u:Number = 0;
 			var textures:Vector.<Texture> = _material.textures;
-			if ( currStrokeVertices.length > 0 && textures.length > 0 )
+			if ( _currLine.length > 0 && textures.length > 0 )
 			{
-				var prevVertex:StrokeVertex = currStrokeVertices[currStrokeVertices.length - 1];
+				var prevVertex:StrokeVertex = _currLine[_currLine.length - 1];
 				var dx:Number = x - prevVertex.x;
 				var dy:Number = y - prevVertex.y;
 				var d:Number = Math.sqrt(dx*dx+dy*dy);
@@ -87,13 +87,13 @@ package starling.display.graphics
 			var g1:Number = ((color1 & 0x00FF00) >> 8) / 255;
 			var b1:Number = (color1 & 0x0000FF) / 255;
 			
-			var v:StrokeVertex = currStrokeVertices[_numVertices] = StrokeVertex.getInstance();
+			var v:StrokeVertex = _currLine[_numVertices] = StrokeVertex.getInstance();
 			v.x = x;
 			v.y = y;
-			v.r = r0;
-			v.g = g0;
-			v.b = b0;
-			v.a = alpha0;
+			v.r1 = r0;
+			v.g1 = g0;
+			v.b1 = b0;
+			v.a1 = alpha0;
 			v.r2 = r1;
 			v.g2 = g1;
 			v.b2 = b1;
@@ -206,33 +206,34 @@ package starling.display.graphics
 					d0y = v1y - v0y;
 				}
 				
+				var thickness:Number = v1.thickness * 0.5;
+				
 				var n0x:Number = -d0y
 				var n0y:Number =  d0x;
-				var n0m:Number = sqrt(n0x * n0x + n0y * n0y);
-				n0x /= n0m;
-				n0y /= n0m;
+				var n0m:Number = (1/sqrt(n0x * n0x + n0y * n0y)) * thickness;
+				n0x *= n0m;
+				n0y *= n0m;
 				
 				var n1x:Number = -d1y
 				var n1y:Number =  d1x;
-				var n1m:Number = sqrt(n1x * n1x + n1y * n1y);
-				n1x /= n1m;
-				n1y /= n1m;
+				var n1m:Number = (1/sqrt(n1x * n1x + n1y * n1y)) * thickness;
+				n1x *= n1m;
+				n1y *= n1m;
 				
-				var thickness:Number = v1.thickness * 0.5;
-				var p0x:Number = v1x + n0x * thickness;
-				var p0y:Number = v1y + n0y * thickness;
-				var p2x:Number = v1x + n1x * thickness;
-				var p2y:Number = v1y + n1y * thickness;
-				var p1x:Number = v1x - n0x * thickness;
-				var p1y:Number = v1y - n0y * thickness;
-				var p3x:Number = v1x - n1x * thickness;
-				var p3y:Number = v1y - n1y * thickness;
+				var p0x:Number = v1x + n0x;
+				var p0y:Number = v1y + n0y;
+				var p2x:Number = v1x + n1x;
+				var p2y:Number = v1y + n1y;
+				var p1x:Number = v1x - n0x;
+				var p1y:Number = v1y - n0y;
+				var p3x:Number = v1x - n1x;
+				var p3y:Number = v1y - n1y;
 				
-				intersection( isectPointA, p0x, p0y, p0x +d0x, p0y + d0y, p2x, p2y, p2x + d1x, p2y + d1y );
-				intersection( isectPointB, p1x, p1y, p1x +d0x, p1y + d0y, p3x, p3y, p3x + d1x, p3y + d1y );
+				intersection( isectPointA, p0x, p0y, p0x+d0x, p0y+d0y, p2x, p2y, p2x+d1x, p2y+d1y );
+				intersection( isectPointB, p1x, p1y, p1x+d0x, p1y+d0y, p3x, p3y, p3x+d1x, p3y+d1y );
 				
-				outputVertices.push(isectPointA.x, isectPointA.y, 0, v1.r2, v1.g2, v1.b2, v1.a2, v1.u, 1,
-									isectPointB.x, isectPointB.y, 0, v1.r,  v1.g,  v1.b,  v1.a,  v1.u, 0);
+				outputVertices.push( isectPointA.x, isectPointA.y, 0, v1.r2, v1.g2, v1.b2, v1.a2, v1.u, 1,
+									 isectPointB.x, isectPointB.y, 0, v1.r1, v1.g1, v1.b1, v1.a1, v1.u, 0 );
 				
 				if ( i < numVertices - 1 )
 				{
@@ -267,20 +268,19 @@ package starling.display.graphics
 
 internal class StrokeVertex
 {
-	public var x	:Number;
-	public var y	:Number;
-	public var r	:Number;
-	public var g	:Number;
-	public var b	:Number;
-	public var a	:Number;
-	public var u	:Number;
-	public var v	:Number;
-	
+	public var x		:Number;
+	public var y		:Number;
+	public var u		:Number;
+	public var v		:Number;
+	public var r1		:Number;
+	public var g1		:Number;
+	public var b1		:Number;
+	public var a1		:Number;
+	public var r2		:Number;
+	public var g2		:Number;
+	public var b2		:Number;
+	public var a2		:Number;
 	public var thickness:Number;
-	public var r2:Number;
-	public var g2:Number;
-	public var b2:Number;
-	public var a2:Number;
 	
 	public function StrokeVertex()
 	{
@@ -292,10 +292,10 @@ internal class StrokeVertex
 		var vertex:StrokeVertex = getInstance();
 		vertex.x = x;
 		vertex.y = y;
-		vertex.r = r;
-		vertex.g = g;
-		vertex.b = b;
-		vertex.a = a;
+		vertex.r1 = r1;
+		vertex.g1 = g1;
+		vertex.b1 = b1;
+		vertex.a1 = a1;
 		vertex.u = u;
 		vertex.v = v;
 		return vertex;
