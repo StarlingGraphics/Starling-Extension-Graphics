@@ -209,6 +209,10 @@ package starling.display.graphics
 					// Thanks to Tom Clapham for spotting this relationship.
 					var dot:Number = (d0x*d1x+d0y*d1y) / (d0*d1);
 					elbowThickness /= sin((PI-Math.acos(dot)) * 0.5);
+					if ( isNaN( elbowThickness ) )
+					{
+						elbowThickness = v1.thickness*0.5;
+					}
 				}
 				
 				var n0x:Number = -d0y / d0;
