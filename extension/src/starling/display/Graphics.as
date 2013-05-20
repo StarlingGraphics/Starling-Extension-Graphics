@@ -319,7 +319,7 @@ package starling.display
 				var strokePoints:Vector.<Number> = roundedRect.getStrokePoints();
 				for ( var i:int = 0; i < strokePoints.length; i+=2 )
 				{
-					_currentStroke.addVertex( x+strokePoints[i],y+strokePoints[i+1], _strokeThickness, _strokeColor, _strokeAlpha, _strokeColor, _strokeAlpha );
+					_currentStroke.addVertex( x+strokePoints[i],y+strokePoints[i+1], _strokeThickness );
 				}
 			}
 		}
