@@ -16,7 +16,7 @@ package
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
 			
-			starling = new Starling( Profiling, stage );
+			starling = new Starling( StrokeProfilingGraphics, stage );
 			
 			starling.antiAliasing = 1;
 			starling.start();

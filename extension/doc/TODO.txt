@@ -1,0 +1,11 @@
+Re-use two materials, one for texture, one for flat fills.
+
+
+Fill
+	Finish off trapezoidalisation in Fill.
+
+	
+Stroke
+	Handle closed strokes
+
+	

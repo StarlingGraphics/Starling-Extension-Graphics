@@ -1,51 +1,97 @@
 package starling.display.graphics
 {
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+	
 	import starling.core.RenderSupport;
+	import starling.core.Starling;
+	import starling.display.DisplayObject;
+
 	public class Plane extends Graphic
 	{
-		private var vertices		:Vector.<Number>;
-		private var indices			:Vector.<uint>
 		private var _width			:Number;
 		private var _height			:Number;
 		private var _numVerticesX	:uint;
 		private var _numVerticesY	:uint;
+		private var _vertexFunction	:Function;
 		
-		private var _numTriangles	:int;
-		
-		public function Plane( width:Number = 1, height:Number = 1, numVerticesX:uint = 2, numVerticesY:uint = 2 )
+		public function Plane( width:Number = 100, height:Number = 100, numVerticesX:uint = 2, numVerticesY:uint = 2 )
 		{
 			_width = width;
 			_height = height;
 			_numVerticesX = numVerticesX;
 			_numVerticesY = numVerticesY;
-			validate();
+			_vertexFunction = defaultVertexFunction;
+			isInvalid = true;
 		}
 		
-		public function validate():void
+		public static function defaultVertexFunction( column:int, row:int, width:Number, height:Number, numVerticesX:int, numVerticesY:int, output:Vector.<Number>, uvMatrix:Matrix = null ):void
+		{
+			var segmentWidth:Number = width / (numVerticesX-1);
+			var segmentHeight:Number = height / (numVerticesY-1);
+			
+			output.push( 	segmentWidth * column, 		// x
+							segmentHeight * row,		// y
+							0,							// z
+							1,1,1,1,					// rgba
+							column / (numVerticesX-1), 	// u
+							row / (numVerticesY-1) );	// v
+		}
+		
+		public function set vertexFunction( value:Function ):void
+		{
+			if ( value == null )
+			{
+				throw( new Error( "Value must not be null" ) );
+				return;
+			}
+			_vertexFunction = value;
+			isInvalid = true;
+		}
+		
+		public function get vertexFunction():Function
+		{
+			return _vertexFunction
+		}
+		
+		override protected function buildGeometry():void
 		{
 			vertices = new Vector.<Number>();
+			indices = new Vector.<uint>();
+			
+			// Generate vertices
 			var numVertices:int = _numVerticesX * _numVerticesY;
-			var segmentWidth:Number = _width / (_numVerticesX-1);
-			var segmentHeight:Number = _height / (_numVerticesY-1);
-			var halfWidth:Number = _width * 0.5;
-			var halfHeight:Number = _height * 0.5;
 			for ( var i:int = 0; i < numVertices; i++ )
 			{
 				var column:int = i % _numVerticesX;
 				var row:int = i / _numVerticesX;
-				var u:Number = column / (_numVerticesX-1);
-				var v:Number = row / (_numVerticesY-1);
-				var x:Number = segmentWidth * column;
-				var y:Number = segmentHeight * row;
-				vertices.push( x, y, 0, u, v, 1, 1, 1 );
+				_vertexFunction( column, row, _width, _height, _numVerticesX, _numVerticesY, vertices, _uvMatrix );
 			}
 			
-			indices = new Vector.<uint>();
-			var numQuads:int = (_numVerticesX-1) * (_numVerticesY-1);
-			for ( i = 0; i < numQuads; i++ )
-			{
-				indices.push( i, i+1, i+_numVerticesX+1, i+_numVerticesX+1, i+_numVerticesX, i );
+			// Generate indices
+			var qn:int = 0; //quad number
+			for (var n:int = 0; n <_numVerticesX-1; n++) //create quads out of the vertices
+			{               
+				for (var m:int = 0; m <_numVerticesY - 1; m++)
+				{
+					
+					indices.push(qn, qn + 1, qn + _numVerticesX ); //upper face
+					indices.push(qn + _numVerticesX, qn + _numVerticesX  + 1, qn+1); //lower face
+					
+					qn++; //jumps to next quad
+				}
+				qn++; // jumps to next row
 			}
+		}
+		
+		public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
+		{
+			minBounds.x = 0;
+			minBounds.y = 0;
+			maxBounds.x = _width;
+			maxBounds.y = _height;
+			return super.getBounds(targetSpace, resultRect);
 		}
 	}
 }

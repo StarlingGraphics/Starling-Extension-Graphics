@@ -1,11 +1,5 @@
 package starling.display.materials
 {
-	import com.adobe.utils.AGALMiniAssembler;
-	import starling.display.shaders.fragment.VertexColorFragmentShader;
-	import starling.display.shaders.IShader;
-	import starling.display.shaders.vertex.StandardVertexShader;
-	import starling.textures.Texture;
-	
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
 	import flash.display3D.Context3DVertexBufferFormat;
@@ -13,6 +7,11 @@ package starling.display.materials
 	import flash.display3D.Program3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix3D;
+	
+	import starling.display.shaders.IShader;
+	import starling.display.shaders.fragment.VertexColorFragmentShader;
+	import starling.display.shaders.vertex.StandardVertexShader;
+	import starling.textures.Texture;
 
 	public class StandardMaterial implements IMaterial
 	{
@@ -20,6 +19,9 @@ package starling.display.materials
 		
 		private var _vertexShader	:IShader;
 		private var _fragmentShader	:IShader;
+		private var _alpha			:Number = 1;
+		private var _color			:uint;
+		private var colorVector		:Vector.<Number>;
 		private var _textures		:Vector.<Texture>;
 		
 		public function StandardMaterial( vertexShader:IShader = null, fragmentShader:IShader = null )
@@ -27,6 +29,37 @@ package starling.display.materials
 			this.vertexShader = vertexShader || new StandardVertexShader();
 			this.fragmentShader = fragmentShader || new VertexColorFragmentShader();
 			textures = new Vector.<Texture>();
+			colorVector = new Vector.<Number>();
+			color = 0xFFFFFF;
+		}
+		
+		public function dispose( disposeTextures:Boolean = false ):void
+		{
+			if ( program )
+			{
+				Program3DCache.releaseProgram3D(program);
+				program = null;
+			}
+			_vertexShader= null;
+			_fragmentShader = null;
+			
+			if (disposeTextures)
+			{
+				for each ( var texture:Texture in _textures )
+				{
+					texture.dispose();
+				}
+			}
+			_textures = null;
+		}
+		
+		public function restoreOnLostContext():void
+		{
+			if ( program )
+			{
+				Program3DCache.releaseProgram3D(program);
+				program = null;
+			}
 		}
 		
 		public function set textures( value:Vector.<Texture> ):void
@@ -44,7 +77,7 @@ package starling.display.materials
 			_vertexShader = value;
 			if ( program )
 			{
-				program.dispose();
+				Program3DCache.releaseProgram3D(program);
 				program = null;
 			}
 		}
@@ -59,7 +92,7 @@ package starling.display.materials
 			_fragmentShader = value;
 			if ( program )
 			{
-				program.dispose();
+				Program3DCache.releaseProgram3D(program);
 				program = null;
 			}
 		}
@@ -69,7 +102,32 @@ package starling.display.materials
 			return _fragmentShader;
 		}
 		
-		public function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D ):void
+		
+		public function get alpha():Number
+		{
+			return _alpha;
+		}
+		
+		public function set alpha(value:Number):void
+		{
+			_alpha = value;
+		}
+		
+		public function get color():uint
+		{
+			return _color;
+		}
+		
+		public function set color(value:uint):void
+		{
+			_color = value;
+			colorVector[0] = (_color >> 16) / 255;
+			colorVector[1] = ((_color & 0x00FF00) >> 8) / 255;
+			colorVector[2] = (_color & 0x0000FF) / 255;
+		}
+
+		
+		public function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1 ):void
 		{
 			context.setVertexBufferAt( 0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3 );
 			context.setVertexBufferAt( 1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_4 );
@@ -77,8 +135,7 @@ package starling.display.materials
 			
 			if ( program == null && _vertexShader && _fragmentShader )
 			{
-				program = context.createProgram();
-				program.upload( _vertexShader.opCode, _fragmentShader.opCode );
+				program = Program3DCache.getProgram3D(context, _vertexShader, _fragmentShader);
 			}
 			context.setProgram(program);
 			
@@ -89,8 +146,9 @@ package starling.display.materials
 			
 			context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix, true);
 			_vertexShader.setConstants(context, 4);
-			
-			_fragmentShader.setConstants(context, 0);
+			colorVector[3] = _alpha*alpha;	// Multiply display obect's alpha by material alpha.
+			context.setProgramConstantsFromVector( Context3DProgramType.FRAGMENT, 0, colorVector );
+			_fragmentShader.setConstants(context, 1);
 			
 			context.drawTriangles(indexBuffer);
 		}

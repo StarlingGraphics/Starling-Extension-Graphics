@@ -1,14 +1,14 @@
 package
 {
 	import flash.display.Bitmap;
+	import flash.utils.getTimer;
 	
 	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.events.Event;
-	import starling.textures.Texture;
 	
-	public class Profiling extends Sprite
+	public class FillProfiling extends Sprite
 	{
 		[Embed( source = "/assets/Checker.png" )]
 		private var CheckerBMP		:Class;
@@ -16,18 +16,21 @@ package
 		
 		private var checkerBMP		:Bitmap;
 		
-		public function Profiling()
+		private var startTime		:int;
+		
+		public function FillProfiling()
 		{
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
 		}
 		
 		private function onAdded ( e:Event ):void
 		{
-			shape = new Shape(true);
+			shape = new Shape();
 			addChild(shape);
 			
 			checkerBMP = new CheckerBMP();
 			
+			startTime = getTimer();
 			addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 		}
 		
@@ -36,7 +39,7 @@ package
 		{
 			shape.graphics.clear();
 			
-			shape.graphics.beginBitmapFill( checkerBMP );
+			shape.graphics.beginBitmapFill( checkerBMP.bitmapData );
 			for ( var i:int = 0; i < 3 * 100; i++ )
 			{
 				shape.graphics.lineTo( Math.random() * Starling.current.nativeStage.stageWidth, Math.random() * Starling.current.nativeStage.stageHeight );
@@ -45,7 +48,7 @@ package
 			numFrames++;
 			if ( numFrames == 500 )
 			{
-				trace("Finished");
+				trace("Total time: " + String(getTimer()-startTime));
 				removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 			}
 		}

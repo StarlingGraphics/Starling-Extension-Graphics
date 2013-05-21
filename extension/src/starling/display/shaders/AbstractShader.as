@@ -1,7 +1,9 @@
 package starling.display.shaders
 {
 	import com.adobe.utils.AGALMiniAssembler;
+	
 	import flash.display3D.Context3D;
+	import flash.display3D.Context3DProgramType;
 	import flash.utils.ByteArray;
 	
 	public class AbstractShader implements IShader

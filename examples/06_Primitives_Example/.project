@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Starling-Extension-Graphics</name>
+	<name>06_Primitives_Example</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -12,7 +12,6 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>com.adobe.flexbuilder.project.aslibnature</nature>
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 	</natures>
 </projectDescription>

@@ -56,7 +56,8 @@ package
 			var m:Matrix = new Matrix();
 			m.createGradientBox( 1, 4, Math.PI*0.5 );
 			var skyGradientTexture:Texture = GradientTexture.create( 2, 4, GradientType.LINEAR, [ 0x8ac9d2, 0xf4a886, 0xfec28c ], [1, 1, 1], [0, 128, 255], m );
-			skyFill.uvMatrix.scale( w / skyGradientTexture.width, h / skyGradientTexture.height );
+			skyFill.uvMatrix = new Matrix();
+			skyFill.uvMatrix.scale( 1 / w, 1 / h );
 			skyFill.material.fragmentShader = new TextureVertexColorFragmentShader();
 			skyFill.material.textures[0] = skyGradientTexture;
 			skyFill.addVertex( 0, 0 );
@@ -155,7 +156,7 @@ package
 					triangleFan.y = y2;
 					triangleFan.rotation = Math.random() * 360;
 					leaves.push(triangleFan);
-					triangleFan.addVertex(0, 0, 0xFFFFFF, 1, 0, 1);
+					triangleFan.addVertex(0, 0, 0, 1);
 					var radius:Number = 30 + Math.random() * 30;
 					var numBumps:int = 2 + Math.random() * 1;
 					var bumpSize:Number = 5 + Math.random() * 5;
@@ -171,7 +172,7 @@ package
 						trace(Math.sin( (angle * 2) % Math.PI ));
 						//currRadius += Math.random() * 5;
 						
-						triangleFan.addVertex( nx * currRadius, ny * currRadius, 0xFFFFFF, 1, ratio, 0 );
+						triangleFan.addVertex( nx * currRadius, ny * currRadius, ratio, 0 );
 					}
 					
 					continue;

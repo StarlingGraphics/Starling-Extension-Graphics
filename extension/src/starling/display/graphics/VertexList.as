@@ -13,6 +13,17 @@ package starling.display.graphics
 			
 		}
 		
+		static public function insertAfter( nodeA:VertexList, nodeB:VertexList ):VertexList
+		{
+			var temp:VertexList = nodeA.next;
+			nodeA.next = nodeB;
+			nodeB.next = temp;
+			nodeB.prev = nodeA;
+			nodeB.head = nodeA.head;
+			
+			return nodeB;
+		}
+		
 		static public function clone( vertexList:VertexList ):VertexList
 		{
 			var newHead:VertexList;
@@ -82,10 +93,13 @@ package starling.display.graphics
 		}
 		
 		private static var nodePool:Vector.<VertexList> = new Vector.<VertexList>();
+		private static var nodePoolLength:int = 0;
+		
 		static public function getNode():VertexList
 		{
-			if ( nodePool.length > 0 )
+			if ( nodePoolLength > 0 )
 			{
+				nodePoolLength--;
 				return nodePool.pop();
 			}
 			return new VertexList();
@@ -96,7 +110,7 @@ package starling.display.graphics
 			node.prev = node.next = node.head = null;
 			node.vertex = null;
 			node.index = -1;
-			nodePool.push(node);
+			nodePool[nodePoolLength++] = node;
 		}
 	}
 }
