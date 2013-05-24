@@ -4,8 +4,7 @@ package starling.display.graphics
 	
 	public class Stroke extends Graphic
 	{
-		private var lines				:Vector.<Vector.<StrokeVertex>>;
-		private var _currLine			:Vector.<StrokeVertex>;
+		private var _line			:Vector.<StrokeVertex>;
 		private var _numVertices		:int;
 		
 		private static const c_degenerateUseNext:uint = 1;
@@ -24,7 +23,6 @@ package starling.display.graphics
 		override public function dispose():void
 		{
 			clear();
-			lines = null;
 			super.dispose();
 		}
 
@@ -36,59 +34,43 @@ package starling.display.graphics
 				maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
 			}
 			
-			if ( lines )
+			if (_line)
 			{
-				var L:int = lines.length;
-				for ( var i:int = 0; i < L; i++ )
-				{
-					StrokeVertex.returnInstances(lines[i]);
-				}
+				StrokeVertex.returnInstances(_line);
 			}
-			lines = new Vector.<Vector.<StrokeVertex>>();
-			_currLine = null;
+			_line = new Vector.<StrokeVertex>;
 			_numVertices = 0;
 			isInvalid = true;
 		}
 		
-		public function addBreak():void
-		{
-			_currLine = null;
-			_numVertices = 0;
-		}
-		
-		public function addDegenerates(x:Number, y:Number):void
+		public function addDegenerates(destX:Number, destY:Number):void
 		{
 			if (_numVertices < 1)
 			{
 				return;
 			}
-			var v:StrokeVertex = _currLine[_numVertices-1];
-			addVertex(v.x, v.y, 0.0);
+			var lastVertex:StrokeVertex = _line[_numVertices-1];
+			addVertex(lastVertex.x, lastVertex.y, 0.0);
 			setLastVertexAsDegenerate(c_degenerateUseLast);
-			addVertex(x, y, 0.0);
+			addVertex(destX, destY, 0.0);
 			setLastVertexAsDegenerate(c_degenerateUseNext);
 		}
 		
 		private function setLastVertexAsDegenerate(type:uint):void
 		{
-			_currLine[_numVertices-1].degenerate = type;
+			_line[_numVertices-1].degenerate = type;
+			_line[_numVertices-1].u = 0.0;
 		}
 		
 		public function addVertex( 	x:Number, y:Number, thickness:Number = 1,
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
-			if ( _currLine == null )
-			{
-				_currLine = lines[lines.length] = new Vector.<StrokeVertex>();
-				_numVertices = 0;
-			}
-			
 			var u:Number = 0;
 			var textures:Vector.<Texture> = _material.textures;
-			if ( _currLine.length > 0 && textures.length > 0 )
+			if ( _line.length > 0 && textures.length > 0 )
 			{
-				var prevVertex:StrokeVertex = _currLine[_currLine.length - 1];
+				var prevVertex:StrokeVertex = _line[_line.length - 1];
 				var dx:Number = x - prevVertex.x;
 				var dy:Number = y - prevVertex.y;
 				var d:Number = Math.sqrt(dx*dx+dy*dy);
@@ -102,7 +84,7 @@ package starling.display.graphics
 			var g1:Number = ((color1 & 0x00FF00) >> 8) / 255;
 			var b1:Number = (color1 & 0x0000FF) / 255;
 			
-			var v:StrokeVertex = _currLine[_numVertices] = StrokeVertex.getInstance();
+			var v:StrokeVertex = _line[_numVertices] = StrokeVertex.getInstance();
 			v.x = x;
 			v.y = y;
 			v.r1 = r0;
@@ -145,15 +127,11 @@ package starling.display.graphics
 			vertices = new Vector.<Number>();
 			indices = new Vector.<uint>();
 			var indexOffset:int = 0;
-			var L:int = lines.length;
 			const oneOverVertexStride:Number = 1/VERTEX_STRIDE;
-			for ( var i:int = 0; i < L; i++ )
-			{
-				var oldVerticesLength:int = vertices.length;
-				fixUpPolyLine( lines[i] );
-				createPolyLine( lines[i], vertices, indices, indexOffset );
-				indexOffset += (vertices.length-oldVerticesLength) * oneOverVertexStride;
-			}
+			var oldVerticesLength:int = vertices.length;
+			fixUpPolyLine( _line );
+			createPolyLine( _line, vertices, indices, indexOffset );
+			indexOffset += (vertices.length-oldVerticesLength) * oneOverVertexStride;
 		}
 		
 		///////////////////////////////////

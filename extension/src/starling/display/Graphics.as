@@ -360,26 +360,11 @@ package starling.display
 		
 		public function moveTo(x:Number, y:Number):void
 		{
-			if ( _currentStroke && _strokeThickness > 0 )
-			{
-				_currentStroke.addBreak();
-			}
-			
-			if (_currentFill) 
-			{
-				_currentFill.addVertex( x, y );
-			}
-			
-			_currentX = x;
-			_currentY = y;
-		}
-		
-		// Degenerates allow for better performance as they do not terminate
-		// the vertex buffer but instead use zero size polygons to translate
-		// from the end point of the last sections of the stroke to the
-		// start of the new point.
-		public function moveToWithDegenerates(x:Number, y:Number):void
-		{
+			// Move to changed to add degenerates:
+			// Degenerates allow for better performance as they do not terminate
+			// the vertex buffer but instead use zero size polygons to translate
+			// from the end point of the last section of the stroke to the
+			// start of the new point.
 			if ( _currentStroke && _strokeThickness > 0 )
 			{
 				_currentStroke.addDegenerates(x, y);
@@ -387,9 +372,7 @@ package starling.display
 			
 			if (_currentFill) 
 			{
-				_currentFill.addVertex( _currentX, _currentY );
-				_currentFill.addVertex( x, y );
-				_currentFill.addVertex( x, y );
+				_currentFill.addDegenerates( x, y );
 			}
 			
 			_currentX = x;
