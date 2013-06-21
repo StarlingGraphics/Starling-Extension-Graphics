@@ -1,7 +1,5 @@
 package
 {
-	import flash.geom.Matrix;
-	
 	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.events.Event;

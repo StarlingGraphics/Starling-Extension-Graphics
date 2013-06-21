@@ -1,25 +1,18 @@
 package
 {
 	import flash.display.GradientType;
-	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
-	import flash.geom.Point;
 	
-	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.display.graphics.Fill;
 	import starling.display.graphics.Stroke;
 	import starling.display.graphics.TriangleFan;
-	import starling.display.materials.StandardMaterial;
 	import starling.display.shaders.fragment.TextureVertexColorFragmentShader;
-	import starling.display.shaders.fragment.VertexColorFragmentShader;
 	import starling.display.shaders.vertex.RippleVertexShader;
-	import starling.display.shaders.vertex.StandardVertexShader;
 	import starling.events.Event;
 	import starling.textures.GradientTexture;
 	import starling.textures.Texture;
-	import starling.utils.Color;
 	
 	public class FillStrokeExample extends Sprite
 	{

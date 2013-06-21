@@ -10,7 +10,6 @@ package
 	import starling.display.materials.StandardMaterial;
 	import starling.display.materials.TextureMaterial;
 	import starling.display.shaders.fragment.TextureFragmentShader;
-	import starling.display.shaders.fragment.VertexColorFragmentShader;
 	import starling.display.shaders.vertex.StandardVertexShader;
 	import starling.events.Event;
 	import starling.textures.Texture;
