@@ -16,7 +16,7 @@ package
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.align = StageAlign.TOP_LEFT;
 			
-			starling = new Starling( BoundsExample, stage );
+			starling = new Starling( BoundsTest, stage );
 			
 			starling.antiAliasing = 3;
 			starling.start();

@@ -9,11 +9,11 @@ package
 	import starling.events.TouchEvent;
 	import starling.events.TouchPhase;
 	
-	public class BoundsExample extends Sprite
+	public class BoundsTest extends Sprite
 	{	
 		private var shape:Shape;
 		
-		public function BoundsExample()
+		public function BoundsTest()
 		{
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
 		}
