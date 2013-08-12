@@ -9,7 +9,7 @@ These primitives can be manipulated directly, or created on your behalf by using
 Roadmap
 ===========================
 
-Optimisations across the board to aid with the currently poor performance on mobile devices. If you're targeting mobile, try to avoid calls to graphics.lineTo() as much as possible. Any arbitrary polygon shape is processed by a triangulator implemented in AS3, which is very CPU intensive. drawRect(), drawRoundedRect(), drawCircle() etc are implemented by specialised primitives, so avoid the triangulator altogether. 
+Optimisations across the board to aid with performance on mobile devices. If you're targeting mobile, try to avoid calls to graphics.lineTo() as much as possible. Any arbitrary polygon shape is processed by a triangulator implemented in AS3, which is very CPU intensive. drawRect(), drawRoundedRect(), drawCircle() etc are implemented by specialised primitives, so avoid the triangulator altogether. 
 
 Improve performance of triangulator by using trapezoidalisation to pre-process polygons fed to the ear-clipping algorithm.
 
