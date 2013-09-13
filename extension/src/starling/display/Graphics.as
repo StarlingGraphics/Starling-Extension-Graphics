@@ -2,6 +2,7 @@ package starling.display
 {
 	import flash.display.BitmapData;
 	import flash.geom.Matrix;
+	import starling.display.graphicsEx.GraphicsExData;
 	
 	import starling.display.graphics.Fill;
 	import starling.display.graphics.Graphic;
@@ -17,26 +18,27 @@ package starling.display
 	public class Graphics
 	{
 		// Shared texture fragment shader used across all graphics drawn via graphics API.
-		private static var textureFragmentShader	:TextureFragmentShader = new TextureFragmentShader();
-		private const BEZIER_ERROR:Number = 0.75;
+		protected static var textureFragmentShader	:TextureFragmentShader = new TextureFragmentShader();
+		protected const BEZIER_ERROR:Number = 0.75;
 		
-		private var _currentX				:Number;
-		private var _currentY				:Number;
-		private var _currentStroke			:Stroke;
-		private var _currentFill			:Fill;
+		protected var _currentX				:Number;
+		protected var _currentY				:Number;
+		protected var _currentStroke			:Stroke;
+		protected var _currentFill			:Fill;
 		
-		private var _fillColor				:uint;
-		private var _fillAlpha				:Number;
-		private var _strokeThickness		:Number
-		private var _strokeColor			:uint;
-		private var _strokeAlpha			:Number;
-		private var _strokeTexture			:Texture;
-		private var _strokeMaterial			:IMaterial;
+		protected var _fillColor				:uint;
+		protected var _fillAlpha				:Number;
+		protected var _strokeThickness		:Number;
+      	protected var _strokeColor			:uint;
+		protected var _strokeAlpha			:Number;
+		protected var _strokeTexture			:Texture;
+		protected var _strokeMaterial			:IMaterial;
 		
-		private var _container				:DisplayObjectContainer;
-		private var _strokeInterrupted		:Boolean;
-		
-		public function Graphics(displayObjectContainer:DisplayObjectContainer)
+		protected var _container				:DisplayObjectContainer;
+		protected var _strokeInterrupted		:Boolean;
+
+     
+        public function Graphics(displayObjectContainer:DisplayObjectContainer)
 		{
 			_container = displayObjectContainer;
 		}
@@ -64,7 +66,8 @@ package starling.display
 			_fillAlpha 	= NaN;
 			_currentFill= null;
 			_currentStroke = null;
-		}
+         
+        }
 		
 		public function beginFill(color:uint, alpha:Number = 1.0):void
 		{
@@ -338,7 +341,7 @@ package starling.display
 		
 		public function lineTexture(thickness:Number = NaN, texture:Texture = null):void
 		{
-			_strokeThickness		= thickness;
+         	_strokeThickness		= thickness;
 			_strokeColor			= 0xFFFFFF;
 			_strokeAlpha			= 1;
 			_strokeTexture 			= texture;
@@ -400,7 +403,8 @@ package starling.display
 			
 			if ( _currentStroke && ( _strokeInterrupted || _currentStroke.numVertices == 0 ) && isNaN(_currentX) == false )
 			{
-				_currentStroke.addVertex( _currentX, _currentY, _strokeThickness );
+                _currentStroke.addVertex( _currentX, _currentY, _strokeThickness );
+
 				_strokeInterrupted  = false;
 			}
 			
@@ -411,7 +415,7 @@ package starling.display
 			
 			if ( _currentStroke && _strokeThickness > 0 )
 			{
-				_currentStroke.addVertex( x, y, _strokeThickness );
+               	_currentStroke.addVertex( x, y, _strokeThickness );
 			}
 			
 			if (_currentFill) 
@@ -434,24 +438,24 @@ package starling.display
 			}
 			
 			var points:Vector.<Number> = CurveUtil.quadraticCurve(startX, startY, cx, cy, a2x, a2y, error);
-			
-			var L:int = points.length;
-			for ( var i:int = 0; i < L; i+=2 )
-			{
-				var x:Number = points[i];
-				var y:Number = points[i+1];
-				
-				if ( i == 0 && isNaN(_currentX) )
-				{
-					moveTo( x, y );
-				}
-				else
-				{
-					lineTo( x, y );
-				}
-			}
-			
-			_currentX = a2x;
+
+            var L:int = points.length;
+            for ( var i:int = 0; i < L; i+=2 )
+            {
+                var x:Number = points[i];
+                var y:Number = points[i+1];
+
+                if ( i == 0 && isNaN(_currentX) )
+                {
+                    moveTo( x, y );
+                }
+                else
+                {
+                    lineTo( x, y );
+                }
+            }
+
+            _currentX = a2x;
 			_currentY = a2y;
 		}
 		
@@ -469,29 +473,30 @@ package starling.display
 			var points:Vector.<Number> = CurveUtil.cubicCurve(startX, startY, c1x, c1y, c2x, c2y, a2x, a2y, error);
 			
 			var L:int = points.length;
-			for ( var i:int = 0; i < L; i+=2 )
-			{
-				var x:Number = points[i];
-				var y:Number = points[i+1];
+            for ( var i:int = 0; i < L; i+=2 )
+    		{
+	    		var x:Number = points[i];
+		    	var y:Number = points[i+1];
 				
-				if ( i == 0 && isNaN(_currentX) )
-				{
-					moveTo( x, y );
-				}
-				else
-				{
-					lineTo( x, y );
-				}
+			   	if ( i == 0 && isNaN(_currentX) )
+			    {
+				    moveTo( x, y );
+			    }
+			    else
+			    {
+                    lineTo( x, y );
+                }
 			}
+
 			_currentX = a2x;
 			_currentY = a2y;
 		}
-		
+
 		////////////////////////////////////////
-		// PRIVATE
+		// PROTECTED
 		////////////////////////////////////////
 		
-		private function beginStroke():void
+		protected function beginStroke():void
 		{
 			disposeCurrentStroke();
 			_currentStroke = new Stroke();
@@ -500,7 +505,7 @@ package starling.display
 			_container.addChild(_currentStroke);
 		}
 		
-		private function beginTextureStroke():void
+		protected function beginTextureStroke():void
 		{
 			disposeCurrentStroke();
 			_currentStroke = new Stroke();
@@ -511,7 +516,7 @@ package starling.display
 			_container.addChild(_currentStroke);
 		}
 		
-		private function beginMaterialStroke():void
+		protected function beginMaterialStroke():void
 		{
 			disposeCurrentStroke();
 			_currentStroke = new Stroke();
@@ -519,7 +524,7 @@ package starling.display
 			_container.addChild(_currentStroke);
 		}
 		
-		private function disposeCurrentStroke():void
+		protected function disposeCurrentStroke():void
 		{
 			if ( _currentStroke )
 			{
@@ -531,5 +536,7 @@ package starling.display
 				_currentStroke = null;
 			}
 		}
-	}
+
+
+    }
 }
