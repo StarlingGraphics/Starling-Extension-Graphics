@@ -2,7 +2,6 @@ package starling.display
 {
 	import flash.display.BitmapData;
 	import flash.geom.Matrix;
-	import starling.display.graphicsEx.GraphicsExData;
 	
 	import starling.display.graphics.Fill;
 	import starling.display.graphics.Graphic;
@@ -10,6 +9,7 @@ package starling.display
 	import starling.display.graphics.Plane;
 	import starling.display.graphics.RoundedRectangle;
 	import starling.display.graphics.Stroke;
+	import starling.display.graphics.StrokeVertex;
 	import starling.display.materials.IMaterial;
 	import starling.display.shaders.fragment.TextureFragmentShader;
 	import starling.display.util.CurveUtil;
@@ -23,7 +23,7 @@ package starling.display
 		
 		protected var _currentX				:Number;
 		protected var _currentY				:Number;
-		protected var _currentStroke			:Stroke;
+		protected var _currentStroke		:Stroke;
 		protected var _currentFill			:Fill;
 		
 		protected var _fillColor				:uint;
@@ -65,7 +65,7 @@ package starling.display
 			_fillColor 	= NaN;
 			_fillAlpha 	= NaN;
 			_currentFill= null;
-			_currentStroke = null;
+			clearCurrentStroke();
          
         }
 		
@@ -492,23 +492,36 @@ package starling.display
 			_currentY = a2y;
 		}
 
+		
 		////////////////////////////////////////
 		// PROTECTED
 		////////////////////////////////////////
 		
+		protected function createStroke() : Stroke
+		{ // Created to be able to extend class with different strokes for different folks.
+			return new Stroke();
+		}
+		
+		protected function clearCurrentStroke() : void
+		{
+			_currentStroke = null;
+		}
+		
 		protected function beginStroke():void
 		{
 			disposeCurrentStroke();
-			_currentStroke = new Stroke();
+			_currentStroke = createStroke();
 			_currentStroke.material.color = _strokeColor;
 			_currentStroke.material.alpha = _strokeAlpha;
 			_container.addChild(_currentStroke);
 		}
 		
+		
+		
 		protected function beginTextureStroke():void
 		{
 			disposeCurrentStroke();
-			_currentStroke = new Stroke();
+			_currentStroke = createStroke();
 			_currentStroke.material.fragmentShader = textureFragmentShader;
 			_currentStroke.material.textures[0] = _strokeTexture;
 			_currentStroke.material.color = _strokeColor;
@@ -519,7 +532,7 @@ package starling.display
 		protected function beginMaterialStroke():void
 		{
 			disposeCurrentStroke();
-			_currentStroke = new Stroke();
+			_currentStroke = createStroke();
 			_currentStroke.material = _strokeMaterial;
 			_container.addChild(_currentStroke);
 		}

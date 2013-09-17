@@ -1,14 +1,15 @@
 package starling.display.graphics
 {
 	import starling.textures.Texture;
+	import starling.display.graphics.StrokeVertex;
 	
 	public class Stroke extends Graphic
 	{
-		private var _line			:Vector.<StrokeVertex>;
-		private var _numVertices		:int;
+		protected var _line			:Vector.<StrokeVertex>;
+		protected var _numVertices		:int;
 		
-		private static const c_degenerateUseNext:uint = 1;
-		private static const c_degenerateUseLast:uint = 2;
+		protected static const c_degenerateUseNext:uint = 1;
+		protected static const c_degenerateUseLast:uint = 2;
 		
 		public function Stroke()
 		{
@@ -56,7 +57,7 @@ package starling.display.graphics
 			setLastVertexAsDegenerate(c_degenerateUseNext);
 		}
 		
-		private function setLastVertexAsDegenerate(type:uint):void
+		protected function setLastVertexAsDegenerate(type:uint):void
 		{
 			_line[_numVertices-1].degenerate = type;
 			_line[_numVertices-1].u = 0.0;
@@ -134,11 +135,13 @@ package starling.display.graphics
 			indexOffset += (vertices.length-oldVerticesLength) * oneOverVertexStride;
 		}
 		
+		
+		
 		///////////////////////////////////
 		// Static helper methods
 		///////////////////////////////////
 		[inline]
-		private static function createPolyLine( vertices:Vector.<StrokeVertex>, 
+		protected static function createPolyLine( vertices:Vector.<StrokeVertex>, 
 												outputVertices:Vector.<Number>, 
 												outputIndices:Vector.<uint>, 
 												indexOffset:int ):void
@@ -243,7 +246,7 @@ package starling.display.graphics
 			}
 		}
 		
-		private static function fixUpPolyLine( vertices:Vector.<StrokeVertex> ):void
+		protected static function fixUpPolyLine( vertices:Vector.<StrokeVertex> ):void
 		{
 			if ( vertices.length > 0 && vertices[0].degenerate > 0 ) { throw ( new Error("Degenerate on first line vertex") ); }
 			var idx:uint = vertices.length - 1;
@@ -254,72 +257,5 @@ package starling.display.graphics
 			}
 		}
 		
-	}
-}
-
-internal class StrokeVertex
-{
-	public var x		:Number;
-	public var y		:Number;
-	public var u		:Number;
-	public var v		:Number;
-	public var r1		:Number;
-	public var g1		:Number;
-	public var b1		:Number;
-	public var a1		:Number;
-	public var r2		:Number;
-	public var g2		:Number;
-	public var b2		:Number;
-	public var a2		:Number;
-	public var thickness:Number;
-	public var degenerate:uint;
-	
-	public function StrokeVertex()
-	{
-		
-	}
-	
-	public function clone():StrokeVertex
-	{
-		var vertex:StrokeVertex = getInstance();
-		vertex.x = x;
-		vertex.y = y;
-		vertex.r1 = r1;
-		vertex.g1 = g1;
-		vertex.b1 = b1;
-		vertex.a1 = a1;
-		vertex.u = u;
-		vertex.v = v;
-		vertex.degenerate = degenerate;
-		return vertex;
-	}
-	
-	private static var pool:Vector.<StrokeVertex> = new Vector.<StrokeVertex>();
-	private static var poolLength:int = 0;
-	
-	public static function getInstance():StrokeVertex
-	{
-		if ( poolLength == 0 ) 
-		{
-			return new StrokeVertex();
-		}
-		poolLength--;
-		return pool.pop();
-	}
-	
-	public static function returnInstance( instance:StrokeVertex ):void
-	{
-		pool[poolLength] = instance;
-		poolLength++;
-	}
-	
-	public static function returnInstances( instances:Vector.<StrokeVertex> ):void
-	{
-		var L:int = instances.length;
-		for ( var i:int = 0; i < L; i++ )
-		{
-			pool[poolLength] = instances[i];
-			poolLength++;
-		}
 	}
 }

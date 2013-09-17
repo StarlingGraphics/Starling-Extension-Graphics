@@ -7,8 +7,8 @@ package starling.display.graphics
 	{
 		public static const VERTEX_STRIDE	:int = 9;
 		
-		private var fillVertices	:VertexList;
-		private var _numVertices	:int;
+		protected var fillVertices	:VertexList;
+		protected var _numVertices	:int;
 		
 		public function Fill()
 		{
@@ -142,7 +142,7 @@ package starling.display.graphics
 		 * @return 
 		 * 
 		 */		
-		private static function triangulate( vertices:VertexList, _numVertices:int, outputVertices:Vector.<Number>, outputIndices:Vector.<uint> ):void
+		protected static function triangulate( vertices:VertexList, _numVertices:int, outputVertices:Vector.<Number>, outputIndices:Vector.<uint> ):void
 		{
 			vertices = VertexList.clone(vertices);
 			var openList:Vector.<VertexList> = convertToSimple(vertices);
@@ -252,7 +252,7 @@ package starling.display.graphics
 		 * @param vertexList
 		 * @return 
 		 */		
-		private static function convertToSimple( vertexList:VertexList ):Vector.<VertexList>
+		protected static function convertToSimple( vertexList:VertexList ):Vector.<VertexList>
 		{
 			var output:Vector.<VertexList> = new Vector.<VertexList>();
 			var outputLength:int = 0;
@@ -331,7 +331,7 @@ package starling.display.graphics
 			return output;
 		}
 		
-		private static function flatten( vertexLists:Vector.<VertexList>, output:Vector.<Number> ):void
+		protected static function flatten( vertexLists:Vector.<VertexList>, output:Vector.<Number> ):void
 		{
 			var L:int = vertexLists.length;
 			var index:int = 0;
@@ -349,7 +349,7 @@ package starling.display.graphics
 			}
 		}
 		
-		private static function windingNumberAroundPoint( vertexList:VertexList, x:Number, y:Number ):int
+		protected static function windingNumberAroundPoint( vertexList:VertexList, x:Number, y:Number ):int
 		{
 			var wn:int = 0;
 			var node:VertexList = vertexList.head;
@@ -397,7 +397,7 @@ package starling.display.graphics
 			return wn <= 0;
 		}
 		
-		private static function windingNumber( vertexList:VertexList ):int
+		protected static function windingNumber( vertexList:VertexList ):int
 		{
 			var wn:int = 0;
 			var node:VertexList = vertexList.head;
@@ -415,12 +415,12 @@ package starling.display.graphics
 			return wn;
 		}
 		
-		private static function isLeft(v0x:Number, v0y:Number, v1x:Number, v1y:Number, px:Number, py:Number):Boolean
+		protected static function isLeft(v0x:Number, v0y:Number, v1x:Number, v1y:Number, px:Number, py:Number):Boolean
 		{
 			return ((v1x - v0x) * (py - v0y) - (v1y - v0y) * (px - v0x)) < 0;
 		}
 		
-		private static function isPointInTriangle(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
+		protected static function isPointInTriangle(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
 		{
 			//if ( isLeft( v0x, v0y, v1x, v1y, px, py ) ) return false;
 			//if ( isLeft( v1x, v1y, v2x, v2y, px, py ) ) return false;
@@ -434,7 +434,7 @@ package starling.display.graphics
 			return true;
 		}
 		
-		private static function isReflex( v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number ):Boolean
+		protected static function isReflex( v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number ):Boolean
 		{
 			//if ( isLeft( v0x, v0y, v1x, v1y, v2x, v2y ) ) return false;
 			//if ( isLeft( v1x, v1y, v2x, v2y, v0x, v0y ) ) return false;
@@ -446,8 +446,8 @@ package starling.display.graphics
 			return true;
 		}
 		
-		private static const EPSILON:Number = 0.0000001
-		static private function intersection( a0:VertexList, a1:VertexList, b0:VertexList, b1:VertexList ):Vector.<Number>
+		protected static const EPSILON:Number = 0.0000001
+		static protected function intersection( a0:VertexList, a1:VertexList, b0:VertexList, b1:VertexList ):Vector.<Number>
 		{
 			var ux:Number = (a1.vertex[0]) - (a0.vertex[0]);
 			var uy:Number = (a1.vertex[1]) - (a0.vertex[1]);

@@ -1,6 +1,8 @@
 package starling.display.graphicsEx
 {
 	import flash.geom.Point;
+	import starling.display.graphics.Stroke;
+	import starling.display.graphics.StrokeVertex;
 
 	import starling.display.Graphics;
 	import starling.textures.Texture;
@@ -10,220 +12,26 @@ package starling.display.graphicsEx
 
 	public class GraphicsEx extends Graphics
 	{
-		// Added to support dynamic stroke thickness and alpha between control points for the Extended Ex part of the API
-		private var _strokeThicknessLast    :Number = NaN; // Used to keep track of last thickness
-		private var _strokeAlphaLast		:Number = NaN; // Used to keep track of last alpha
-
+		protected var _currentStrokeEx:StrokeEx;
+		
 		public function GraphicsEx(displayObjectContainer:DisplayObjectContainer)
 		{
 			super(displayObjectContainer);
 		}
 
-		override public function clear():void
+		override protected function clearCurrentStroke() : void
 		{
-			super.clear();
-
-			_strokeThicknessLast = NaN;
-			_strokeAlphaLast = NaN;
+			super.clearCurrentStroke();
+			
+			_currentStrokeEx = null;
 		}
-
-		/*
-		 * Added code to expand the API. With interpolated thickness, you get
-		 * a greater freedom in designing curves fitting your games.
-		 * The "thickness" parameter should be interpreted as:
-		 * "Interpolate to this "thickness" at the end of the segment"
-		 * The segment will then go from "last thickness" as set by, for example,
-		 * lineMaterialEx or previous call to curveToEx, to this new thickness.
-		 *
-		 */
-
-		public function lineToEx(x:Number, y:Number, thickness:Number = -1, alpha:Number = -1):void
+		
+		public function get currentLineIndex() : int
 		{
-			lineToExInternal(x, y, thickness, alpha);
-			if ( thickness != -1 )
-				_strokeThicknessLast = thickness;
+			if ( _currentStroke != null )
+				return _currentStroke.numVertices;
 			else
-				_strokeThicknessLast = _strokeThickness;
-
-			if ( alpha != -1 )
-				_strokeAlphaLast = alpha;
-			else
-				_strokeAlphaLast = _strokeAlpha;
-
-
-		}
-
-		/*
-		 * The reason for an lineToExInternal method is that the public method lineToEx
-		 * needs to set _strokeThicknessLast, but when lineToExInternal is called from
-		 * curveToEx, the _strokeThicknessLast variable should not be updated until
-		 * after the full curveToEx call has been completed.
-		 * So these had to be separated.
-		 */
-		protected function lineToExInternal(x:Number, y:Number, thickness:Number = -1, alpha:Number = -1):void
-		{
-			if (!_currentStroke && _strokeThickness > 0)
-			{
-				if (_strokeTexture)
-				{
-					beginTextureStroke();
-				}
-				else if ( _strokeMaterial )
-				{
-					beginMaterialStroke();
-				}
-				else
-				{
-					beginStroke();
-				}
-			}
-
-			if ( _currentStroke && ( _strokeInterrupted || _currentStroke.numVertices == 0 ) && isNaN(_currentX) == false )
-			{
-				if ( thickness != -1 )
-					_currentStroke.addVertex( _currentX, _currentY, _strokeThicknessLast, 0xFFFFFF, _strokeAlphaLast, 0xFFFFFF, _strokeAlphaLast );
-				else
-					_currentStroke.addVertex( _currentX, _currentY, _strokeThickness , 0xFFFFFF, _strokeAlphaLast, 0xFFFFFF, _strokeAlphaLast);
-
-				_strokeInterrupted  = false;
-			}
-
-			if ( isNaN(_currentX) )
-			{
-				moveTo(0,0);
-			}
-
-			if ( _currentStroke && _strokeThickness > 0 )
-			{
-				if ( thickness != -1 )
-				{
-					_currentStroke.addVertex( x, y, thickness, 0xFFFFFF, alpha, 0xFFFFFF, alpha );
-				}
-				else
-				{
-					_currentStroke.addVertex( x, y, _strokeThickness, 0xFFFFFF, alpha, 0xFFFFFF, alpha );
-				}
-			}
-
-			if (_currentFill)
-			{
-				_currentFill.addVertex( x, y );
-			}
-			_currentX = x;
-			_currentY = y;
-		}
-
-
-		protected function drawPointsInternal(points:Vector.<Number>, param:GraphicsExData) : void
-		{
-			var lerp:Number;
-			var t:Number;
-			var a:Number;
-
-			var targetThickness:Number = _strokeThickness;
-			if ( param && param.endThickness > -1 )
-				targetThickness = param.endThickness;
-
-			var targetAlpha:Number = _strokeAlpha;
-			if ( param && param.endAlpha > -1 )
-				targetAlpha = param.endAlpha;
-
-			var L:int = points.length;
-			if ( L > 0 )
-			{
-				var invHalfL:Number = 1.0/(0.5*L);
-				for ( var i:int = 0; i < L; i+=2 )
-				{
-					var x:Number = points[i];
-					var y:Number = points[i+1];
-
-					if ( i == 0 && isNaN(_currentX) )
-					{
-						moveTo( x, y );
-					}
-					else
-					{
-						lerp = Number(i>>1) * invHalfL;
-						if ( param != null )
-						{
-							if ( param.thicknessCallback != null )
-							{
-								t = param.thicknessCallback(_strokeThicknessLast, targetThickness, lerp);
-
-								a = _strokeAlphaLast * (1.0 - lerp) + targetAlpha * lerp;
-								if ( param.alphaCallback != null )
-									a = param.alphaCallback(_strokeAlphaLast, targetAlpha, lerp);
-
-								lineToExInternal(x,y,t,a);
-							}
-							else if ( param.endThickness > -1 )
-							{
-								t = _strokeThicknessLast * (1.0 - lerp) + targetThickness * lerp;
-
-								a = _strokeAlphaLast * (1.0 - lerp) + targetAlpha * lerp;
-
-								if ( param.alphaCallback != null )
-									a = param.alphaCallback(_strokeAlphaLast, targetAlpha, lerp);
-
-								lineToExInternal(x,y,t,a);
-							}
-							else
-							{
-								a = _strokeAlphaLast * (1.0 - lerp) + targetAlpha * lerp;
-								if ( param.alphaCallback != null )
-									a = param.alphaCallback(_strokeAlphaLast, targetAlpha, lerp);
-
-								lineToEx(x, y, targetThickness, a);
-							}
-						}
-						else
-							lineTo(x, y);
-					}
-				}
-			}
-			_strokeThicknessLast = targetThickness;
-			_strokeAlphaLast = a;
-
-		}
-
-
-		public function curveToEx(cx:Number, cy:Number, a2x:Number, a2y:Number, param:GraphicsExData, error:Number = BEZIER_ERROR ):void
-		{
-			var startX:Number = _currentX;
-			var startY:Number = _currentY;
-
-			if ( isNaN(startX) )
-			{
-				startX = 0;
-				startY = 0;
-			}
-
-			var points:Vector.<Number> = CurveUtil.quadraticCurve(startX, startY, cx, cy, a2x, a2y, error);
-
-			drawPointsInternal(points, param);
-
-
-			_currentX = a2x;
-			_currentY = a2y;
-		}
-
-		public function cubicCurveToEx(c1x:Number, c1y:Number, c2x:Number, c2y:Number, a2x:Number, a2y:Number, param:GraphicsExData, error:Number = BEZIER_ERROR ):void
-		{
-			var startX:Number = _currentX;
-			var startY:Number = _currentY;
-
-			if ( isNaN(startX) )
-			{
-				startX = 0;
-				startY = 0;
-			}
-
-			var points:Vector.<Number> = CurveUtil.cubicCurve(startX, startY, c1x, c1y, c2x, c2y, a2x, a2y, error);
-
-			drawPointsInternal(points, param);
-
-			_currentX = a2x;
-			_currentY = a2y;
+				return 0;
 		}
 
 		/**
@@ -233,7 +41,7 @@ package starling.display.graphicsEx
 		 * @param   steps - an int indicating the number of steps between control points
 		 */
 
-		public function naturalCubicSplineTo( controlPoints:Array, closed:Boolean, steps:int = 4, gfxDataVec:Vector.<GraphicsExData> = null) : void
+		public function naturalCubicSplineTo( controlPoints:Array, closed:Boolean, steps:int = 4) : void
 		{
 			var i:int = 0;
 			var j:Number = 0;
@@ -241,8 +49,6 @@ package starling.display.graphicsEx
 			var numPoints:int = controlPoints.length;
 			var xpoints:Vector.<Number> = new Vector.<Number>(numPoints, true);
 			var ypoints:Vector.<Number> = new Vector.<Number>(numPoints, true);
-
-
 
 			for ( i = 0; i < controlPoints.length; i++ )
 			{
@@ -279,58 +85,170 @@ package starling.display.graphicsEx
 					points[j*2  ] = valueX;
 					points[j*2+1] = valueY;
 				}
-				var gfxData:GraphicsExData = null;
-				if ( gfxDataVec != null )
-					gfxData = gfxDataVec[i];
-
-				drawPointsInternal(points, gfxData);
+				
+				drawPointsInternal(points);
 			}
-
 		}
 
-		public function lineStyleEx(thickness:Number = NaN, color:uint = 0, alpha:Number = 1.0):void
+		public function postProcess(startIndex:int, endIndex:int, thicknessData:GraphicsExThicknessData = null, colorData:GraphicsExColorData = null ) : Boolean
 		{
-			_strokeThicknessLast = thickness;
-			_strokeAlphaLast = alpha;
-
-			_strokeThickness		= thickness;
-			_strokeColor			= color;
-			_strokeAlpha			= alpha;
-			_strokeTexture 			= null;
-			_strokeMaterial			= null;
-
-			disposeCurrentStroke();
+			if ( _currentStrokeEx == null)
+				return false;
+			
+			var verts:Vector.<StrokeVertex> = _currentStrokeEx.strokeVertices;
+			var totalVerts:int = _currentStrokeEx.numVertices;						
+			if ( startIndex >= totalVerts || startIndex < 0 )
+				return false;
+			if ( endIndex >= totalVerts || endIndex < 0 )
+				return false;	
+			if ( startIndex == endIndex )
+				return false;
+			
+			var numVerts:int = endIndex - startIndex;
+			if ( colorData )
+			{
+				if ( thicknessData )
+				{
+					postProcessThicknessColorInternal(numVerts, startIndex, endIndex, verts, thicknessData, colorData);
+				}
+				else
+				{
+					postProcessColorInternal(numVerts, startIndex, endIndex, verts, colorData);
+				}
+			}
+			else
+			{
+				if ( thicknessData )
+				{
+					postProcessThicknessInternal(numVerts, startIndex, endIndex, verts, thicknessData);
+				}
+			}
+			_currentStrokeEx.invalidate();
+			return true;
 		}
-
-		public function lineTextureEx(thickness:Number = NaN, texture:Texture = null, alpha:Number = 1.0):void
+		
+		private function postProcessThicknessColorInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData, colorData:GraphicsExColorData ):void 
 		{
-			_strokeThicknessLast = thickness;
-			_strokeAlphaLast = alpha;
-
-			_strokeThickness		= thickness;
-			_strokeColor			= 0xFFFFFF;
-			_strokeAlpha			= 1;
-			_strokeTexture 			= texture;
-			_strokeMaterial			= null;
-
-			disposeCurrentStroke();
+			var numVerts:int = endIndex - startIndex;
+			var invNumVerts:Number = 1.0 / Number(numVerts);
+			var lerp:Number = 0;	
+			var inv255:Number = 1.0 / 255.0;
+			
+			var t:Number; // thickness
+			var r:Number;
+			var g:Number;
+			var b:Number;
+			var a:Number;
+			var i:Number;
+			
+			for ( i= startIndex; i <= endIndex ; ++i )
+			{
+				t= (thicknessData.startThickness * (1.0 - lerp)) + thicknessData.endThickness * lerp;
+				
+				r= inv255 * ((colorData.startRed * (1.0 - lerp)) + colorData.endRed * lerp);
+				g= inv255 * ((colorData.startGreen * (1.0 - lerp)) + colorData.endGreen * lerp);
+				b= inv255 * ((colorData.startBlue * (1.0 - lerp)) + colorData.endBlue* lerp);
+				a= ((colorData.startAlpha * (1.0 - lerp)) + colorData.endAlpha* lerp);
+				
+				verts[i].thickness = t;
+				
+				verts[i].r1 = r;
+				verts[i].r2 = r;
+				verts[i].g1 = g;
+				verts[i].g2 = g;
+				verts[i].b1 = b;
+				verts[i].b2 = b;
+				verts[i].a1 = a;
+				verts[i].a2 = a;
+				
+				lerp += invNumVerts;
+			}
 		}
 
-		public function lineMaterialEx(thickness:Number = NaN, material:IMaterial = null, alpha:Number = 1.0):void
+		private function postProcessColorInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , colorData:GraphicsExColorData ):void 
 		{
-			_strokeThicknessLast = thickness;
-			_strokeAlphaLast = alpha;
-
-			_strokeThickness		= thickness;
-			_strokeColor			= 0xFFFFFF;
-			_strokeAlpha			= 1;
-			_strokeTexture			= null;
-			_strokeMaterial			= material;
-
-			disposeCurrentStroke();
+			var invNumVerts:Number = 1.0 / Number(numVerts);
+			var lerp:Number = 0;	
+			var inv255:Number = 1.0 / 255.0;
+		
+			var r:Number;
+			var g:Number;
+			var b:Number;
+			var a:Number;
+			
+			var i:Number;
+			
+			for ( i= startIndex; i <= endIndex ; ++i )
+			{
+				r= inv255 * ((colorData.startRed * (1.0 - lerp)) + colorData.endRed * lerp);
+				g= inv255 * ((colorData.startGreen * (1.0 - lerp)) + colorData.endGreen * lerp);
+				b= inv255 * ((colorData.startBlue * (1.0 - lerp)) + colorData.endBlue* lerp);
+				a= ((colorData.startAlpha * (1.0 - lerp)) + colorData.endAlpha* lerp);
+				
+				verts[i].r1 = r;
+				verts[i].r2 = r;
+				verts[i].g1 = g;
+				verts[i].g2 = g;
+				verts[i].b1 = b;
+				verts[i].b2 = b;
+				verts[i].a1 = a;
+				verts[i].a2 = a;
+				
+				lerp += invNumVerts;
+			}
 		}
 
+		protected function postProcessThicknessInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData ):void 
+		{
+			var numVerts:int = endIndex - startIndex;
+			var invNumVerts:Number = 1.0 / Number(numVerts);
+			var lerp:Number = 0;	
+			var inv255:Number = 1.0 / 255.0;
+			
+			var t:Number; // thickness
+			var i:Number;
+			
+			for ( i= startIndex; i <= endIndex ; ++i )
+			{
+				t = (thicknessData.startThickness * (1.0 - lerp)) + thicknessData.endThickness * lerp;
+				verts[i].thickness = t;
+				lerp += invNumVerts;
+			}
+		}
 
+		override protected function createStroke() : Stroke
+		{ // Created to be able to extend class with different strokes for different folks.
+			_currentStrokeEx = new StrokeEx();
+			
+			return _currentStrokeEx as Stroke;
+		}
+		
+
+		
+		protected function drawPointsInternal(points:Vector.<Number>) : void
+		{
+			var L:int = points.length;
+			if ( L > 0 )
+			{
+				var invHalfL:Number = 1.0/(0.5*L);
+				for ( var i:int = 0; i < L; i+=2 )
+				{
+					var x:Number = points[i];
+					var y:Number = points[i+1];
+
+					if ( i == 0 && isNaN(_currentX) )
+					{
+						moveTo( x, y );
+					}
+					else
+					{
+						lineTo(x, y);
+					}
+				}
+			}
+		}
+
+	
 
 		private function calcNaturalCubic( n:int, x:Vector.<Number> ) :Vector.<Cubic>
 		{
@@ -442,6 +360,8 @@ package starling.display.graphicsEx
 			);
 			return C;
 		}
+		
+		
 
 
 	}
