@@ -125,7 +125,6 @@ package starling.display.graphics
 		
 		override protected function buildGeometry():void
 		{
-			
 			//buildGeometryOriginal();
 			 buildGeometryPreAllocatedVectors();
 		}
@@ -148,20 +147,21 @@ package starling.display.graphics
 		protected function buildGeometryPreAllocatedVectors() : void
 		{
 			// This is the code that uses the preAllocated code path for createPolyLinePreAlloc
-				
+			var indexOffset:int = 0;
+			// First remove all deformed things in _line
+			fixUpPolyLine( _line );
+
+			// Then use the line lenght to pre allocate the vertex vectors
 			var numVerts:int = _line.length * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
 			var numIndices:int = (_line.length - 1) * 6; // this looks odd, but for each StrokeVertex-1, we generate 6 indices in createPolyLine
 				
 			vertices = new Vector.<Number>(numVerts, true);
 			indices = new Vector.<uint>(numIndices, true);
-				
-			var indexOffset:int = 0;
-					
-			var oldVerticesLength:int = 0; // this is always zero in the old code, even if we use vertices.length in the original code
-			const oneOverVertexStride:Number = 1 / VERTEX_STRIDE;	
-			fixUpPolyLine( _line );
+
 			createPolyLinePreAlloc( _line, vertices, indices, indexOffset);
-					
+
+			var oldVerticesLength:int = 0; // this is always zero in the old code, even if we use vertices.length in the original code. Not sure why it is here.
+			const oneOverVertexStride:Number = 1 / VERTEX_STRIDE;	
 			indexOffset += (vertices.length - oldVerticesLength) * oneOverVertexStride;
 			
 		}
@@ -300,7 +300,7 @@ package starling.display.graphics
 		}
 		
 		///////////////////////////////////
-		// Static helper methods
+		// Static helper methods - Old version of createPolyLine that does not use pre allocated vectors. Slower.
 		///////////////////////////////////
 		[inline]
 		protected static function createPolyLine( vertices:Vector.<StrokeVertex>, 
