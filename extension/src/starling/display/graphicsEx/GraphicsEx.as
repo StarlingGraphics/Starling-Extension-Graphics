@@ -34,6 +34,14 @@ package starling.display.graphicsEx
 				return 0;
 		}
 
+		public function currentLineLength() : Number
+		{
+			if ( _currentStrokeEx )
+				return _currentStrokeEx.strokeLength();
+			else
+				return 0;
+		}
+		
 		/**
 		 * performs the natural cubic slipne transformation
 		 * @param	controlPoints a Vector.<Point> of the control points
