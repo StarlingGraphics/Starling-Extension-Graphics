@@ -120,6 +120,11 @@ package starling.display.graphics
 				maxBounds.y = y;
 			}
 			
+			if ( maxBounds.x == Number.NEGATIVE_INFINITY )
+				maxBounds.x = x;
+			if ( maxBounds.y == Number.NEGATIVE_INFINITY )	
+				maxBounds.y = y;
+			
 			isInvalid = true;
 		}
 		
