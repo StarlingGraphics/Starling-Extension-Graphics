@@ -48,7 +48,6 @@ package starling.display
 			while ( _container.numChildren > 0 )
 			{
 				var child:DisplayObject = _container.getChildAt(0);
-				child.dispose();
 				if ( child is Graphic )
 				{
 					var graphic:Graphic = Graphic(child);
@@ -57,6 +56,7 @@ package starling.display
 						graphic.material.dispose(true);
 					}
 				}
+				child.dispose();
 				_container.removeChildAt(0);
 			}
 			_currentX = NaN;
@@ -69,12 +69,19 @@ package starling.display
          
         }
 		
+		public function dispose() : void
+		{
+			clearCurrentFill();
+			
+			clear();
+		}
+		
 		public function beginFill(color:uint, alpha:Number = 1.0):void
 		{
 			_fillColor = color;
 			_fillAlpha = alpha;
 			
-			_currentFill = new Fill();
+			createCurrentFill();
 			_currentFill.material.alpha = _fillAlpha;
 			_currentFill.material.color = color;
 			_container.addChild(_currentFill);
@@ -89,7 +96,7 @@ package starling.display
 			_fillColor = 0xFFFFFF;
 			_fillAlpha = 1;
 			
-			_currentFill = new Fill();
+			createCurrentFill();
 			_currentFill.material.fragmentShader = textureFragmentShader;
 			var texture:Texture = Texture.fromBitmapData( bitmap, false );
 			_currentFill.material.textures[0] = texture;
@@ -110,7 +117,7 @@ package starling.display
 			_fillColor = 0xFFFFFF;
 			_fillAlpha = 1;
 			
-			_currentFill = new Fill();
+			createCurrentFill();
 			_currentFill.material.fragmentShader = textureFragmentShader;
 			_currentFill.material.textures[0] = texture;
 			
@@ -130,7 +137,7 @@ package starling.display
 			_fillColor = 0xFFFFFF;
 			_fillAlpha = 1;
 			
-			_currentFill = new Fill();
+			createCurrentFill();
 			_currentFill.material = material;
 			
 			var m:Matrix;
@@ -161,7 +168,6 @@ package starling.display
 			
 			_fillColor 	= NaN;
 			_fillAlpha 	= NaN;
-			_currentFill= null;
 		}
 		
 		public function drawCircle(x:Number, y:Number, radius:Number):void
@@ -497,6 +503,22 @@ package starling.display
 		// PROTECTED
 		////////////////////////////////////////
 		
+		protected function clearCurrentFill() : void
+		{
+			if ( _currentFill != null )
+			{
+				_currentFill.dispose();
+				_currentFill = null;
+			}	
+		}
+		
+		protected function createCurrentFill() : void
+		{
+			clearCurrentFill();
+			_currentFill = new Fill();
+		}
+		
+		
 		protected function createStroke() : Stroke
 		{ // Created to be able to extend class with different strokes for different folks.
 			return new Stroke();
@@ -504,7 +526,11 @@ package starling.display
 		
 		protected function clearCurrentStroke() : void
 		{
-			_currentStroke = null;
+			if ( _currentStroke != null )
+			{
+				_currentStroke.dispose();
+				_currentStroke = null;
+			}
 		}
 		
 		protected function beginStroke():void
