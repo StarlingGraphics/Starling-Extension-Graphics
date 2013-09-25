@@ -18,7 +18,11 @@ package starling.display
 		
 		override public function dispose() : void
 		{
-			_graphics.dispose();
+			if ( _graphics != null )
+			{
+				_graphics.dispose();
+				_graphics = null;
+			}
 			super.dispose();
 		}
 	}
