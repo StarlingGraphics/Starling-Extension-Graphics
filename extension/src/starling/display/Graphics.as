@@ -76,8 +76,6 @@ package starling.display
 			clear();
 		}
 		
-	
-		
 		public function beginFill(color:uint, alpha:Number = 1.0):void
 		{
 			_fillColor = color;
@@ -510,6 +508,7 @@ package starling.display
 			if ( _currentFill != null )
 			{
 				_currentFill.dispose();
+				_currentFill = null;
 			}	
 		}
 		
