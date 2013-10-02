@@ -136,6 +136,9 @@ package starling.display.graphics
 		
 		protected function buildGeometryOriginal() : void
 		{
+			if ( _line == null || _line.length == 0 )
+				return; // block against odd cases.
+				
 			// This is the original (slower) code that does not preallocate the vectors for vertices and indices.	
 			vertices = new Vector.<Number>();
 			indices = new Vector.<uint>();
@@ -151,6 +154,9 @@ package starling.display.graphics
 		
 		protected function buildGeometryPreAllocatedVectors() : void
 		{
+			if ( _line == null || _line.length == 0 )
+				return; // block against odd cases.
+				
 			// This is the code that uses the preAllocated code path for createPolyLinePreAlloc
 			var indexOffset:int = 0;
 			// First remove all deformed things in _line
@@ -418,7 +424,7 @@ package starling.display.graphics
 		protected static function fixUpPolyLine( vertices:Vector.<StrokeVertex> ):void
 		{
 			if ( vertices.length > 0 && vertices[0].degenerate > 0 ) { throw ( new Error("Degenerate on first line vertex") ); }
-			var idx:uint = vertices.length - 1;
+			var idx:int = vertices.length - 1;
 			while ( idx > 0 && vertices[idx].degenerate > 0 )
 			{
 				vertices.pop();
