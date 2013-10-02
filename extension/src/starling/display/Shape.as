@@ -16,7 +16,7 @@ package starling.display
 			return _graphics;
 		}
 		
-		override public function dispose() : void
+	/*	override public function dispose() : void
 		{
 			if ( _graphics != null )
 			{
@@ -24,6 +24,6 @@ package starling.display
 				_graphics = null;
 			}
 			super.dispose();
-		}
+		} */
 	}
 }

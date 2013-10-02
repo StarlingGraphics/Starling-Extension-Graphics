@@ -48,6 +48,7 @@ package starling.display
 			while ( _container.numChildren > 0 )
 			{
 				var child:DisplayObject = _container.getChildAt(0);
+				child.dispose();
 				if ( child is Graphic )
 				{
 					var graphic:Graphic = Graphic(child);
@@ -56,7 +57,6 @@ package starling.display
 						graphic.material.dispose(true);
 					}
 				}
-				child.dispose();
 				_container.removeChildAt(0);
 			}
 			_currentX = NaN;
@@ -68,13 +68,6 @@ package starling.display
 			clearCurrentStroke();
          
         }
-		
-		public function dispose() : void
-		{
-			clearCurrentFill();
-			
-			clear();
-		}
 		
 		public function beginFill(color:uint, alpha:Number = 1.0):void
 		{
@@ -168,6 +161,7 @@ package starling.display
 			
 			_fillColor 	= NaN;
 			_fillAlpha 	= NaN;
+			_currentFill = null;
 		}
 		
 		public function drawCircle(x:Number, y:Number, radius:Number):void
@@ -503,7 +497,7 @@ package starling.display
 		// PROTECTED
 		////////////////////////////////////////
 		
-		protected function clearCurrentFill() : void
+	/*	protected function clearCurrentFill() : void
 		{
 			if ( _currentFill != null )
 			{
@@ -511,10 +505,10 @@ package starling.display
 				_currentFill = null;
 			}	
 		}
-		
+		*/
 		protected function createCurrentFill() : void
 		{
-			clearCurrentFill();
+			// clearCurrentFill();
 			_currentFill = new Fill();
 		}
 		
@@ -526,11 +520,12 @@ package starling.display
 		
 		protected function clearCurrentStroke() : void
 		{
-			if ( _currentStroke != null )
+			_currentStroke = null;
+			/*if ( _currentStroke != null )
 			{
 				_currentStroke.dispose();
 				_currentStroke = null;
-			}
+			}*/
 		}
 		
 		protected function beginStroke():void
