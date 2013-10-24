@@ -268,7 +268,7 @@ package starling.display
 			lineTo(x + width, y);
 			lineTo(x + width, y + height);
 			lineTo(x, y + height);
-			lineTo(x, y);
+			lineTo(x, y - _strokeThickness/2);
 			_currentFill = storedFill;
 		}
 		
