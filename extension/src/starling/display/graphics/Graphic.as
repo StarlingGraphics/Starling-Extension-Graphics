@@ -6,6 +6,7 @@ package starling.display.graphics
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.utils.Dictionary;
 	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
@@ -27,8 +28,8 @@ package starling.display.graphics
 	{
 		protected static const VERTEX_STRIDE		:int = 9;
 		protected static var sHelperMatrix			:Matrix = new Matrix();
-		protected static var defaultVertexShader	:StandardVertexShader;
-		protected static var defaultFragmentShader	:VertexColorFragmentShader;
+		protected static var defaultVertexShaderDictionary		:Dictionary = new Dictionary(true);
+		protected static var defaultFragmentShaderDictionary	:Dictionary = new Dictionary(true);
 		
 		protected var _material		:IMaterial;
 		private var vertexBuffer	:VertexBuffer3D;
@@ -49,12 +50,24 @@ package starling.display.graphics
 			indices = new Vector.<uint>();
 			vertices = new Vector.<Number>();
 			
-			if ( defaultVertexShader == null )
+			var currentStarling:Starling = Starling.current;
+			
+			var vertexShader:StandardVertexShader = defaultVertexShaderDictionary[currentStarling];
+			if ( vertexShader == null )
 			{
-				defaultVertexShader = new StandardVertexShader();
-				defaultFragmentShader = new VertexColorFragmentShader();
+				vertexShader = new StandardVertexShader();
+				defaultVertexShaderDictionary[currentStarling] = vertexShader;
 			}
-			_material = new StandardMaterial( defaultVertexShader, defaultFragmentShader );
+			
+			var fragmentShader:VertexColorFragmentShader = defaultFragmentShaderDictionary[currentStarling];
+			if ( fragmentShader == null )
+			{
+				fragmentShader = new VertexColorFragmentShader();
+				defaultFragmentShaderDictionary[currentStarling] = fragmentShader;
+			}
+			
+			_material = new StandardMaterial( vertexShader, fragmentShader );
+			
 			minBounds = new Point();
 			maxBounds = new Point();
 			
