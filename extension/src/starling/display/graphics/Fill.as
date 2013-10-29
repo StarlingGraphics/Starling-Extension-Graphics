@@ -125,13 +125,18 @@ package starling.display.graphics
 			if ( numVertices < 3 ) return false;
 			
 			var pt:Point = globalToLocal(new Point(stageX,stageY));
-			return shapeHitTestLocalInternal(pt.x, pt.y);
+			var wn:int = windingNumberAroundPoint(fillVertices, pt.x, pt.y);
+			if ( isClockWise(fillVertices) )
+			{
+				return  wn != 0;
+			}
+			return wn == 0;
 		}
 		
 		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
-		{
+		{ // This method differs from shapeHitTest - the isClockWise test is compared with false rather than true. Not sure why, but this yields the correct result for me.
 			var wn:int = windingNumberAroundPoint(fillVertices, localX, localY);
-			if ( isClockWise(fillVertices) )
+			if ( isClockWise(fillVertices) == false )
 			{
 				return  wn != 0;
 			}

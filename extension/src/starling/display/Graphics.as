@@ -41,7 +41,8 @@ package starling.display
 		protected var _container				:DisplayObjectContainer;
 		protected var _strokeInterrupted		:Boolean;
 
-     
+     	protected var _precisionHitTest:Boolean = false;
+		
         public function Graphics(displayObjectContainer:DisplayObjectContainer)
 		{
 			_container = displayObjectContainer;
@@ -578,6 +579,19 @@ package starling.display
 			
 		}
 		
+		public function set precisionHitTest(value:Boolean) : void
+		{
+			_precisionHitTest = value;
+			if ( _currentFill != null )
+				_currentFill.precisionHitTest = value;
+			if ( _currentStroke != null )
+				_currentStroke.precisionHitTest = value;
+				
+		}
+		public function get precisionHitTest() : Boolean 
+		{
+			return _precisionHitTest;
+		}
 		
 		////////////////////////////////////////
 		// PROTECTED
@@ -596,6 +610,7 @@ package starling.display
 		{
 			// clearCurrentFill();
 			_currentFill = new Fill();
+			_currentFill.precisionHitTest = _precisionHitTest;
 		}
 		
 		
@@ -618,6 +633,7 @@ package starling.display
 		{
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
+			_currentStroke.precisionHitTest = _precisionHitTest;
 			_currentStroke.material.color = _strokeColor;
 			_currentStroke.material.alpha = _strokeAlpha;
 			_container.addChild(_currentStroke);
@@ -629,6 +645,7 @@ package starling.display
 		{
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
+			_currentStroke.precisionHitTest = _precisionHitTest;
 			_currentStroke.material.fragmentShader = textureFragmentShader;
 			_currentStroke.material.textures[0] = _strokeTexture;
 			_currentStroke.material.color = _strokeColor;
@@ -640,6 +657,7 @@ package starling.display
 		{
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
+			_currentStroke.precisionHitTest = _precisionHitTest;
 			_currentStroke.material = _strokeMaterial;
 			_container.addChild(_currentStroke);
 		}
