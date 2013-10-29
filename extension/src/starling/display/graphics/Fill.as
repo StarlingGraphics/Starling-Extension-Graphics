@@ -125,14 +125,18 @@ package starling.display.graphics
 			if ( numVertices < 3 ) return false;
 			
 			var pt:Point = globalToLocal(new Point(stageX,stageY));
-			var wn:int = windingNumberAroundPoint(fillVertices, pt.x, pt.y);
+			return shapeHitTestLocalInternal(pt.x, pt.y);
+		}
+		
+		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
+		{
+			var wn:int = windingNumberAroundPoint(fillVertices, localX, localY);
 			if ( isClockWise(fillVertices) )
 			{
 				return  wn != 0;
 			}
 			return wn == 0;
 		}
-		
 		/**
 		 * Takes a list of arbitrary vertices. It will first decompose this list into
 		 * non intersecting polygons, via convertToSimple. Then it uses an ear-clipping
