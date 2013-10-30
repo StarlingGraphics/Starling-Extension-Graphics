@@ -51,6 +51,7 @@ package starling.display.graphics
 		// used for geometry level hit tests. False gives boundingbox results, True gives geometry level results. 
 		// True is a lot more exact, but also slower.
 		protected var _precisionHitTest:Boolean = false;
+		protected var _precisionHitTestDistance:Number = 0; // This is added to the thickness of the line when doing precisionHitTest to make it easier to hit 1px lines etc
 		
 		public function Graphic()
 		{
@@ -154,10 +155,18 @@ package starling.display.graphics
 		{
 			return _precisionHitTest;
 		}
+		public function set precisionHitTestDistance(value:Number) : void
+		{
+			_precisionHitTestDistance = value;
+		}
+		public function get precisionHitTestDistance() : Number
+		{
+			return _precisionHitTestDistance;
+		}
 		
 		protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
 		{
-			return localX >= minBounds.x && localX <= maxBounds.x && localY >= minBounds.y && localY <= maxBounds.y;
+			return localX >= (minBounds.x-_precisionHitTestDistance) && localX <= (maxBounds.x+_precisionHitTestDistance) && localY >= (minBounds.y-_precisionHitTestDistance) && localY <= (maxBounds.y+_precisionHitTestDistance);
 		}
 		
 		/** Returns the object that is found topmost beneath a point in local coordinates, or nil if 

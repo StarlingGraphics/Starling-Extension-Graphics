@@ -41,7 +41,11 @@ package starling.display
 		protected var _container				:DisplayObjectContainer;
 		protected var _strokeInterrupted		:Boolean;
 
+		// used for geometry level hit tests. False gives boundingbox results, True gives geometry level results. 
+		// True is a lot more exact, but also slower. 
      	protected var _precisionHitTest:Boolean = false;
+		protected var _precisionHitTestDistance:Number = 0; 
+		
 		
         public function Graphics(displayObjectContainer:DisplayObjectContainer)
 		{
@@ -593,6 +597,20 @@ package starling.display
 			return _precisionHitTest;
 		}
 		
+		public function set precisionHitTestDistance(value:Number) : void
+		{
+			_precisionHitTestDistance = value;
+			if ( _currentFill != null )
+				_currentFill.precisionHitTestDistance = value;
+			if ( _currentStroke != null )
+				_currentStroke.precisionHitTestDistance = value;
+		
+		}
+		public function get precisionHitTestDistance() : Number
+		{
+			return _precisionHitTestDistance;
+		}
+		
 		////////////////////////////////////////
 		// PROTECTED
 		////////////////////////////////////////
@@ -611,6 +629,8 @@ package starling.display
 			// clearCurrentFill();
 			_currentFill = new Fill();
 			_currentFill.precisionHitTest = _precisionHitTest;
+			_currentFill.precisionHitTestDistance = _precisionHitTestDistance;
+			
 		}
 		
 		
@@ -634,6 +654,7 @@ package starling.display
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
 			_currentStroke.precisionHitTest = _precisionHitTest;
+			_currentStroke.precisionHitTestDistance = _precisionHitTestDistance;
 			_currentStroke.material.color = _strokeColor;
 			_currentStroke.material.alpha = _strokeAlpha;
 			_container.addChild(_currentStroke);
@@ -646,6 +667,7 @@ package starling.display
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
 			_currentStroke.precisionHitTest = _precisionHitTest;
+			_currentStroke.precisionHitTestDistance = _precisionHitTestDistance;
 			_currentStroke.material.fragmentShader = textureFragmentShader;
 			_currentStroke.material.textures[0] = _strokeTexture;
 			_currentStroke.material.color = _strokeColor;
@@ -658,6 +680,7 @@ package starling.display
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
 			_currentStroke.precisionHitTest = _precisionHitTest;
+			_currentStroke.precisionHitTestDistance = _precisionHitTestDistance;
 			_currentStroke.material = _strokeMaterial;
 			_container.addChild(_currentStroke);
 		}

@@ -456,6 +456,9 @@ package starling.display.graphics
 				var distanceSquared:Number = (localX - intersectionX) * (localX - intersectionX) + (localY - intersectionY) * (localY - intersectionY);
 				
 				var intersectThickness:Number = (v0.thickness * (1.0 - interpolation) + v1.thickness * interpolation); // Support for varying thicknesses
+				
+				intersectThickness += _precisionHitTestDistance;
+				
 				if ( distanceSquared <= intersectThickness * intersectThickness)
 					return true;
 			}
