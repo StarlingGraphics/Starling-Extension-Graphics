@@ -3,6 +3,7 @@ package starling.display.graphicsEx
 	import flash.geom.Point;
 	import starling.display.graphics.Stroke;
 	import starling.display.graphics.StrokeVertex;
+	import starling.display.IGraphicsData;
 
 	import starling.display.Graphics;
 	import starling.textures.Texture;
@@ -40,6 +41,14 @@ package starling.display.graphicsEx
 				return _currentStrokeEx.strokeLength();
 			else
 				return 0;
+		}
+		
+		override protected function handleGraphicsDataType(gfxData:IGraphicsData ) : void
+		{
+			if ( gfxData is GraphicsNaturalSpline )
+				naturalCubicSplineTo(GraphicsNaturalSpline(gfxData).controlPoints, GraphicsNaturalSpline(gfxData).closed, GraphicsNaturalSpline(gfxData).steps);
+			else
+				super.handleGraphicsDataType(gfxData);
 		}
 		
 		/**

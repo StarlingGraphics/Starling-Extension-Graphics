@@ -40,10 +40,18 @@ package starling.display.graphics
 		protected var isInvalid		:Boolean = false;
 		protected var uvsInvalid	:Boolean = false;
 		
+		private static var sGraphicHelperRect:Rectangle = new Rectangle();
+		private static var sGraphicHelperPoint:Point = new Point();
+		
 		// Filled-out with min/max vertex positions
 		// during addVertex(). Used during getBounds().
 		protected var minBounds			:Point;
 		protected var maxBounds			:Point;
+		
+		// used for geometry level hit tests. False gives boundingbox results, True gives geometry level results. 
+		// True is a lot more exact, but also slower.
+		protected var _precisionHitTest:Boolean = false;
+		protected var _precisionHitTestDistance:Number = 0; // This is added to the thickness of the line when doing precisionHitTest to make it easier to hit 1px lines etc
 		
 		public function Graphic()
 		{
@@ -132,11 +140,58 @@ package starling.display.graphics
 			uvsInvalid = true;
 		}
 		
+		
 		public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
 		{
 			var pt:Point = globalToLocal(new Point(stageX,stageY));
 			return pt.x >= minBounds.x && pt.x <= maxBounds.x && pt.y >= minBounds.y && pt.y <= maxBounds.y;
 		}
+		
+		public function set precisionHitTest(value:Boolean) : void
+		{
+			_precisionHitTest = value;
+		}
+		public function get precisionHitTest() : Boolean 
+		{
+			return _precisionHitTest;
+		}
+		public function set precisionHitTestDistance(value:Number) : void
+		{
+			_precisionHitTestDistance = value;
+		}
+		public function get precisionHitTestDistance() : Number
+		{
+			return _precisionHitTestDistance;
+		}
+		
+		protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
+		{
+			return localX >= (minBounds.x-_precisionHitTestDistance) && localX <= (maxBounds.x+_precisionHitTestDistance) && localY >= (minBounds.y-_precisionHitTestDistance) && localY <= (maxBounds.y+_precisionHitTestDistance);
+		}
+		
+		/** Returns the object that is found topmost beneath a point in local coordinates, or nil if 
+         *  the test fails. If "forTouch" is true, untouchable and invisible objects will cause
+         *  the test to fail. */
+        override public function hitTest(localPoint:Point, forTouch:Boolean=false):DisplayObject
+        {
+            // on a touch test, invisible or untouchable objects cause the test to fail
+            if (forTouch && (visible == false || touchable == false )) return null;
+            
+			// otherwise, check bounding box
+			if (getBounds(this, sGraphicHelperRect).containsPoint(localPoint))
+			{
+				if ( _precisionHitTest )
+				{
+					if ( shapeHitTestLocalInternal(localPoint.x, localPoint.y ) )
+						return this;
+				}
+				else
+					return this;
+			}
+				
+			return null;
+			
+        }
 		
 		override public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
 		{

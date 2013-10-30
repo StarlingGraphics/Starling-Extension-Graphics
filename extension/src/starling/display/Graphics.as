@@ -10,6 +10,10 @@ package starling.display
 	import starling.display.graphics.RoundedRectangle;
 	import starling.display.graphics.Stroke;
 	import starling.display.graphics.StrokeVertex;
+	import starling.display.GraphicsPath;
+	import starling.display.GraphicsPathCommands;
+	import starling.display.IGraphicsData;
+	
 	import starling.display.materials.IMaterial;
 	import starling.display.shaders.fragment.TextureFragmentShader;
 	import starling.display.util.CurveUtil;
@@ -37,7 +41,12 @@ package starling.display
 		protected var _container				:DisplayObjectContainer;
 		protected var _strokeInterrupted		:Boolean;
 
-     
+		// used for geometry level hit tests. False gives boundingbox results, True gives geometry level results. 
+		// True is a lot more exact, but also slower. 
+     	protected var _precisionHitTest:Boolean = false;
+		protected var _precisionHitTestDistance:Number = 0; 
+		
+		
         public function Graphics(displayObjectContainer:DisplayObjectContainer)
 		{
 			_container = displayObjectContainer;
@@ -492,6 +501,115 @@ package starling.display
 			_currentY = a2y;
 		}
 
+		protected function drawCommandInternal(command:int, data:Vector.<Number>, dataCounter:int, winding:String) : int
+		{
+		
+			if ( command == GraphicsPathCommands.NO_OP )
+			{
+				return 0;
+			}
+			else if ( command == GraphicsPathCommands.MOVE_TO )
+			{
+				moveTo(data[dataCounter], data[dataCounter + 1]);
+				return 2;
+			}
+			else if ( command == GraphicsPathCommands.LINE_TO )
+			{
+				lineTo(data[dataCounter], data[dataCounter + 1]);
+				return 2;
+			}
+			else if ( command == GraphicsPathCommands.CURVE_TO )
+			{
+				curveTo(data[dataCounter], data[dataCounter + 1], data[dataCounter + 2], data[dataCounter + 3] );
+				return 4;
+			}
+			else if ( command == GraphicsPathCommands.CUBIC_CURVE_TO )
+			{
+				cubicCurveTo(data[dataCounter], data[dataCounter + 1], data[dataCounter + 2], data[dataCounter + 3], data[dataCounter + 4], data[dataCounter + 5] );
+				return 6;
+			}
+			else if ( command == GraphicsPathCommands.WIDE_MOVE_TO )
+			{
+				moveTo(data[dataCounter + 2 ], data[dataCounter + 3]); 
+				return 4;
+			}
+			else if ( command == GraphicsPathCommands.WIDE_LINE_TO )
+			{
+				lineTo(data[dataCounter + 2], data[dataCounter + 3]);
+				return 4;
+			}
+			return 0;
+
+		}
+		
+		public function drawPath(commands:Vector.<int>, data:Vector.<Number>, winding:String = "evenOdd"):void
+		{
+			var i:int = 0;
+			var commandLength:int = commands.length;
+			var dataCounter : int = 0;
+			for ( i = 0; i < commandLength; i++ )
+			{
+				var cmd:int = commands[i];
+				dataCounter += drawCommandInternal(cmd, data, dataCounter, winding);
+			}
+		}
+		
+		
+		public function drawGraphicsData(graphicsData:Vector.<IGraphicsData>):void
+		{
+			var i:int = 0;
+			var vectorLength:int = graphicsData.length;
+			for ( i = 0; i < vectorLength; i++ )
+			{
+				var gfxData:IGraphicsData = graphicsData[i];
+				handleGraphicsDataType(gfxData);
+			}
+		}
+		
+		protected function handleGraphicsDataType(gfxData:IGraphicsData ) : void
+		{
+			if ( gfxData is GraphicsPath ) 
+				drawPath(GraphicsPath(gfxData).commands, GraphicsPath(gfxData).data, GraphicsPath(gfxData).winding);
+			else if ( gfxData is GraphicsEndFill )
+				endFill();
+			else if ( gfxData is GraphicsTextureFill )
+				beginTextureFill(GraphicsTextureFill(gfxData).texture, GraphicsTextureFill(gfxData).matrix);
+			else if ( gfxData is GraphicsBitmapFill )
+				beginBitmapFill(GraphicsBitmapFill(gfxData).bitmapData, GraphicsBitmapFill(gfxData).matrix);
+			else if ( gfxData is GraphicsMaterialFill ) 
+				beginMaterialFill(GraphicsMaterialFill(gfxData).material, GraphicsMaterialFill(gfxData).matrix);
+			else if ( gfxData is GraphicsLine )
+				lineStyle(GraphicsLine(gfxData).thickness, GraphicsLine(gfxData).color, GraphicsLine(gfxData).alpha); // This isn't part of the proper Flash API. 
+			
+		}
+		
+		public function set precisionHitTest(value:Boolean) : void
+		{
+			_precisionHitTest = value;
+			if ( _currentFill != null )
+				_currentFill.precisionHitTest = value;
+			if ( _currentStroke != null )
+				_currentStroke.precisionHitTest = value;
+				
+		}
+		public function get precisionHitTest() : Boolean 
+		{
+			return _precisionHitTest;
+		}
+		
+		public function set precisionHitTestDistance(value:Number) : void
+		{
+			_precisionHitTestDistance = value;
+			if ( _currentFill != null )
+				_currentFill.precisionHitTestDistance = value;
+			if ( _currentStroke != null )
+				_currentStroke.precisionHitTestDistance = value;
+		
+		}
+		public function get precisionHitTestDistance() : Number
+		{
+			return _precisionHitTestDistance;
+		}
 		
 		////////////////////////////////////////
 		// PROTECTED
@@ -510,6 +628,9 @@ package starling.display
 		{
 			// clearCurrentFill();
 			_currentFill = new Fill();
+			_currentFill.precisionHitTest = _precisionHitTest;
+			_currentFill.precisionHitTestDistance = _precisionHitTestDistance;
+			
 		}
 		
 		
@@ -532,6 +653,8 @@ package starling.display
 		{
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
+			_currentStroke.precisionHitTest = _precisionHitTest;
+			_currentStroke.precisionHitTestDistance = _precisionHitTestDistance;
 			_currentStroke.material.color = _strokeColor;
 			_currentStroke.material.alpha = _strokeAlpha;
 			_container.addChild(_currentStroke);
@@ -543,6 +666,8 @@ package starling.display
 		{
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
+			_currentStroke.precisionHitTest = _precisionHitTest;
+			_currentStroke.precisionHitTestDistance = _precisionHitTestDistance;
 			_currentStroke.material.fragmentShader = textureFragmentShader;
 			_currentStroke.material.textures[0] = _strokeTexture;
 			_currentStroke.material.color = _strokeColor;
@@ -554,6 +679,8 @@ package starling.display
 		{
 			disposeCurrentStroke();
 			_currentStroke = createStroke();
+			_currentStroke.precisionHitTest = _precisionHitTest;
+			_currentStroke.precisionHitTestDistance = _precisionHitTestDistance;
 			_currentStroke.material = _strokeMaterial;
 			_container.addChild(_currentStroke);
 		}
@@ -571,6 +698,7 @@ package starling.display
 			}
 		}
 
+		
 
     }
 }

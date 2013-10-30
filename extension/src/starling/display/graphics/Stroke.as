@@ -432,5 +432,39 @@ package starling.display.graphics
 			}
 		}
 		
+		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
+		{
+			if ( _line == null ) return false;
+			if ( _line.length < 2 ) return false;
+			
+			var numLines:int = _line.length;
+			
+			for ( var i: int = 1; i < numLines; i++ )
+			{
+				var v0:StrokeVertex = _line[i - 1];
+				var v1:StrokeVertex = _line[i];
+				
+				var lineLengthSquared:Number = (v1.x - v0.x) * (v1.x - v0.x) + (v1.y - v0.y) * (v1.y - v0.y);
+				
+				var interpolation:Number = ( ( ( localX - v0.x ) * ( v1.x - v0.x ) ) + ( ( localY - v0.y ) * ( v1.y - v0.y ) ) )  /	( lineLengthSquared );
+				if( interpolation < 0.0 || interpolation > 1.0 )
+					continue;   // closest point does not fall within the line segment
+					
+				var intersectionX:Number = v0.x + interpolation * ( v1.x - v0.x );
+				var intersectionY:Number = v0.y + interpolation * ( v1.y - v0.y );
+				
+				var distanceSquared:Number = (localX - intersectionX) * (localX - intersectionX) + (localY - intersectionY) * (localY - intersectionY);
+				
+				var intersectThickness:Number = (v0.thickness * (1.0 - interpolation) + v1.thickness * interpolation); // Support for varying thicknesses
+				
+				intersectThickness += _precisionHitTestDistance;
+				
+				if ( distanceSquared <= intersectThickness * intersectThickness)
+					return true;
+			}
+				
+			return false;
+		}
+		
 	}
 }

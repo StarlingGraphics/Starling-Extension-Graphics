@@ -133,6 +133,15 @@ package starling.display.graphics
 			return wn == 0;
 		}
 		
+		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
+		{ // This method differs from shapeHitTest - the isClockWise test is compared with false rather than true. Not sure why, but this yields the correct result for me.
+			var wn:int = windingNumberAroundPoint(fillVertices, localX, localY);
+			if ( isClockWise(fillVertices) == false )
+			{
+				return  wn != 0;
+			}
+			return wn == 0;
+		}
 		/**
 		 * Takes a list of arbitrary vertices. It will first decompose this list into
 		 * non intersecting polygons, via convertToSimple. Then it uses an ear-clipping
