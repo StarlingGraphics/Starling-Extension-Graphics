@@ -1,7 +1,9 @@
 package starling.display.graphics
 {
-	import starling.textures.Texture;
+	import flash.geom.Point;
+	
 	import starling.display.graphics.StrokeVertex;
+	import starling.textures.Texture;
 		
 	public class Stroke extends Graphic
 	{
@@ -126,6 +128,17 @@ package starling.display.graphics
 				maxBounds.y = y;
 			
 			isInvalid = true;
+		}
+		
+		public function getVertexPosition(index:int, prealloc:Point = null):Point
+		{
+			var point:Point = prealloc;
+			if ( point == null ) 
+				point = new Point();
+				
+			point.x = _line[index].x;
+			point.y = _line[index].y;
+			return point;
 		}
 		
 		override protected function buildGeometry():void
