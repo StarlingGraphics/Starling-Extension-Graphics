@@ -33,24 +33,14 @@ package starling.display.materials
 			color = 0xFFFFFF;
 		}
 		
-		public function dispose( disposeTextures:Boolean = false ):void
+		public function dispose():void
 		{
 			if ( program )
 			{
 				Program3DCache.releaseProgram3D(program);
 				program = null;
 			}
-			_vertexShader= null;
-			_fragmentShader = null;
-			
-			if (disposeTextures)
-			{
-				for each ( var texture:Texture in _textures )
-				{
-					texture.dispose();
-				}
-			}
-			_textures = null;
+			textures = new Vector.<Texture>();
 		}
 		
 		public function restoreOnLostContext():void

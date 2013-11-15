@@ -20,11 +20,15 @@ package starling.display.graphicsEx
 			super(displayObjectContainer);
 		}
 
-		override protected function clearCurrentStroke() : void
+		override protected function endStroke() : void
 		{
-			super.clearCurrentStroke();
+			super.endStroke();
 			
-			_currentStrokeEx = null;
+			if ( _currentStrokeEx )
+			{
+				_currentStrokeEx.dispose();
+				_currentStrokeEx = null;
+			}
 		}
 		
 		public function get currentLineIndex() : int
@@ -144,7 +148,7 @@ package starling.display.graphicsEx
 			return true;
 		}
 		
-		private function postProcessThicknessColorInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData, colorData:GraphicsExColorData ):void 
+		private function postProcessThicknessColorInternal(_numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData, colorData:GraphicsExColorData ):void 
 		{
 			var numVerts:int = endIndex - startIndex;
 			var invNumVerts:Number = 1.0 / Number(numVerts);
@@ -215,7 +219,7 @@ package starling.display.graphicsEx
 			}
 		}
 
-		protected function postProcessThicknessInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData ):void 
+		protected function postProcessThicknessInternal(_numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData ):void 
 		{
 			var numVerts:int = endIndex - startIndex;
 			var invNumVerts:Number = 1.0 / Number(numVerts);
@@ -233,7 +237,7 @@ package starling.display.graphicsEx
 			}
 		}
 
-		override protected function createStroke() : Stroke
+		override protected function getStrokeInstance() : Stroke
 		{ // Created to be able to extend class with different strokes for different folks.
 			_currentStrokeEx = new StrokeEx();
 			
@@ -253,7 +257,7 @@ package starling.display.graphicsEx
 					var x:Number = points[i];
 					var y:Number = points[i+1];
 
-					if ( i == 0 && isNaN(_currentX) )
+					if ( i == 0 && isNaN(_penPosX) )
 					{
 						moveTo( x, y );
 					}

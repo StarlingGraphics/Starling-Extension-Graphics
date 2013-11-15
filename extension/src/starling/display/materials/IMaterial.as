@@ -10,7 +10,7 @@ package starling.display.materials
 	
 	public interface IMaterial
 	{
-		function dispose(disposeTextures:Boolean=false):void
+		function dispose():void
 		function set alpha(value:Number):void;
 		function get alpha():Number;
 		function set color(value:uint):void;
