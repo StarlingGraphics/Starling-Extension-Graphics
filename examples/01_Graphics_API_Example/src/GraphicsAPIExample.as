@@ -1,5 +1,7 @@
 package
 {
+	import flash.display.Bitmap;
+	import flash.system.System;
 	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.events.Event;
@@ -19,6 +21,22 @@ package
 		[Embed( source = "/assets/Grass.png" )]
 		private var GrassBMP		:Class;
 		
+		// Display objects
+		private var shape			:Shape;
+		
+		// Resources
+		private var rockBMP			:Bitmap;
+		private var grassBMP		:Bitmap;
+		private var checkerBMP		:Bitmap;
+		private var marbleBMP		:Bitmap;
+		
+		private var rockTexture		:Texture;
+		private var grassTexture	:Texture;
+		private var checkerTexture	:Texture;
+		private var marbleTexture	:Texture;
+		
+		
+		
 		public function GraphicsAPIExample()
 		{
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
@@ -26,16 +44,42 @@ package
 		
 		private function onAdded ( e:Event ):void
 		{
-			var rockTexture:Texture = Texture.fromBitmap( new RockBMP(), false );
-			var grassTexture:Texture = Texture.fromBitmap( new GrassBMP(), false );
-			var checkerTexture:Texture = Texture.fromBitmap( new CheckerBMP(), false );
-			var marbleTexture:Texture = Texture.fromBitmap( new MarbleBMP(), false );
-			
-			var shape:Shape = new Shape();
+			shape = new Shape();
 			addChild(shape);
 			shape.x = 20;
 			shape.y = 20;
 			
+			rockBMP = new RockBMP();
+			grassBMP = new GrassBMP();
+			checkerBMP = new CheckerBMP();
+			marbleBMP = new MarbleBMP();
+			
+			rockTexture = Texture.fromBitmap( rockBMP, false );
+			grassTexture = Texture.fromBitmap( grassBMP, false );
+			checkerTexture = Texture.fromBitmap( checkerBMP, false );
+			marbleTexture = Texture.fromBitmap( marbleBMP, false );
+			
+			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		}
+		
+		private var runCount:int = 0;
+		private function onEnterFrame():void
+		{
+			// Run and clear the example multiple times
+			// to expose any potential memory leaks to Scout.
+			shape.graphics.clear();
+			runExample();
+			System.gc();
+			
+			runCount++;
+			if ( runCount == 30 )
+			{
+				removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+			}
+		}
+		
+		private function runExample():void
+		{
 			// Rect drawn with drawRect()
 			shape.graphics.beginFill(0x8dc63f);
 			shape.graphics.drawRect(0, 0, 100, 100);
