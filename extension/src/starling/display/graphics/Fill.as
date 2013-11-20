@@ -9,6 +9,7 @@ package starling.display.graphics
 		
 		protected var fillVertices	:VertexList;
 		protected var _numVertices	:int;
+		protected var _isConvex:Boolean = true; 
 		
 		public function Fill()
 		{
@@ -36,7 +37,8 @@ package starling.display.graphics
 			_numVertices = 0;
 			VertexList.dispose(fillVertices);
 			fillVertices = null;
-			isInvalid = true;
+			setGeometryInvalid();
+			_isConvex = true;
 		}
 		
 		override public function dispose():void
@@ -64,7 +66,18 @@ package starling.display.graphics
 			addVertex(destX, destY, color, alpha);
 		}
 		
+		public function addVertexInConvexShape(x:Number, y:Number, color:uint = 0xFFFFFF, alpha:Number = 1 ):void
+		{
+			addVertexInternal(x, y, color, alpha);
+		}
+		
 		public function addVertex( x:Number, y:Number, color:uint = 0xFFFFFF, alpha:Number = 1 ):void
+		{
+			_isConvex = false;
+			addVertexInternal(x, y, color, alpha);
+		}
+		
+		protected function addVertexInternal( x:Number, y:Number, color:uint = 0xFFFFFF, alpha:Number = 1 ):void
 		{
 			var r:Number = (color >> 16) / 255;
 			var g:Number = ((color & 0x00FF00) >> 8) / 255;
@@ -106,7 +119,7 @@ package starling.display.graphics
 			
 			_numVertices++;
 			
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		override protected function buildGeometry():void
@@ -115,8 +128,9 @@ package starling.display.graphics
 			
 			vertices = new Vector.<Number>();
 			indices = new Vector.<uint>();
-			
-			triangulate(fillVertices, _numVertices, vertices, indices);
+		
+			triangulate(fillVertices, _numVertices, vertices, indices, _isConvex);
+				
 		}
 		
 		override public function shapeHitTest( stageX:Number, stageY:Number ):Boolean
@@ -151,10 +165,18 @@ package starling.display.graphics
 		 * @return 
 		 * 
 		 */		
-		protected static function triangulate( vertices:VertexList, _numVertices:int, outputVertices:Vector.<Number>, outputIndices:Vector.<uint> ):void
+		protected static function triangulate( vertices:VertexList, _numVertices:int, outputVertices:Vector.<Number>, outputIndices:Vector.<uint>, isConvex:Boolean ):void
 		{
 			vertices = VertexList.clone(vertices);
-			var openList:Vector.<VertexList> = convertToSimple(vertices);
+			var openList:Vector.<VertexList> = null;
+			if ( isConvex == false )
+				openList = convertToSimple(vertices);
+			else
+			{
+				openList = new Vector.<VertexList>();
+				openList.push(vertices); // If the shape is convex, no need to run it through expensive convertToSimple
+			}
+			
 			flatten(openList, outputVertices);
 			
 			while ( openList.length > 0 )
@@ -431,9 +453,9 @@ package starling.display.graphics
 		
 		protected static function isPointInTriangle(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
 		{
+			if ( isLeft( v2x, v2y, v0x, v0y, px, py ) ) return false;  // In practical tests, this seems to be the one returning false the most. Put it on top as faster early out.
 			if ( isLeft( v0x, v0y, v1x, v1y, px, py ) ) return false;
 			if ( isLeft( v1x, v1y, v2x, v2y, px, py ) ) return false;
-			if ( isLeft( v2x, v2y, v0x, v0y, px, py ) ) return false;
 			
 			// Inline version of above ( this prevents the fill to be drawn on iOS with AIR > 3.6, so we roll back to isLeft())
 			//if ( ((v1x - v0x) * (py - v0y) - (px - v0x) * (v1y - v0y)) < 0 ) return false;

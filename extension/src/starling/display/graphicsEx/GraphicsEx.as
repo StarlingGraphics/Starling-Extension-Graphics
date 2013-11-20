@@ -4,7 +4,19 @@ package starling.display.graphicsEx
 	import starling.display.graphics.Stroke;
 	import starling.display.graphics.StrokeVertex;
 	import starling.display.IGraphicsData;
-
+	import flash.display.GraphicsPath;
+	import flash.display.IGraphicsData;
+	import flash.display.IGraphicsFill;
+	import flash.display.GraphicsSolidFill;
+	import flash.display.GraphicsGradientFill;
+	import flash.display.GraphicsPath;
+	import starling.textures.GradientTexture;
+	
+	import starling.display.GraphicsPath;
+	import starling.display.GraphicsPathCommands;
+	import starling.display.IGraphicsData;
+	
+	
 	import starling.display.Graphics;
 	import starling.textures.Texture;
 	import starling.display.materials.IMaterial;
@@ -24,11 +36,7 @@ package starling.display.graphicsEx
 		{
 			super.endStroke();
 			
-			if ( _currentStrokeEx )
-			{
-				_currentStrokeEx.dispose();
-				_currentStrokeEx = null;
-			}
+			_currentStrokeEx = null;
 		}
 		
 		public function get currentLineIndex() : int
@@ -47,13 +55,135 @@ package starling.display.graphicsEx
 				return 0;
 		}
 		
-		override protected function handleGraphicsDataType(gfxData:IGraphicsData ) : void
+			
+		
+		public function drawGraphicsData(graphicsData:Vector.<flash.display.IGraphicsData>):void
+		{
+			var i:int = 0;
+			var vectorLength:int = graphicsData.length;
+			for ( i = 0; i < vectorLength; i++ )
+			{
+				var gfxData:flash.display.IGraphicsData = graphicsData[i];
+				handleGraphicsDataType(gfxData);
+			}
+		}
+		
+		protected function handleGraphicsDataType(gfxData:flash.display.IGraphicsData ) : void
+		{
+			if ( gfxData is flash.display.GraphicsPath ) 
+				drawPath(flash.display.GraphicsPath(gfxData).commands, flash.display.GraphicsPath(gfxData).data, flash.display.GraphicsPath(gfxData).winding);
+			else if ( gfxData is flash.display.GraphicsEndFill )
+				endFill();
+		//	else if ( gfxData is flash.display.GraphicsBitmapFill ) // TODO - With the righteous removal of GraphicsBitmapFill, how do we solve this? /IonSwitz
+		//		beginBitmapFill(flash.display.GraphicsBitmapFill(gfxData).bitmapData, flash.display.GraphicsBitmapFill(gfxData).matrix);
+			else if ( gfxData is flash.display.GraphicsSolidFill )
+				beginFill(flash.display.GraphicsSolidFill(gfxData).color, flash.display.GraphicsSolidFill(gfxData).alpha );
+			else if ( gfxData is flash.display.GraphicsGradientFill )
+			{
+				var gradientFill:flash.display.GraphicsGradientFill = gfxData as flash.display.GraphicsGradientFill;
+				var gradTexture:Texture = GradientTexture.create(128, 128, gradientFill.type, gradientFill.colors, gradientFill.alphas, gradientFill.ratios, gradientFill.matrix, gradientFill.spreadMethod, gradientFill.interpolationMethod, gradientFill.focalPointRatio);
+				beginTextureFill(gradTexture);
+			}
+			else if ( gfxData is flash.display.GraphicsStroke )
+			{
+				var solidFill:flash.display.GraphicsSolidFill = flash.display.GraphicsStroke(gfxData).fill as flash.display.GraphicsSolidFill;
+				var bitmapFill:flash.display.GraphicsBitmapFill = flash.display.GraphicsStroke(gfxData).fill as flash.display.GraphicsBitmapFill;
+				var strokeGradientFill:flash.display.GraphicsGradientFill = flash.display.GraphicsStroke(gfxData).fill as flash.display.GraphicsGradientFill;
+				if (  solidFill != null )
+					lineStyle(flash.display.GraphicsStroke(gfxData).thickness, solidFill.color, solidFill.alpha); 
+				else if ( bitmapFill != null )
+					lineTexture(flash.display.GraphicsStroke(gfxData).thickness, Texture.fromBitmapData( bitmapFill.bitmapData, false ))
+				else if ( strokeGradientFill )
+				{
+					var strokeGradTexture:Texture = GradientTexture.create(128, 128, strokeGradientFill.type, strokeGradientFill.colors, strokeGradientFill.alphas, strokeGradientFill.ratios, strokeGradientFill.matrix, strokeGradientFill.spreadMethod, strokeGradientFill.interpolationMethod, strokeGradientFill.focalPointRatio);
+					lineTexture(flash.display.GraphicsStroke(gfxData).thickness, strokeGradTexture);
+				}
+			}
+		}
+		
+		public function drawGraphicsDataEx(graphicsData:Vector.<starling.display.IGraphicsData>):void
+		{
+			var i:int = 0;
+			var vectorLength:int = graphicsData.length;
+			for ( i = 0; i < vectorLength; i++ )
+			{
+				var gfxData:starling.display.IGraphicsData = graphicsData[i];
+				handleGraphicsDataTypeEx(gfxData);
+			}
+		}
+		
+		protected function handleGraphicsDataTypeEx(gfxData:starling.display.IGraphicsData ) : void
 		{
 			if ( gfxData is GraphicsNaturalSpline )
 				naturalCubicSplineTo(GraphicsNaturalSpline(gfxData).controlPoints, GraphicsNaturalSpline(gfxData).closed, GraphicsNaturalSpline(gfxData).steps);
-			else
-				super.handleGraphicsDataType(gfxData);
+			else if ( gfxData is starling.display.GraphicsPath ) 
+				drawPath(starling.display.GraphicsPath(gfxData).commands, starling.display.GraphicsPath(gfxData).data, starling.display.GraphicsPath(gfxData).winding);
+			else if ( gfxData is starling.display.GraphicsEndFill )
+				endFill();
+			else if ( gfxData is starling.display.GraphicsTextureFill )
+				beginTextureFill(starling.display.GraphicsTextureFill(gfxData).texture, starling.display.GraphicsTextureFill(gfxData).matrix);
+		//	else if ( gfxData is starling.display.GraphicsBitmapFill ) // TODO - With the righteous removal of GraphicsBitmapFill, how do we solve this? /IonSwitz
+		//		beginBitmapFill(starling.display.GraphicsBitmapFill(gfxData).bitmapData, starling.display.GraphicsBitmapFill(gfxData).matrix);
+			else if ( gfxData is starling.display.GraphicsMaterialFill ) 
+				beginMaterialFill(starling.display.GraphicsMaterialFill(gfxData).material, starling.display.GraphicsMaterialFill(gfxData).matrix);
+			else if ( gfxData is starling.display.GraphicsLine )
+				lineStyle(starling.display.GraphicsLine(gfxData).thickness, starling.display.GraphicsLine(gfxData).color, starling.display.GraphicsLine(gfxData).alpha); // This isn't part of the proper Flash API. 
+			
 		}
+
+		protected function drawCommandInternal( command:int, data:Vector.<Number>, dataCounter:int, winding:String ):int
+		{
+			if ( command == GraphicsPathCommands.NO_OP )
+			{
+				return 0;
+			}
+			else if ( command == GraphicsPathCommands.MOVE_TO )
+			{
+				moveTo( data[dataCounter], data[dataCounter + 1] );
+				return 2;
+			}
+			else if ( command == GraphicsPathCommands.LINE_TO )
+			{
+				lineTo( data[dataCounter], data[dataCounter + 1] );
+				return 2;
+			}
+			else if ( command == GraphicsPathCommands.CURVE_TO )
+			{
+				curveTo(data[dataCounter], data[dataCounter + 1], data[dataCounter + 2], data[dataCounter + 3] );
+				return 4;
+			}
+			else if ( command == GraphicsPathCommands.CUBIC_CURVE_TO )
+			{
+				cubicCurveTo( data[dataCounter], data[dataCounter + 1], data[dataCounter + 2], data[dataCounter + 3], data[dataCounter + 4], data[dataCounter + 5] );
+				return 6;
+			}
+			else if ( command == GraphicsPathCommands.WIDE_MOVE_TO )
+			{
+				moveTo( data[dataCounter + 2 ], data[dataCounter + 3] ); 
+				return 4;
+			}
+			else if ( command == GraphicsPathCommands.WIDE_LINE_TO )
+			{
+				lineTo( data[dataCounter + 2], data[dataCounter + 3] );
+				return 4;
+			}
+			
+			return 0;
+		}
+
+		public function drawPath(commands:Vector.<int>, data:Vector.<Number>, winding:String = "evenOdd"):void
+		{
+			var i:int = 0;
+			var commandLength:int = commands.length;
+			var dataCounter : int = 0;
+			for ( i = 0; i < commandLength; i++ )
+			{
+				var cmd:int = commands[i];
+				dataCounter += drawCommandInternal(cmd, data, dataCounter, winding);
+			}
+		}
+		
+
 		
 		/**
 		 * performs the natural cubic slipne transformation
@@ -148,7 +278,7 @@ package starling.display.graphicsEx
 			return true;
 		}
 		
-		private function postProcessThicknessColorInternal(_numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData, colorData:GraphicsExColorData ):void 
+		private function postProcessThicknessColorInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData, colorData:GraphicsExColorData ):void 
 		{
 			var numVerts:int = endIndex - startIndex;
 			var invNumVerts:Number = 1.0 / Number(numVerts);
@@ -219,7 +349,7 @@ package starling.display.graphicsEx
 			}
 		}
 
-		protected function postProcessThicknessInternal(_numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData ):void 
+		protected function postProcessThicknessInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData ):void 
 		{
 			var numVerts:int = endIndex - startIndex;
 			var invNumVerts:Number = 1.0 / Number(numVerts);
@@ -236,15 +366,13 @@ package starling.display.graphicsEx
 				lerp += invNumVerts;
 			}
 		}
-
-		override protected function getStrokeInstance() : Stroke
-		{ // Created to be able to extend class with different strokes for different folks.
+		
+		override protected function getStrokeInstance():Stroke
+		{// Created to be able to extend class with different strokes for different folks.
 			_currentStrokeEx = new StrokeEx();
 			
 			return _currentStrokeEx as Stroke;
 		}
-		
-
 		
 		protected function drawPointsInternal(points:Vector.<Number>) : void
 		{
@@ -257,7 +385,7 @@ package starling.display.graphicsEx
 					var x:Number = points[i];
 					var y:Number = points[i+1];
 
-					if ( i == 0 && isNaN(_penPosX) )
+					if ( i == 0 && (_penPosX != _penPosX) ) // Alledgedly the fastest way to do "isNaN(x)". All comparisons with NaN yields false
 					{
 						moveTo( x, y );
 					}

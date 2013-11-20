@@ -40,6 +40,8 @@ package starling.display.graphics
 		protected var isInvalid		:Boolean = false;
 		protected var uvsInvalid	:Boolean = false;
 		
+		protected var hasValidatedGeometry:Boolean = false;
+				
 		private static var sGraphicHelperRect:Rectangle = new Rectangle();
 		private static var sGraphicHelperPoint:Point = new Point();
 		
@@ -84,6 +86,8 @@ package starling.display.graphics
 		
 		private function onContextCreated( event:Event ):void
 		{
+			hasValidatedGeometry = false;
+			
 			isInvalid = true;
 			uvsInvalid = true;
 			_material.restoreOnLostContext();
@@ -117,6 +121,8 @@ package starling.display.graphics
 			_uvMatrix = null;
 			minBounds = null;
 			maxBounds = null;
+			
+			hasValidatedGeometry = false;
 		}
 		
 		public function set material( value:IMaterial ):void
@@ -138,6 +144,7 @@ package starling.display.graphics
 		{
 			_uvMatrix = value;
 			uvsInvalid = true;
+			hasValidatedGeometry = false;
 		}
 		
 		
@@ -248,6 +255,11 @@ package starling.display.graphics
 		
 		public function validateNow():void
 		{
+			if ( hasValidatedGeometry )
+				return;
+			
+			hasValidatedGeometry = true;
+			
 			if ( vertexBuffer && (isInvalid || uvsInvalid) )
 			{
 				vertexBuffer.dispose();
@@ -263,6 +275,12 @@ package starling.display.graphics
 			{
 				applyUVMatrix();
 			}
+		}
+		
+		protected function setGeometryInvalid() : void
+		{
+			isInvalid = true;
+			hasValidatedGeometry = false;
 		}
 		
 		override public function render( renderSupport:RenderSupport, parentAlpha:Number ):void

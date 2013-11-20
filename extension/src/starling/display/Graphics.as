@@ -10,10 +10,7 @@ package starling.display
 	import starling.display.graphics.RoundedRectangle;
 	import starling.display.graphics.Stroke;
 	import starling.display.graphics.StrokeVertex;
-	import starling.display.GraphicsPath;
-	import starling.display.GraphicsPathCommands;
-	import starling.display.IGraphicsData;
-	
+
 	import starling.display.materials.IMaterial;
 	import starling.display.shaders.fragment.TextureFragmentShader;
 	import starling.display.util.CurveUtil;
@@ -214,6 +211,7 @@ package starling.display
 			
 			_currentStroke = null;
 		}
+		
 		
 		////////////////////////////////////////
 		// Draw commands
@@ -526,29 +524,6 @@ package starling.display
 			}
 		}
 		
-		public function drawPath(commands:Vector.<int>, data:Vector.<Number>, winding:String = "evenOdd"):void
-		{
-			var i:int = 0;
-			var commandLength:int = commands.length;
-			var dataCounter : int = 0;
-			for ( i = 0; i < commandLength; i++ )
-			{
-				var cmd:int = commands[i];
-				dataCounter += drawCommandInternal(cmd, data, dataCounter, winding);
-			}
-		}
-		
-		
-		public function drawGraphicsData(graphicsData:Vector.<IGraphicsData>):void
-		{
-			var i:int = 0;
-			var vectorLength:int = graphicsData.length;
-			for ( i = 0; i < vectorLength; i++ )
-			{
-				var gfxData:IGraphicsData = graphicsData[i];
-				handleGraphicsDataType(gfxData);
-			}
-		}
 		
 		/**
 		 * Used for geometry level hit tests. 
@@ -591,6 +566,7 @@ package starling.display
 		{
 			return _precisionHitTestDistance;
 		}
+		
 		
 		/////////////////////////////////////////////////////////////////////////////////////////
 		// PROTECTED
@@ -686,68 +662,6 @@ package starling.display
 		// Graphics command functions
 		////////////////////////////////////////
 		
-		protected function drawCommandInternal( command:int, data:Vector.<Number>, dataCounter:int, winding:String ):int
-		{
-			if ( command == GraphicsPathCommands.NO_OP )
-			{
-				return 0;
-			}
-			else if ( command == GraphicsPathCommands.MOVE_TO )
-			{
-				moveTo( data[dataCounter], data[dataCounter + 1] );
-				return 2;
-			}
-			else if ( command == GraphicsPathCommands.LINE_TO )
-			{
-				lineTo( data[dataCounter], data[dataCounter + 1] );
-				return 2;
-			}
-			else if ( command == GraphicsPathCommands.CURVE_TO )
-			{
-				curveTo(data[dataCounter], data[dataCounter + 1], data[dataCounter + 2], data[dataCounter + 3] );
-				return 4;
-			}
-			else if ( command == GraphicsPathCommands.CUBIC_CURVE_TO )
-			{
-				cubicCurveTo( data[dataCounter], data[dataCounter + 1], data[dataCounter + 2], data[dataCounter + 3], data[dataCounter + 4], data[dataCounter + 5] );
-				return 6;
-			}
-			else if ( command == GraphicsPathCommands.WIDE_MOVE_TO )
-			{
-				moveTo( data[dataCounter + 2 ], data[dataCounter + 3] ); 
-				return 4;
-			}
-			else if ( command == GraphicsPathCommands.WIDE_LINE_TO )
-			{
-				lineTo( data[dataCounter + 2], data[dataCounter + 3] );
-				return 4;
-			}
-			
-			return 0;
-		}
 		
-		protected function handleGraphicsDataType( gfxData:IGraphicsData ):void
-		{
-			if ( gfxData is GraphicsPath )
-			{
-				drawPath( GraphicsPath( gfxData ).commands, GraphicsPath( gfxData ).data, GraphicsPath( gfxData ).winding );
-			}
-			else if ( gfxData is GraphicsEndFill )
-			{
-				endFill();
-			}
-			else if ( gfxData is GraphicsTextureFill )
-			{
-				beginTextureFill( GraphicsTextureFill( gfxData ).texture, GraphicsTextureFill( gfxData ).matrix );
-			}
-			else if ( gfxData is GraphicsMaterialFill ) 
-			{
-				beginMaterialFill( GraphicsMaterialFill( gfxData ).material, GraphicsMaterialFill( gfxData ).matrix );
-			}
-			else if ( gfxData is GraphicsLine )
-			{
-				lineStyle( GraphicsLine( gfxData ).thickness, GraphicsLine( gfxData ).color, GraphicsLine( gfxData ).alpha ); // This isn't part of the proper Flash API. 
-			}
-		}
     }
 }

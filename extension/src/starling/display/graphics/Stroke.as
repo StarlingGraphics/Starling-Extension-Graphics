@@ -43,7 +43,7 @@ package starling.display.graphics
 			}
 			_line = new Vector.<StrokeVertex>;
 			_numVertices = 0;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function addDegenerates(destX:Number, destY:Number):void
@@ -127,7 +127,7 @@ package starling.display.graphics
 			if ( maxBounds.y == Number.NEGATIVE_INFINITY )	
 				maxBounds.y = y;
 			
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function getVertexPosition(index:int, prealloc:Point = null):Point

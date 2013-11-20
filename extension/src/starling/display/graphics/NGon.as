@@ -42,7 +42,7 @@ package starling.display.graphics
 		public function set endAngle(value:Number):void
 		{
 			_endAngle = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 
 		public function get startAngle():Number
@@ -53,7 +53,7 @@ package starling.display.graphics
 		public function set startAngle(value:Number):void
 		{
 			_startAngle = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 
 		public function get radius():Number
@@ -68,7 +68,7 @@ package starling.display.graphics
 			var maxRadius:Number = Math.max(_radius, _innerRadius);
 			minBounds.x = minBounds.y = -maxRadius;
 			maxBounds.x = maxBounds.y = maxRadius;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function get innerRadius():Number
@@ -82,8 +82,8 @@ package starling.display.graphics
 			_innerRadius = value;
 			var maxRadius:Number = Math.max(_radius, _innerRadius);
 			minBounds.x = minBounds.y = -maxRadius;
-			maxBounds.x = minBounds.y = maxRadius;
-			isInvalid = true;
+			maxBounds.x = maxBounds.y = maxRadius;
+			setGeometryInvalid();
 		}
 
 		public function get numSides():int
@@ -95,7 +95,7 @@ package starling.display.graphics
 		{
 			value = value < 3 ? 3 : value;
 			_numSides = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		override protected function buildGeometry():void

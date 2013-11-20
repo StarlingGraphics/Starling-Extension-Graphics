@@ -23,7 +23,7 @@ package starling.display.graphics
 			_numVerticesX = numVerticesX;
 			_numVerticesY = numVerticesY;
 			_vertexFunction = defaultVertexFunction;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public static function defaultVertexFunction( column:int, row:int, width:Number, height:Number, numVerticesX:int, numVerticesY:int, output:Vector.<Number>, uvMatrix:Matrix = null ):void
@@ -47,7 +47,7 @@ package starling.display.graphics
 				return;
 			}
 			_vertexFunction = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function get vertexFunction():Function

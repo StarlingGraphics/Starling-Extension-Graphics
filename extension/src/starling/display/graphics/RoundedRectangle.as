@@ -33,7 +33,7 @@ package starling.display.graphics
 			value = value < 0 ? 0 : value;
 			_width = value;
 			maxBounds.x = _width;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 
 		override public function get height():Number
@@ -46,7 +46,7 @@ package starling.display.graphics
 			value = value < 0 ? 0 : value;
 			_height = value;
 			maxBounds.y = _height;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 
 		public function get cornerRadius():Number
@@ -58,7 +58,7 @@ package starling.display.graphics
 		{
 			value = value < 0 ? 0 : value;
 			_topLeftRadius = _topRightRadius = _bottomLeftRadius = _bottomRightRadius = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function get topLeftRadius():Number
@@ -70,7 +70,7 @@ package starling.display.graphics
 		{
 			value = value < 0 ? 0 : value;
 			_topLeftRadius = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function get topRightRadius():Number
@@ -82,7 +82,7 @@ package starling.display.graphics
 		{
 			value = value < 0 ? 0 : value;
 			_topRightRadius = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function get bottomLeftRadius():Number
@@ -94,7 +94,7 @@ package starling.display.graphics
 		{
 			value = value < 0 ? 0 : value;
 			_bottomLeftRadius = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function get bottomRightRadius():Number
@@ -106,7 +106,7 @@ package starling.display.graphics
 		{
 			value = value < 0 ? 0 : value;
 			_bottomRightRadius = value;
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		public function getStrokePoints():Vector.<Number>

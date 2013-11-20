@@ -29,7 +29,7 @@ package starling.display.graphics
 				indices.push( 0, numVertices-2, numVertices-1 );
 			}
 			
-			isInvalid = true;
+			setGeometryInvalid();
 		}
 		
 		override protected function buildGeometry():void
