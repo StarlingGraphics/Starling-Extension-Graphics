@@ -67,7 +67,7 @@ package starling.display.graphics
 			_radius = value;
 			var maxRadius:Number = Math.max(_radius, _innerRadius);
 			minBounds.x = minBounds.y = -maxRadius;
-			maxBounds.x = minBounds.y = maxRadius;
+			maxBounds.x = maxBounds.y = maxRadius;
 			isInvalid = true;
 		}
 		
