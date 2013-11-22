@@ -144,7 +144,7 @@ package starling.display.graphics
 		override protected function buildGeometry():void
 		{
 			//buildGeometryOriginal();
-			 buildGeometryPreAllocatedVectors();
+			buildGeometryPreAllocatedVectors();
 		}
 		
 		protected function buildGeometryOriginal() : void
@@ -160,7 +160,7 @@ package starling.display.graphics
 					
 			var oldVerticesLength:int = vertices.length;
 			const oneOverVertexStride:Number = 1 / VERTEX_STRIDE;	
-			fixUpPolyLine( _line );
+			_numVertices = fixUpPolyLine( _line );
 			createPolyLine( _line, vertices, indices, indexOffset);
 			indexOffset += (vertices.length - oldVerticesLength) * oneOverVertexStride;
 		}
@@ -173,8 +173,8 @@ package starling.display.graphics
 			// This is the code that uses the preAllocated code path for createPolyLinePreAlloc
 			var indexOffset:int = 0;
 			// First remove all deformed things in _line
-			fixUpPolyLine( _line );
-
+			_numVertices = fixUpPolyLine( _line );
+			
 			// Then use the line lenght to pre allocate the vertex vectors
 			var numVerts:int = _line.length * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
 			var numIndices:int = (_line.length - 1) * 6; // this looks odd, but for each StrokeVertex-1, we generate 6 indices in createPolyLine
@@ -434,8 +434,9 @@ package starling.display.graphics
 			}
 		}
 		
-		protected static function fixUpPolyLine( vertices:Vector.<StrokeVertex> ):void
+		protected static function fixUpPolyLine( vertices:Vector.<StrokeVertex> ): int
 		{
+			
 			if ( vertices.length > 0 && vertices[0].degenerate > 0 ) { throw ( new Error("Degenerate on first line vertex") ); }
 			var idx:int = vertices.length - 1;
 			while ( idx > 0 && vertices[idx].degenerate > 0 )
@@ -443,6 +444,7 @@ package starling.display.graphics
 				vertices.pop();
 				idx--;
 			}
+			return vertices.length;
 		}
 		
 		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
