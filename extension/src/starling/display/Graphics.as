@@ -229,9 +229,15 @@ package starling.display
 				_currentStroke.addDegenerates( x, y );
 			}
 			
-			if ( _fillStyleSet && _currentFill ) 
+			if ( _fillStyleSet ) 
 			{
-				_currentFill.addDegenerates( x, y );
+				if ( _currentFill == null )
+				{ // Added to make sure that the first vertex in a shape gets added to the fill as well.
+					createFill();
+					_currentFill.addVertex(x, y);
+				}
+				else
+					_currentFill.addDegenerates( x, y );
 			}
 			
 			_penPosX = x;
