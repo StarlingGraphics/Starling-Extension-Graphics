@@ -103,11 +103,18 @@ package starling.display
 			_fillTexture 	= texture;
 			_fillMaterial 	= null;
 			_fillMatrix 	= new Matrix();
-			_fillMatrix.scale( 1 / texture.width, 1 / texture.height );
+			
 			if ( uvMatrix )
 			{
-				_fillMatrix.concat( uvMatrix );
+				_fillMatrix = uvMatrix.clone();
+				_fillMatrix.invert();
 			}
+			else
+			{
+				_fillMatrix = new Matrix();
+			}
+			
+			_fillMatrix.scale( 1 / texture.width, 1 / texture.height );
 		}
 		
 		public function beginMaterialFill( material:IMaterial, uvMatrix:Matrix = null ):void
@@ -161,7 +168,7 @@ package starling.display
 		{
 			endStroke();
 			
-			_strokeStyleSet			= !isNaN(thickness);
+			_strokeStyleSet			= !isNaN(thickness) && thickness > 0;
 			_strokeThickness		= thickness;
 			_strokeColor			= color;
 			_strokeAlpha			= alpha;
@@ -173,7 +180,7 @@ package starling.display
 		{
 			endStroke();
 			
-			_strokeStyleSet			= !isNaN(thickness) && texture;
+			_strokeStyleSet			= !isNaN(thickness) && thickness > 0 && texture;
          	_strokeThickness		= thickness;
 			_strokeColor			= 0xFFFFFF;
 			_strokeAlpha			= 1;
@@ -185,7 +192,7 @@ package starling.display
 		{
 			endStroke();
 			
-			_strokeStyleSet			= !isNaN(thickness) && material;
+			_strokeStyleSet			= !isNaN(thickness) && thickness > 0 && material;
 			_strokeThickness		= thickness;
 			_strokeColor			= 0xFFFFFF;
 			_strokeAlpha			= 1;
@@ -627,6 +634,10 @@ package starling.display
 			}
 			
 			_currentFill = getFillInstance();
+			if ( _fillMatrix )
+			{
+				_currentFill.uvMatrix = _fillMatrix;
+			}
 			_currentFill.precisionHitTest = _precisionHitTest;
 			_currentFill.precisionHitTestDistance = _precisionHitTestDistance;
 			applyFillStyleToGraphic( _currentFill );
@@ -659,6 +670,10 @@ package starling.display
 			{
 				graphic.material.fragmentShader = s_textureFragmentShader;
 				graphic.material.textures[0] = _fillTexture;
+			}
+			if ( _fillMatrix )
+			{
+				graphic.uvMatrix = _fillMatrix;
 			}
 			graphic.material.color = _fillColor;
 			graphic.material.alpha = _fillAlpha;

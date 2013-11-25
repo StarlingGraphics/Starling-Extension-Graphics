@@ -1,7 +1,9 @@
 package
 {
 	import flash.display.Bitmap;
+	import flash.geom.Matrix;
 	import flash.system.System;
+	import starling.core.Starling;
 	import starling.display.Shape;
 	import starling.display.Sprite;
 	import starling.events.Event;
@@ -74,7 +76,7 @@ package
 			runCount++;
 			if ( runCount == 30 )
 			{
-				removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+				//removeEventListener(Event.ENTER_FRAME, onEnterFrame);
 			}
 		}
 		
@@ -133,7 +135,9 @@ package
 			shape.graphics.endFill();
 			
 			// Marble
-			shape.graphics.beginTextureFill(marbleTexture);
+			var uvMatrix:Matrix = new Matrix();
+			uvMatrix.translate( -marbleTexture.width*0.5 + 150, -marbleTexture.height*0.5 + 364 );
+			shape.graphics.beginTextureFill(marbleTexture, uvMatrix);
 			shape.graphics.lineStyle(2, 0xFFFFFF, 1);
 			shape.graphics.drawCircle(150, 364, 32);
 			shape.graphics.endFill();
