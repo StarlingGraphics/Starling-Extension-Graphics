@@ -6,18 +6,6 @@ This extension adds a suite of graphics primitives such as Planes, Fills and Str
 These primitives can be manipulated directly, or created on your behalf by using a familiar graphics API accessed via the Shape class.
 
 
-Roadmap
-===========================
-
-Optimisations across the board to aid with performance on mobile devices. If you're targeting mobile, try to avoid calls to graphics.lineTo() as much as possible. Any arbitrary polygon shape is processed by a triangulator implemented in AS3, which is very CPU intensive. drawRect(), drawRoundedRect(), drawCircle() etc are implemented by specialised primitives, so avoid the triangulator altogether. 
-
-Improve performance of triangulator by using trapezoidalisation to pre-process polygons fed to the ear-clipping algorithm.
-
-Provide an extended library of off-the-shelf vertex/fragment shaders for commonly desired effects (reccomendations/votes welcome).
-
-Add support for 'holes' on fills.
-
-
 
 Starling Framework: the GPU powered 2D Flash API
 ================================================
