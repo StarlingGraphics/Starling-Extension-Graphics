@@ -3,6 +3,8 @@ package starling.display.graphics
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	
+	import starling.display.graphics.util.TriangleUtil;
+	
 	public class Fill extends Graphic
 	{
 		public static const VERTEX_STRIDE	:int = 9;
@@ -235,7 +237,7 @@ package starling.display.graphics
 					while ( n != n0 )
 					{
 						//trace("Testing if point is in triangle : " + n.index);
-						if ( isPointInTriangle(v0x, v0y, v1x, v1y, v2x, v2y, n.vertex[0], n.vertex[1]) )
+						if ( TriangleUtil.isPointInTriangle(v0x, v0y, v1x, v1y, v2x, v2y, n.vertex[0], n.vertex[1]) )
 						{
 							found = true;
 							break;
@@ -446,29 +448,11 @@ package starling.display.graphics
 			return wn;
 		}
 		
-		protected static function isLeft(v0x:Number, v0y:Number, v1x:Number, v1y:Number, px:Number, py:Number):Boolean
-		{
-			return ((v1x - v0x) * (py - v0y) - (v1y - v0y) * (px - v0x)) < 0;
-		}
-		
-		protected static function isPointInTriangle(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
-		{
-			if ( isLeft( v2x, v2y, v0x, v0y, px, py ) ) return false;  // In practical tests, this seems to be the one returning false the most. Put it on top as faster early out.
-			if ( isLeft( v0x, v0y, v1x, v1y, px, py ) ) return false;
-			if ( isLeft( v1x, v1y, v2x, v2y, px, py ) ) return false;
-			
-			// Inline version of above ( this prevents the fill to be drawn on iOS with AIR > 3.6, so we roll back to isLeft())
-			//if ( ((v1x - v0x) * (py - v0y) - (px - v0x) * (v1y - v0y)) < 0 ) return false;
-			//if ( ((v2x - v1x) * (py - v1y) - (px - v1x) * (v2y - v1y)) < 0 ) return false;
-			//if ( ((v0x - v2x) * (py - v2y) - (px - v2x) * (v0y - v2y)) < 0 ) return false;
-			
-			return true;
-		}
 		
 		protected static function isReflex( v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number ):Boolean
 		{
-			if ( isLeft( v0x, v0y, v1x, v1y, v2x, v2y ) ) return false;
-			if ( isLeft( v1x, v1y, v2x, v2y, v0x, v0y ) ) return false;
+			if ( TriangleUtil.isLeft( v0x, v0y, v1x, v1y, v2x, v2y ) ) return false;
+			if ( TriangleUtil.isLeft( v1x, v1y, v2x, v2y, v0x, v0y ) ) return false;
 			
 			// Inline version of above ( this prevents the fill to be drawn on iOS with AIR > 3.6, so we roll back to isLeft())
 			//if ( ((v1x - v0x) * (v2y - v0y) - (v2x - v0x) * (v1y - v0y)) < 0 ) return false;
