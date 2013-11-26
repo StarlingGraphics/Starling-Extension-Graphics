@@ -160,13 +160,58 @@ package starling.display.graphics
 			}
 		}
 		
+		protected static function isLeft(v0x:Number, v0y:Number, v1x:Number, v1y:Number, px:Number, py:Number):Boolean
+		{
+			return ((v1x - v0x) * (py - v0y) - (v1y - v0y) * (px - v0x)) < 0;
+		}
+		
+		protected static function isPointInTriangle(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
+		{
+			if ( isLeft( v2x, v2y, v0x, v0y, px, py ) ) return false;  // In practical tests, this seems to be the one returning false the most. Put it on top as faster early out.
+			if ( isLeft( v0x, v0y, v1x, v1y, px, py ) ) return false;
+			if ( isLeft( v1x, v1y, v2x, v2y, px, py ) ) return false;
+			return true;
+		}
+		
+		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
+		{
+			var numIndices:int = indices.length;
+			if ( numIndices < 2 )
+				return false;
+			
+			if ( _innerRadius == 0 && _radius > 0 && _startAngle == 0 && _endAngle == 360 && _numSides > 20 )  
+			{  // simple - faster - if ngon is circle shape and numsides more than 20, assume circle is desired.
+				if ( Math.sqrt( localX * localX + localY * localY ) < _radius )
+					return true;
+				return false;	
+			}
+				
+			for ( var i:int = 2; i < numIndices; i+=3 )
+			{ // slower version - should be complete though. For all triangles, check if point is in triangle
+				var i0:int = indices[(i - 2)];
+				var i1:int = indices[(i - 1)];
+				var i2:int = indices[(i - 0)];
+				
+				var v0x:Number = vertices[VERTEX_STRIDE * i0 + 0];
+				var v0y:Number = vertices[VERTEX_STRIDE * i0 + 1];
+				var v1x:Number = vertices[VERTEX_STRIDE * i1 + 0];
+				var v1y:Number = vertices[VERTEX_STRIDE * i1 + 1];
+				var v2x:Number = vertices[VERTEX_STRIDE * i2 + 0];
+				var v2y:Number = vertices[VERTEX_STRIDE * i2 + 1];
+				if ( isPointInTriangle(v0x, v0y, v1x, v1y, v2x, v2y, localX, localY) )
+					return true;
+			}
+			return false;
+		}
+		
 		private static function buildSimpleNGon( radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix ):void
 		{
 			var numVertices:int = 0;
 			
 			_uv.x = 0;
 			_uv.y = 0;
-			_uv = uvMatrix.transformPoint(_uv);
+			if ( uvMatrix ) 
+				_uv = uvMatrix.transformPoint(_uv);
 			
 			vertices.push( 0, 0, 0, 1, 1, 1, 1, _uv.x, _uv.y );
 			numVertices++;
@@ -183,7 +228,8 @@ package starling.display.graphics
 				var y:Number = -c * radius;
 				_uv.x = x;
 				_uv.y = y;
-				_uv = uvMatrix.transformPoint(_uv);
+				if ( uvMatrix ) 
+					_uv = uvMatrix.transformPoint(_uv);
 				
 				vertices.push( x, y, 0, 1, 1, 1, 1, _uv.x, _uv.y );
 				numVertices++;
@@ -212,7 +258,8 @@ package starling.display.graphics
 				var y:Number = -c * radius;
 				_uv.x = x;
 				_uv.y = y;
-				_uv = uvMatrix.transformPoint(_uv);
+				if ( uvMatrix ) 
+					_uv = uvMatrix.transformPoint(_uv);
 				
 				vertices.push( x, y, 0, 1, 1, 1, 1, _uv.x, _uv.y );
 				numVertices++;
@@ -221,7 +268,8 @@ package starling.display.graphics
 				y = -c * innerRadius;
 				_uv.x = x;
 				_uv.y = y;
-				_uv = uvMatrix.transformPoint(_uv);
+				if ( uvMatrix ) 
+					_uv = uvMatrix.transformPoint(_uv);
 				
 				vertices.push( x, y, 0, 1, 1, 1, 1, _uv.x, _uv.y );
 				numVertices++;
@@ -232,7 +280,7 @@ package starling.display.graphics
 				}
 				else
 				{
-					indices.push( numVertices-2, numVertices-1, numVertices, numVertices, numVertices-1, numVertices+1 );
+					indices.push( numVertices - 2, numVertices , numVertices-1, numVertices, numVertices + 1, numVertices - 1 );
 				}
 				
 				const ns:Number = sinB*c + cosA*s;
@@ -283,7 +331,8 @@ package starling.display.graphics
 				
 				_uv.x = x;
 				_uv.y = y;
-				_uv = uvMatrix.transformPoint(_uv);
+				if ( uvMatrix ) 
+					_uv = uvMatrix.transformPoint(_uv);
 				
 				vertices.push( x, y, 0, 1, 1, 1, 1, _uv.x, _uv.y );
 				numVertices++;
@@ -356,21 +405,24 @@ package starling.display.graphics
 				
 				_uv.x = x;
 				_uv.y = y;
-				_uv = uvMatrix.transformPoint(_uv);
+				if ( uvMatrix ) 
+					_uv = uvMatrix.transformPoint(_uv);
 				
 				vertices.push( x, y, 0, 1, 1, 1, 1, _uv.x, _uv.y );
 				nv++;
 				
 				_uv.x = x2;
 				_uv.y = y2;
-				_uv = uvMatrix.transformPoint(_uv);
+				if ( uvMatrix ) 
+					_uv = uvMatrix.transformPoint(_uv);
 				
 				vertices.push( x2, y2, 0, 1, 1, 1, 1, _uv.x, _uv.y );
 				nv++;
 				
 				if ( vertices.length > 3*9 )
 				{
-					indices.push( nv-1, nv-2, nv-3, nv-3, nv-2, nv-4 );
+					//indices.push( nv-1, nv-2, nv-3, nv-3, nv-2, nv-4 );
+					indices.push( nv-3, nv-2, nv-1, nv-3, nv-4, nv-2 );
 				}
 				
 				if ( angle >= endAngle )

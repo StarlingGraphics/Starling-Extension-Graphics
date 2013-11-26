@@ -386,6 +386,8 @@ package starling.display
 					m.concat( _fillMatrix );
 				}
 				nGon.uvMatrix = m;
+				nGon.precisionHitTest = _precisionHitTest;
+				nGon.precisionHitTestDistance = _precisionHitTestDistance;
 				
 				_container.addChild(nGon);
 			}
