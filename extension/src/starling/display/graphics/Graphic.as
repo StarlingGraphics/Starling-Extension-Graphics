@@ -80,8 +80,11 @@ package starling.display.graphics
 			
 			minBounds = new Point();
 			maxBounds = new Point();
-			
-			Starling.current.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+
+			if (Starling.current)
+			{
+				Starling.current.addEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+			}
 		}
 		
 		private function onContextCreated( event:Event ):void
