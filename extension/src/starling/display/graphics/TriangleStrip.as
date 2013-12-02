@@ -54,6 +54,15 @@ package starling.display.graphics
 				var v2y:Number = vertices[VERTEX_STRIDE * i2 + 1];
 				if ( TriangleUtil.isPointInTriangleBarycentric(v0x, v0y, v1x, v1y, v2x, v2y, localX, localY) )
 					return true;
+				if ( _precisionHitTestDistance > 0 )
+				{
+					if ( TriangleUtil.isPointOnLine(v0x, v0y, v1x, v1y, localX, localY, _precisionHitTestDistance) )
+						return true;
+					if ( TriangleUtil.isPointOnLine(v0x, v0y, v2x, v2y, localX, localY, _precisionHitTestDistance) )
+						return true;
+					if ( TriangleUtil.isPointOnLine(v1x, v1y, v2x, v2y, localX, localY, _precisionHitTestDistance) )
+						return true;
+				}
 			}
 			return false;
 		}

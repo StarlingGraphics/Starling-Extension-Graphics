@@ -213,6 +213,13 @@ package starling.display.graphics
 				resultRect.y = minBounds.y;
 				resultRect.right = maxBounds.x;
 				resultRect.bottom = maxBounds.y;
+				if ( _precisionHitTest )
+				{	
+					resultRect.x -= _precisionHitTestDistance;
+					resultRect.y -= _precisionHitTestDistance;
+					resultRect.width += _precisionHitTestDistance * 2;
+					resultRect.height += _precisionHitTestDistance * 2;
+				}
 				return resultRect;
 			}
 			
@@ -231,7 +238,13 @@ package starling.display.graphics
 			resultRect.y = Math.min(TL.y, BR.y, tr.y, bl.y);
 			resultRect.right = Math.max(TL.x, BR.x, tr.x, bl.x);
 			resultRect.bottom = Math.max(TL.y, BR.y, tr.y, bl.y);
-			
+			if ( _precisionHitTest )
+			{
+				resultRect.x -= _precisionHitTestDistance;
+				resultRect.y -= _precisionHitTestDistance;
+				resultRect.width += _precisionHitTestDistance * 2;
+				resultRect.height += _precisionHitTestDistance * 2;
+			}
 			return resultRect;
 		}
 		

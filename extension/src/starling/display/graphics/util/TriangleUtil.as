@@ -32,6 +32,26 @@ package starling.display.graphics.util
 			return false;	
 		}
 		
+		public static function isPointOnLine(v0x:Number, v0y:Number, v1x:Number, v1y:Number, px:Number, py:Number, distance:Number ):Boolean
+		{
+			var lineLengthSquared:Number = (v1x - v0x) * (v1x - v0x) + (v1y - v0y) * (v1y - v0y);
+				
+			var interpolation:Number = ( ( ( px - v0x ) * ( v1x - v0x ) ) + ( ( py - v0y ) * ( v1y - v0y ) ) )  /	( lineLengthSquared );
+			if( interpolation < 0.0 || interpolation > 1.0 )
+				return false;   // closest point does not fall within the line segment
+					
+			var intersectionX:Number = v0x + interpolation * ( v1x - v0x );
+			var intersectionY:Number = v0y + interpolation * ( v1y - v0y );
+				
+			var distanceSquared:Number = (px - intersectionX) * (px - intersectionX) + (py - intersectionY) * (py - intersectionY);
+				
+			var intersectThickness:Number = 1 + distance;
+				
+			if ( distanceSquared <= intersectThickness * intersectThickness)
+				return true;
+				
+			return false;	
+		}
 	}
 
 }
