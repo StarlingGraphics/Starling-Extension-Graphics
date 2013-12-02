@@ -21,6 +21,17 @@ package starling.display.graphics.util
 			if ( isLeft( v1x, v1y, v2x, v2y, px, py ) ) return false;
 			return true;
 		}
+		
+		public static function isPointInTriangleBarycentric(v0x:Number, v0y:Number, v1x:Number, v1y:Number, v2x:Number, v2y:Number, px:Number, py:Number ):Boolean
+		{
+			var alpha:Number = ((v1y - v2y)*(px - v2x) + (v2x - v1x)*(py - v2y)) / ((v1y - v2y)*(v0x - v2x) + (v2x - v1x)*(v0y - v2y));
+			var beta:Number = ((v2y - v0y)*(px - v2x) + (v0x - v2x)*(py - v2y)) / ((v1y - v2y)*(v0x - v2x) + (v2x - v1x)*(v0y - v2y));
+			var gamma:Number = 1.0 - alpha - beta;
+			if ( alpha > 0 && beta > 0 && gamma > 0 )
+				return true;
+			return false;	
+		}
+		
 	}
 
 }

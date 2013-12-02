@@ -3,6 +3,7 @@ package starling.display.graphics
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.textures.Texture;
+	import starling.display.graphics.util.TriangleUtil;
 	
 	public class TriangleStrip extends Graphic
 	{
@@ -31,6 +32,30 @@ package starling.display.graphics
 			}
 			
 			setGeometryInvalid();
+		}
+		
+		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
+		{
+			var numIndices:int = indices.length;
+			if ( numIndices < 2 )
+				return false;
+				
+			for ( var i:int = 2; i < numIndices; i+=3 )
+			{ // slower version - should be complete though. For all triangles, check if point is in triangle
+				var i0:int = indices[(i - 2)];
+				var i1:int = indices[(i - 1)];
+				var i2:int = indices[(i - 0)];
+				
+				var v0x:Number = vertices[VERTEX_STRIDE * i0 + 0];
+				var v0y:Number = vertices[VERTEX_STRIDE * i0 + 1];
+				var v1x:Number = vertices[VERTEX_STRIDE * i1 + 0];
+				var v1y:Number = vertices[VERTEX_STRIDE * i1 + 1];
+				var v2x:Number = vertices[VERTEX_STRIDE * i2 + 0];
+				var v2y:Number = vertices[VERTEX_STRIDE * i2 + 1];
+				if ( TriangleUtil.isPointInTriangleBarycentric(v0x, v0y, v1x, v1y, v2x, v2y, localX, localY) )
+					return true;
+			}
+			return false;
 		}
 		
 		override protected function buildGeometry():void
