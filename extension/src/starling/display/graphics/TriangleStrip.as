@@ -34,6 +34,13 @@ package starling.display.graphics
 			setGeometryInvalid();
 		}
 		
+		public function clear():void
+		{
+			vertices.length = 0;
+			indices.length = 0;
+			numVertices =  0;
+		}
+		
 		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
 		{
 			var numIndices:int = indices.length;
