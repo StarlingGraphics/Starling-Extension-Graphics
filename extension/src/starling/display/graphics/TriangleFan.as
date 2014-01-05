@@ -32,6 +32,14 @@ package starling.display.graphics
 			setGeometryInvalid();
 		}
 		
+		public function clear():void
+		{
+			vertices.length = 0;
+			indices.length = 0;
+			numVertices =  0;
+			setGeometryInvalid();
+		}
+		
 		override protected function buildGeometry():void
 		{
 			
