@@ -200,8 +200,6 @@ package starling.display.graphics
 												indexOffset:int):void
 		{
 			
-			var sqrt:Function = Math.sqrt;
-			var sin:Function = Math.sin;
 			const numVertices:int = vertices.length;
 			const PI:Number = Math.PI;
 			var vertCounter:int = 0;
@@ -253,22 +251,23 @@ package starling.display.graphics
 					d0y = v1y - v0y;
 				}
 				
-				var d0:Number = sqrt( d0x*d0x + d0y*d0y );
-				var d1:Number = sqrt( d1x*d1x + d1y*d1y );
-				
+				var d0:Number = Math.sqrt( d0x*d0x + d0y*d0y );
+				var d1:Number = Math.sqrt( d1x*d1x + d1y*d1y );
+		
 				var elbowThickness:Number = v1.thickness*0.5;
 				if ( !(treatAsFirst || treatAsLast) )
 				{
 					// Thanks to Tom Clapham for spotting this relationship.
-					var dot:Number = (d0x*d1x+d0y*d1y) / (d0*d1);
-					elbowThickness /= sin((PI-Math.acos(dot)) * 0.5);
+					var dot:Number = (d0x * d1x + d0y * d1y) / (d0 * d1);
+					var arcCosDot:Number = Math.acos(dot);
+					elbowThickness /= Math.sin( (PI-arcCosDot) * 0.5);
 					
 					if ( elbowThickness > v1.thickness * 4 )
 					{
 						elbowThickness = v1.thickness * 4;
 					}
 					
-					if ( isNaN( elbowThickness ) )
+					if ( elbowThickness != elbowThickness )
 					{
 						elbowThickness = v1.thickness*0.5;
 					}
@@ -281,7 +280,7 @@ package starling.display.graphics
 				
 				var cnx:Number = n0x + n1x;
 				var cny:Number = n0y + n1y;
-				var c:Number = (1/sqrt( cnx*cnx + cny*cny )) * elbowThickness;
+				var c:Number = (1/Math.sqrt( cnx*cnx + cny*cny )) * elbowThickness;
 				cnx *= c;
 				cny *= c;
 				
