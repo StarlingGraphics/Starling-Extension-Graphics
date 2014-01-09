@@ -26,9 +26,9 @@ package starling.display.util
 			
 			var output:Vector.<Number> = new Vector.<Number>();
 			
-			subdivide( 0.0, 0.5, 0, quadratic, output );
-			subdivide( 0.5, 1.0, 0, quadratic, output );
-			
+			subdivideQuadratic( 0.0, 0.5, 0, output );
+			subdivideQuadratic( 0.5, 1.0, 0, output );
+		
 			return output;
 		}
 		
@@ -48,8 +48,8 @@ package starling.display.util
 			
 			var output:Vector.<Number> = new Vector.<Number>();
 			
-			subdivide( 0.0, 0.5, 0, cubic, output );
-			subdivide( 0.5, 1.0, 0, cubic, output );
+			subdivideCubic( 0.0, 0.5, 0, output );
+			subdivideCubic( 0.5, 1.0, 0, output );
 			
 			return output;
 		}
@@ -105,5 +105,62 @@ package starling.display.util
 				output.push(x1,y1);
 			}
 		}
+		
+		private static function subdivideQuadratic( t0:Number, t1:Number, depth:int, output:Vector.<Number> ):void
+		{
+			var quadX:Number = quadratic( (t0 + t1) * 0.5, 0 );
+			var quadY:Number = quadratic( (t0 + t1) * 0.5, 1 );
+			
+			var x0:Number = quadratic( t0, 0 );
+			var y0:Number = quadratic( t0, 1 );
+			var x1:Number = quadratic( t1, 0 );
+			var y1:Number = quadratic( t1, 1 );
+			
+			var midX:Number = ( x0 + x1 ) * 0.5;
+			var midY:Number = ( y0 + y1 ) * 0.5;
+			
+			var dx:Number = quadX - midX;
+			var dy:Number = quadY - midY;
+			
+			var error2:Number = dx * dx + dy * dy;
+			
+			if ( error2 > (_bezierError*_bezierError) ) {
+				subdivideQuadratic( t0, (t0 + t1)*0.5, depth+1, output );	
+				subdivideQuadratic( (t0 + t1)*0.5, t1, depth+1, output );	
+			}
+			else {
+				++_subSteps;
+				output.push(x1,y1);
+			}
+		}
+		
+		private static function subdivideCubic( t0:Number, t1:Number, depth:int, output:Vector.<Number> ):void
+		{
+			var quadX:Number = cubic( (t0 + t1) * 0.5, 0 );
+			var quadY:Number = cubic( (t0 + t1) * 0.5, 1 );
+			
+			var x0:Number = cubic( t0, 0 );
+			var y0:Number = cubic( t0, 1 );
+			var x1:Number = cubic( t1, 0 );
+			var y1:Number = cubic( t1, 1 );
+			
+			var midX:Number = ( x0 + x1 ) * 0.5;
+			var midY:Number = ( y0 + y1 ) * 0.5;
+			
+			var dx:Number = quadX - midX;
+			var dy:Number = quadY - midY;
+			
+			var error2:Number = dx * dx + dy * dy;
+			
+			if ( error2 > (_bezierError*_bezierError) ) {
+				subdivideCubic( t0, (t0 + t1)*0.5, depth+1, output );	
+				subdivideCubic( (t0 + t1)*0.5, t1, depth+1, output );	
+			}
+			else {
+				++_subSteps;
+				output.push(x1,y1);
+			}
+		}
+		
 	}
 }
