@@ -70,9 +70,10 @@ package starling.display.graphics
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
 			var u:Number = 0;
-			var textures:Vector.<Texture> = _material.textures;
-			if ( _line.length > 0 && textures.length > 0 )
+			
+			if ( _line.length > 0 && _materialNumTextures > 0 )
 			{
+				var textures:Vector.<Texture> = _material.textures;
 				var prevVertex:StrokeVertex = _line[_line.length - 1];
 				var dx:Number = x - prevVertex.x;
 				var dy:Number = y - prevVertex.y;
@@ -126,9 +127,10 @@ package starling.display.graphics
 				maxBounds.x = x;
 			if ( maxBounds.y == Number.NEGATIVE_INFINITY )	
 				maxBounds.y = y;
-			
-			setGeometryInvalid();
+			if ( isInvalid == false )
+				setGeometryInvalid();
 		}
+		
 		
 		public function getVertexPosition(index:int, prealloc:Point = null):Point
 		{
@@ -178,10 +180,18 @@ package starling.display.graphics
 			// Then use the line lenght to pre allocate the vertex vectors
 			var numVerts:int = _line.length * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
 			var numIndices:int = (_line.length - 1) * 6; // this looks odd, but for each StrokeVertex-1, we generate 6 indices in createPolyLine
-				
-			vertices = new Vector.<Number>(numVerts, true);
-			indices = new Vector.<uint>(numIndices, true);
-
+			
+			// In special cases, there is some time to save here. 
+			// If the new number of vertices is the same as in the previous list of vertices, there's no need to recreate the buffer of vertices and indices
+			if ( vertices == null || numVerts != vertices.length )
+			{
+				vertices = new Vector.<Number>(numVerts, true);
+			}
+			if ( indices == null || numIndices != indices.length )
+			{
+				indices = new Vector.<uint>(numIndices, true);
+			}	
+			
 			createPolyLinePreAlloc( _line, vertices, indices, indexOffset);
 
 			var oldVerticesLength:int = 0; // this is always zero in the old code, even if we use vertices.length in the original code. Not sure why it is here.
@@ -214,6 +224,9 @@ package starling.display.graphics
 				}
 				var treatAsFirst:Boolean = ( idx == 0 ) || ( vertices[ idx - 1 ].degenerate > 0 );
 				var treatAsLast:Boolean = ( idx == numVertices - 1 ) || ( vertices[ idx + 1 ].degenerate > 0 );
+				
+				var treatAsRegular:Boolean = treatAsFirst == false && treatAsLast == false;
+				
 				var idx0:uint = treatAsFirst ? idx : ( idx - 1 );
 				var idx2:uint = treatAsLast ? idx : ( idx + 1 );
 				
@@ -233,29 +246,32 @@ package starling.display.graphics
 				var d1x:Number = v2x - v1x;
 				var d1y:Number = v2y - v1y;
 				
-				if ( treatAsLast )
+				if ( treatAsRegular == false )
 				{
-					v2x += d0x;
-					v2y += d0y;
-					
-					d1x = v2x - v1x;
-					d1y = v2y - v1y;
-				}
+					if ( treatAsLast )
+					{
+						v2x += d0x;
+						v2y += d0y;
+						
+						d1x = v2x - v1x;
+						d1y = v2y - v1y;
+					}
 				
-				if ( treatAsFirst )
-				{
-					v0x -= d1x;
-					v0y -= d1y;
-					
-					d0x = v1x - v0x;
-					d0y = v1y - v0y;
+					if ( treatAsFirst )
+					{
+						v0x -= d1x;
+						v0y -= d1y;
+						
+						d0x = v1x - v0x;
+						d0y = v1y - v0y;
+					}
 				}
 				
 				var d0:Number = Math.sqrt( d0x*d0x + d0y*d0y );
 				var d1:Number = Math.sqrt( d1x*d1x + d1y*d1y );
 		
 				var elbowThickness:Number = v1.thickness*0.5;
-				if ( !(treatAsFirst || treatAsLast) )
+				if ( treatAsRegular )
 				{
 					// Thanks to Tom Clapham for spotting this relationship.
 					var dot:Number = (d0x * d1x + d0y * d1y) / (d0 * d1);
