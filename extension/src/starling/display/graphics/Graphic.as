@@ -101,9 +101,12 @@ package starling.display.graphics
 		
 		override public function dispose():void
 		{
-			Starling.current.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
-			super.dispose();
-			
+			if (Starling.current)
+			{
+				Starling.current.removeEventListener(Event.CONTEXT3D_CREATE, onContextCreated);
+				super.dispose();
+			}
+
 			if ( vertexBuffer )
 			{
 				vertexBuffer.dispose();
