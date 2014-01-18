@@ -214,7 +214,8 @@ package starling.display.graphics
 			const PI:Number = Math.PI;
 			var vertCounter:int = 0;
 			var indiciesCounter:int = 0;
-			
+			var lastD0:Number = 0;
+			var lastD1:Number = 0;
 			for ( var i:int = 0; i < numVertices; i++ )
 			{
 				var degenerate:uint = vertices[i].degenerate;
@@ -233,6 +234,8 @@ package starling.display.graphics
 				var v0:StrokeVertex = vertices[idx0];
 				var v1:StrokeVertex = vertices[idx];
 				var v2:StrokeVertex = vertices[idx2];
+				
+				var vThickness:Number = v1.thickness;
 				
 				var v0x:Number = v0.x;
 				var v0y:Number = v0.y;
@@ -270,22 +273,32 @@ package starling.display.graphics
 				var d0:Number = Math.sqrt( d0x*d0x + d0y*d0y );
 				var d1:Number = Math.sqrt( d1x*d1x + d1y*d1y );
 		
-				var elbowThickness:Number = v1.thickness*0.5;
+				var elbowThickness:Number = vThickness*0.5;
 				if ( treatAsRegular )
 				{
+					if ( d0 == 0 )
+						d0 = lastD0;
+					else
+						lastD0 = d0;
+					
+					if ( d1 == 0 )
+						d1 = lastD1;
+					else
+						lastD1 = d1;
+				
 					// Thanks to Tom Clapham for spotting this relationship.
 					var dot:Number = (d0x * d1x + d0y * d1y) / (d0 * d1);
 					var arcCosDot:Number = Math.acos(dot);
 					elbowThickness /= Math.sin( (PI-arcCosDot) * 0.5);
 					
-					if ( elbowThickness > v1.thickness * 4 )
+					if ( elbowThickness > vThickness * 4 )
 					{
-						elbowThickness = v1.thickness * 4;
+						elbowThickness = vThickness * 4;
 					}
 					
-					if ( elbowThickness != elbowThickness )
+					if ( elbowThickness != elbowThickness ) // faster NaN comparison
 					{
-						elbowThickness = v1.thickness*0.5;
+						elbowThickness = vThickness*0.5;
 					}
 				}
 				
@@ -296,6 +309,7 @@ package starling.display.graphics
 				
 				var cnx:Number = n0x + n1x;
 				var cny:Number = n0y + n1y;
+				
 				var c:Number = (1/Math.sqrt( cnx*cnx + cny*cny )) * elbowThickness;
 				cnx *= c;
 				cny *= c;
