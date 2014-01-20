@@ -3,6 +3,7 @@ package
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import startupbenchmark.EmptyBenchmark;
+	import tristripbenchmark.TriangleStripBenchmark;
 	
 	import boxbenchmark.BoxesShapeBenchmark;
 	import strokebenchmark.StrokeBenchmark;
@@ -21,6 +22,7 @@ package
 			_benchmarks.push(new EmptyBenchmark());
 			_benchmarks.push(new StrokeBenchmark());
 			_benchmarks.push(new BoxesShapeBenchmark());
+			_benchmarks.push(new TriangleStripBenchmark());			
 			
 		}
 		
