@@ -1,9 +1,6 @@
 package startupbenchmark 
 {
-	/**
-	 * ...
-	 * @author Henrik Jonsson
-	 */
+	
 	public class EmptyBenchmark extends Benchmark 
 	{
 		
