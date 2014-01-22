@@ -1,5 +1,6 @@
 package  
 {
+	import fillbenchmark.FillBenchmark;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import startupbenchmark.EmptyBenchmark;
@@ -20,6 +21,7 @@ package
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
 			_benchmarks = new Vector.<Benchmark>();
 			_benchmarks.push(new EmptyBenchmark());
+			_benchmarks.push(new FillBenchmark());
 			_benchmarks.push(new StrokeBenchmark());
 			_benchmarks.push(new BoxesShapeBenchmark());
 			_benchmarks.push(new TriangleStripBenchmark());			
