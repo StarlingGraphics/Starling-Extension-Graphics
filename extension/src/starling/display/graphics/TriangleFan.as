@@ -14,9 +14,9 @@ package starling.display.graphics
 			numVertices++;
 		}
 		
-		public function addVertex( 	x:Number, y:Number, u:Number = 0, v:Number = 0 ):void
+		public function addVertex( 	x:Number, y:Number, u:Number = 0, v:Number = 0, r:Number = 1, g:Number = 1, b:Number = 1, a:Number = 1 ):void
 		{
-			vertices.push( x, y, 0, 1, 1, 1, 1, u, v );
+			vertices.push( x, y, 0, r, b, b, a, u, v );
 			numVertices++;
 			
 			minBounds.x = x < minBounds.x ? x : minBounds.x;
@@ -31,6 +31,7 @@ package starling.display.graphics
 			
 			setGeometryInvalid();
 		}
+		
 		
 		public function clear():void
 		{
