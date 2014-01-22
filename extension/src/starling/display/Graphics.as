@@ -93,13 +93,13 @@ package starling.display
 			_fillMatrix 	= null;
 		}
 				
-		public function beginTextureFill( texture:Texture, uvMatrix:Matrix = null ):void
+		public function beginTextureFill( texture:Texture, uvMatrix:Matrix = null, color:uint = 0xFFFFFF, alpha:Number = 1.0 ):void
 		{
 			endFill();
 			
 			_fillStyleSet 	= true;
-			_fillColor 		= 0xFFFFFF;
-			_fillAlpha 		= 1;
+			_fillColor 		= color;
+			_fillAlpha 		= alpha;
 			_fillTexture 	= texture;
 			_fillMaterial 	= null;
 			_fillMatrix 	= new Matrix();
