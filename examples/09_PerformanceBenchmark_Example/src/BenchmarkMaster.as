@@ -5,6 +5,7 @@ package
 	import starling.events.Event;
 	import startupbenchmark.EmptyBenchmark;
 	import tristripbenchmark.TriangleStripBenchmark;
+	import trifanbenchmark.TriangleFanBenchmark;
 	
 	import boxbenchmark.BoxesShapeBenchmark;
 	import strokebenchmark.StrokeBenchmark;
@@ -25,6 +26,7 @@ package
 			_benchmarks.push(new BoxesShapeBenchmark());
 			_benchmarks.push(new TriangleStripBenchmark());			
 			_benchmarks.push(new FillBenchmark());
+			_benchmarks.push(new TriangleFanBenchmark());	
 		}
 		
 		protected function onAdded ( e:Event ):void
