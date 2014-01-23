@@ -13,7 +13,9 @@ package strokegraphicsbenchmark
 		private var shape			:Shape;
 		private var startTime		:int;
 		private var numFrames:int = 0;
-		
+		private var randomArray:Vector.<Number>;
+		private var currentRandom:int;
+		private var maxRandom:int = 101797;
 		public function StrokeGraphicsBenchmark()
 		{
 			
@@ -23,12 +25,17 @@ package strokegraphicsbenchmark
 		{
 			shape = new Shape();
 			addChild(shape );
+			randomArray = new Vector.<Number>(maxRandom, true);
+			for ( var i:int = 0; i < maxRandom; i++ )
+				randomArray[i] = Math.random();
+			currentRandom = 0;
 			
+			stage.color = 0x000000;
 		}
 		
 		override public function endBenchmark() : void
 		{
-			
+			stage.color = 0xFFFFFF;
 		}
 		
 		override public function isDone() : Boolean
@@ -39,6 +46,7 @@ package strokegraphicsbenchmark
 		override public function updateBenchmark( ):void
 		{
 			const STAGE_HEIGHT:Number = Starling.current.nativeStage.stageHeight;
+			const STAGE_WIDTH:Number = Starling.current.nativeStage.stageWidth;
 	
 			shape.graphics.clear();
 			shape.graphics.lineStyle( 1, 0xFFFFFF );
@@ -54,7 +62,13 @@ package strokegraphicsbenchmark
 				shape.graphics.moveTo( Math.random() * Starling.current.nativeStage.stageWidth, Math.random() * Starling.current.nativeStage.stageHeight );
 				for ( var j:int = 0; j < L; j++ )
 				{
-					shape.graphics.lineTo( Math.random() * Starling.current.nativeStage.stageWidth, Math.random() * Starling.current.nativeStage.stageHeight );
+					if ( currentRandom + 2 > maxRandom )
+						currentRandom = 0;
+				
+					var xVal:Number = STAGE_WIDTH * randomArray[currentRandom++];
+					var yVal:Number = STAGE_HEIGHT * randomArray[currentRandom++];
+					
+					shape.graphics.lineTo( xVal, yVal);
 				}
 			}
 			

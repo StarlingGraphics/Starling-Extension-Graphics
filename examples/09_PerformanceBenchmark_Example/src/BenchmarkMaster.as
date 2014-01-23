@@ -27,8 +27,8 @@ package
 			
 			_benchmarks.push(new EmptyBenchmark());
 			_benchmarks.push(new StrokeBenchmark());
-	//		_benchmarks.push(new StrokeGraphicsBenchmark());
 			_benchmarks.push(new BoxesShapeBenchmark());
+			_benchmarks.push(new StrokeGraphicsBenchmark());
 			_benchmarks.push(new TriangleStripBenchmark());			
 			_benchmarks.push(new FillBenchmark());
 			_benchmarks.push(new TriangleFanBenchmark());	 
