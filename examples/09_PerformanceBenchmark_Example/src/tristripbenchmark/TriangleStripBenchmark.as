@@ -13,7 +13,9 @@ package tristripbenchmark
 		private var triStrip			:TriangleStrip;
 		private var startTime		:int;
 		private var numFrames:int = 0;
-		
+		private var randomArray:Vector.<Number>;
+		private var currentRandom:int;
+		private var maxRandom:int = 101797;
 		public function TriangleStripBenchmark()
 		{
 			
@@ -23,7 +25,10 @@ package tristripbenchmark
 		{
 			triStrip = new TriangleStrip();
 			addChild(triStrip);
-			
+			randomArray = new Vector.<Number>(maxRandom, true);
+			for ( var i:int = 0; i < maxRandom; i++ )
+				randomArray[i] = Math.random();
+			currentRandom = 0;
 		}
 		
 		override public function endBenchmark() : void
@@ -61,10 +66,13 @@ package tristripbenchmark
 				
 				for ( var j:int = 0; j < L; j++ )
 				{
-					triStrip.addVertex( lastX, lastY, 0, 0, Math.random() , Math.random(), Math.random(), 1 );
-					triStrip.addVertex( lastX, lastY + STAGE_HEIGHT / loops, 0, 0, Math.random() , Math.random(), Math.random(), 1 );
-					triStrip.addVertex( lastX + STAGE_WIDTH / L, lastY , 0, 0, Math.random() , Math.random(), Math.random(), 1 );
-					triStrip.addVertex( lastX + STAGE_WIDTH / L, lastY+ STAGE_HEIGHT / loops , 0, 0, Math.random() , Math.random(), Math.random(), 1 );
+					if ( currentRandom + 12 > maxRandom )
+						currentRandom = 0;
+					
+					triStrip.addVertex( lastX, lastY, 0, 0, randomArray[currentRandom++] , randomArray[currentRandom++], randomArray[currentRandom++], 1 );
+					triStrip.addVertex( lastX, lastY + STAGE_HEIGHT / loops, 0, 0, randomArray[currentRandom++] , randomArray[currentRandom++], randomArray[currentRandom++], 1 );
+					triStrip.addVertex( lastX + STAGE_WIDTH / L, lastY , 0, 0, randomArray[currentRandom++] , randomArray[currentRandom++], randomArray[currentRandom++], 1 );
+					triStrip.addVertex( lastX + STAGE_WIDTH / L, lastY+ STAGE_HEIGHT / loops , 0, 0, randomArray[currentRandom++], randomArray[currentRandom++], randomArray[currentRandom++], 1 );
 
 					lastX += STAGE_WIDTH / L; 
 				}

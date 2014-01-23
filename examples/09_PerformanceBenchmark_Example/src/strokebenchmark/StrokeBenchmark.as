@@ -10,6 +10,8 @@ package strokebenchmark
 	{
 		private var stroke			:Stroke = null;
 		
+		private var allStrokes:Vector.<Stroke>;
+		
 		private var startTime		:int;
 		private var numFrames:int = 0;
 				
@@ -24,19 +26,34 @@ package strokebenchmark
 		
 		override public function startBenchmark() : void
 		{
-			stroke = new Stroke();
-			addChild(stroke);
+			allStrokes = new Vector.<Stroke>();
+			var i:int = 0;
+			for ( i = 0; i < 1 ; i++ )
+			{
+				stroke = new Stroke();
+				allStrokes.push(stroke);
+				addChild(stroke);
+			}
+			//stroke = new Stroke();
+			//addChild(stroke);
+			
 			stage.color = 0xFFFFFF;
 			
 			randomArray = new Vector.<Number>(maxRandom, true);
-			for ( var i:int = 0; i < maxRandom; i++ )
+			for ( i = 0; i < maxRandom; i++ )
 				randomArray[i] = Math.random();
 			currentRandom = 0;
+			
+			
 		}
 		
 		override public function endBenchmark() : void
 		{
-			stroke.dispose();
+			for ( var si:int = 0;  si < allStrokes.length; si++ )
+			{
+				stroke = allStrokes[si];
+				stroke.dispose();
+			}
 			stage.color = 0xFFFFFF;
 			randomArray = null;
 		}
@@ -56,29 +73,35 @@ package strokebenchmark
 				L = 20;
 			var numVerts:int = L * 100 + Math.random() * 50;
 			
-			stroke.clear();
-			
-			var Width:int = Starling.current.nativeStage.stageWidth;
-			var Height:int = Starling.current.nativeStage.stageHeight;
-			var xVal:Number;
-			var yVal:Number;
-			var color1:int ;
-			var color2:int;
-			var i:int;
-			var j:int;
-			
-			for ( i = 0; i < numVerts; i++ )
+			for ( var si:int = 0;  si < allStrokes.length; si++ )
 			{
-				if ( currentRandom + 4 > maxRandom )
-					currentRandom = 0;
+				stroke = allStrokes[si];
+			
+				stroke.clear();
+			
+				var Width:int = Starling.current.nativeStage.stageWidth;
+				var Height:int = Starling.current.nativeStage.stageHeight;
+				var xVal:Number;
+				var yVal:Number;
+				var color1:int ;
+				var color2:int;
+				var i:int;
+				var j:int;
+			
+				for ( i = 0; i < numVerts; i++ )
+				{
+					if ( currentRandom + 4 > maxRandom )
+						currentRandom = 0;
 					
-				xVal = Width * randomArray[currentRandom++];
-				yVal = Height * randomArray[currentRandom++];
-				color1 = randomArray[currentRandom++] * 0xFFFFFF;
-				color2 = randomArray[currentRandom++] * 0xFFFFFF;
+					xVal = Width * randomArray[currentRandom++];
+					yVal = Height * randomArray[currentRandom++];
+					color1 = randomArray[currentRandom++] * 0xFFFFFF;
+					color2 = randomArray[currentRandom++] * 0xFFFFFF;
 					
-				stroke.addVertex( xVal, yVal, 1, color1, 1, color2 , 1);
+					stroke.addVertex( xVal, yVal, 1, color1, 1, color2 , 1);
+				}
 			}
+			
 			numFrames++;
 		}
 	}
