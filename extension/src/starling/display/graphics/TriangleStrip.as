@@ -31,7 +31,8 @@ package starling.display.graphics
 				indices.push( numVertices-3, numVertices-2, numVertices-1 );
 			}
 			
-			setGeometryInvalid();
+			if ( isInvalid == false )
+				setGeometryInvalid();
 		}
 		
 		public function clear():void

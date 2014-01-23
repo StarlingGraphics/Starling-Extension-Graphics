@@ -12,6 +12,7 @@ package starling.display.graphics
 		
 		protected static const c_degenerateUseNext:uint = 1;
 		protected static const c_degenerateUseLast:uint = 2;
+		protected var _hasDegenerates:Boolean = false;
 		
 		public function Stroke()
 		{
@@ -47,6 +48,7 @@ package starling.display.graphics
 				
 			_numVertices = 0;
 			setGeometryInvalid();
+			_hasDegenerates = false;
 		}
 		
 		public function addDegenerates(destX:Number, destY:Number):void
@@ -60,6 +62,7 @@ package starling.display.graphics
 			setLastVertexAsDegenerate(c_degenerateUseLast);
 			addVertex(destX, destY, 0.0);
 			setLastVertexAsDegenerate(c_degenerateUseNext);
+			_hasDegenerates = true;
 		}
 		
 		protected function setLastVertexAsDegenerate(type:uint):void
@@ -74,7 +77,7 @@ package starling.display.graphics
 		{
 			var u:Number = 0;
 			
-			if ( _line.length > 0 && _materialNumTextures > 0 )
+			if ( _materialNumTextures > 0 && _line.length > 0 )
 			{
 				var textures:Vector.<Texture> = _material.textures;
 				var prevVertex:StrokeVertex = _line[_line.length - 1];
@@ -91,7 +94,8 @@ package starling.display.graphics
 			var g1:Number = ((color1 & 0x00FF00) >> 8) / 255;
 			var b1:Number = (color1 & 0x0000FF) / 255;
 			
-			var v:StrokeVertex = _line[_numVertices] = StrokeVertex.getInstance();
+			var v:StrokeVertex = StrokeVertex.getInstance();
+			_line[_numVertices] = v;
 			v.x = x;
 			v.y = y;
 			v.r1 = r0;
@@ -195,8 +199,8 @@ package starling.display.graphics
 				indices = new Vector.<uint>(numIndices, true);
 			}	
 			
-			createPolyLinePreAlloc( _line, vertices, indices, indexOffset);
-
+			createPolyLinePreAlloc( _line, vertices, indices, _hasDegenerates);
+		
 			var oldVerticesLength:int = 0; // this is always zero in the old code, even if we use vertices.length in the original code. Not sure why it is here.
 			const oneOverVertexStride:Number = 1 / VERTEX_STRIDE;	
 			indexOffset += (vertices.length - oldVerticesLength) * oneOverVertexStride;
@@ -207,36 +211,49 @@ package starling.display.graphics
 		// Static helper methods
 		///////////////////////////////////
 		[inline]
-		protected static function createPolyLinePreAlloc( vertices:Vector.<StrokeVertex>, 
-												outputVertices:Vector.<Number>, 
-												outputIndices:Vector.<uint>, 
-												indexOffset:int):void
+		protected static function createPolyLinePreAlloc( _line:Vector.<StrokeVertex>, 
+												vertices:Vector.<Number>, 
+												indices:Vector.<uint>, 
+												_hasDegenerates:Boolean):void 
 		{
-			
-			const numVertices:int = vertices.length;
+		
+			const numVertices:int = _line.length;
 			const PI:Number = Math.PI;
 			var vertCounter:int = 0;
 			var indiciesCounter:int = 0;
 			var lastD0:Number = 0;
 			var lastD1:Number = 0;
+			var degenerate:uint = 0;
+			var idx:uint = 0;
+			var treatAsFirst:Boolean;
+			var treatAsLast:Boolean;
+			
 			for ( var i:int = 0; i < numVertices; i++ )
 			{
-				var degenerate:uint = vertices[i].degenerate;
-				var idx:uint = i;
-				if ( degenerate != 0 ) {
-					idx = ( degenerate == c_degenerateUseLast ) ? ( i - 1 ) : ( i + 1 );
+				idx = i;
+				if ( _hasDegenerates )
+				{
+					degenerate = _line[i].degenerate;
+					if ( degenerate != 0 ) {
+						idx = ( degenerate == c_degenerateUseLast ) ? ( i - 1 ) : ( i + 1 );
+					}
+					treatAsFirst = ( idx == 0 ) || ( _line[ idx - 1 ].degenerate > 0 );
+					treatAsLast = ( idx == numVertices - 1 ) || ( _line[ idx + 1 ].degenerate > 0 );
 				}
-				var treatAsFirst:Boolean = ( idx == 0 ) || ( vertices[ idx - 1 ].degenerate > 0 );
-				var treatAsLast:Boolean = ( idx == numVertices - 1 ) || ( vertices[ idx + 1 ].degenerate > 0 );
+				else
+				{
+					treatAsFirst = (idx == 0);
+					treatAsLast = ( idx == numVertices - 1 )
+				}
 				
 				var treatAsRegular:Boolean = treatAsFirst == false && treatAsLast == false;
 				
 				var idx0:uint = treatAsFirst ? idx : ( idx - 1 );
 				var idx2:uint = treatAsLast ? idx : ( idx + 1 );
 				
-				var v0:StrokeVertex = vertices[idx0];
-				var v1:StrokeVertex = vertices[idx];
-				var v2:StrokeVertex = vertices[idx2];
+				var v0:StrokeVertex = _line[idx0];
+				var v1:StrokeVertex = _line[idx];
+				var v2:StrokeVertex = _line[idx2];
 				
 				var vThickness:Number = v1.thickness;
 				
@@ -322,34 +339,34 @@ package starling.display.graphics
 				var v1xNeg:Number = ( degenerate ) ? v1xPos : ( v1x - cnx );
 				var v1yNeg:Number = ( degenerate ) ? v1yPos : ( v1y - cny );
 			
-				outputVertices[vertCounter++] = v1xPos;
-				outputVertices[vertCounter++] = v1yPos;
-				outputVertices[vertCounter++] = 0;
-				outputVertices[vertCounter++] = v1.r2;
-				outputVertices[vertCounter++] = v1.g2;
-				outputVertices[vertCounter++] = v1.b2;
-				outputVertices[vertCounter++] = v1.a2;
-				outputVertices[vertCounter++] = v1.u;
-				outputVertices[vertCounter++] = 1;
-				outputVertices[vertCounter++] = v1xNeg;
-				outputVertices[vertCounter++] = v1yNeg;
-				outputVertices[vertCounter++] = 0;
-				outputVertices[vertCounter++] = v1.r1;
-				outputVertices[vertCounter++] = v1.g1;
-				outputVertices[vertCounter++] = v1.b1;
-				outputVertices[vertCounter++] = v1.a1;
-				outputVertices[vertCounter++] = v1.u;
-				outputVertices[vertCounter++] = 0;
+				vertices[vertCounter++] = v1xPos;
+				vertices[vertCounter++] = v1yPos;
+				vertices[vertCounter++] = 0;
+				vertices[vertCounter++] = v1.r2;
+				vertices[vertCounter++] = v1.g2;
+				vertices[vertCounter++] = v1.b2;
+				vertices[vertCounter++] = v1.a2;
+				vertices[vertCounter++] = v1.u;
+				vertices[vertCounter++] = 1;
+				vertices[vertCounter++] = v1xNeg;
+				vertices[vertCounter++] = v1yNeg;
+				vertices[vertCounter++] = 0;
+				vertices[vertCounter++] = v1.r1;
+				vertices[vertCounter++] = v1.g1;
+				vertices[vertCounter++] = v1.b1;
+				vertices[vertCounter++] = v1.a1;
+				vertices[vertCounter++] = v1.u;
+				vertices[vertCounter++] = 0;
 				
 				if ( i < numVertices - 1 )
 				{
-					var i2:int = indexOffset + (i << 1);
-					outputIndices[indiciesCounter++] = i2;
-					outputIndices[indiciesCounter++] = i2+2;
-					outputIndices[indiciesCounter++] = i2+1;
-					outputIndices[indiciesCounter++] = i2+1;
-					outputIndices[indiciesCounter++] = i2+2;
-					outputIndices[indiciesCounter++] = i2+3;
+					var i2:int = (i << 1);
+					indices[indiciesCounter++] = i2;
+					indices[indiciesCounter++] = i2+2;
+					indices[indiciesCounter++] = i2+1;
+					indices[indiciesCounter++] = i2+1;
+					indices[indiciesCounter++] = i2+2;
+					indices[indiciesCounter++] = i2+3;
 				}
 				
 			}
