@@ -33,7 +33,7 @@ package starling.display.graphics
 		
 		public function FastStroke()
 		{
-			
+			clear();
 		}
 		
 		public function setCapacity(capacity:int) : void
@@ -45,23 +45,17 @@ package starling.display.graphics
 				indices = new Vector.<uint>((capacity ) * INDEX_STRIDE_FOR_QUAD * 2, true);
 				_capacity = capacity;
 			}
-				
-		}
-		
-		override public function dispose():void
-		{
-			clear();
-			vertices = new Vector.<Number>();
-			indices = new Vector.<uint>();
-			
-			super.dispose();
-			_numControlPoints = 0;
-			_capacity = -1;
 		}
 
-	
+		public function moveTo(x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1 ) : void
+		{
+			setCurrentPosition(x, y);
+			setCurrentColor(color, alpha);
+			setCurrentThickness(thickness);
+		}
+
 		
-		public function addVertex(x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, a:Number = 1  ):void
+		public function lineTo(x:Number, y:Number, thickness:Number = 1.0, color:uint = 0xFFFFFF, a:Number = 1.0  ):void
 		{
 			var r:Number = (color >> 16) / 255;
 			var g:Number = ((color & 0x00FF00) >> 8) / 255;
@@ -69,59 +63,51 @@ package starling.display.graphics
 			
 			var halfThickness:Number = (0.5 * thickness);
 			
-			if ( _numControlPoints == 0 )
-			{ // Not optimal, first vertex adds a zero sized quad. This should be polished, not sure how.
-				pushVerts(vertices, _numControlPoints  , x, y + halfThickness, x, y - halfThickness, r, g, b, a);
-				pushVerts(vertices, _numControlPoints+1, x, y + halfThickness, x, y - halfThickness, r, g, b, a);
+			var dx:Number = x - _lastX;
+			var dy:Number = y - _lastY;
+			var halfLastThickness:Number = _lastThickness * 0.5;
+			if ( dy == 0 )
+			{
+				pushVerts(vertices,  _numControlPoints  , _lastX, _lastY+halfLastThickness, _lastX, _lastY-halfLastThickness, _lastR, _lastG, _lastB, _lastA );
+				pushVerts(vertices,  _numControlPoints+1, x     , y+halfThickness, x, y-halfThickness, r, g, b, a);
+			}
+			else if ( dx == 0 )
+			{
+				pushVerts(vertices,  _numControlPoints  , _lastX + halfLastThickness, _lastY, _lastX - halfLastThickness, _lastY, _lastR, _lastG, _lastB, _lastA);
+				pushVerts(vertices,  _numControlPoints+1, x+halfThickness, y, x-halfThickness, y, r, g, b, a);
 			}
 			else
 			{
-				var dx:Number = x - _lastX;
-				var dy:Number = y - _lastY;
-				var halfLastThickness:Number = _lastThickness * 0.5;
-				if ( dy == 0 )
-				{
-					pushVerts(vertices,  _numControlPoints  , _lastX, _lastY+halfLastThickness, _lastX, _lastY-halfLastThickness, _lastR, _lastG, _lastB, _lastA );
-					pushVerts(vertices,  _numControlPoints+1, x     , y+halfThickness, x, y-halfThickness, r, g, b, a);
-				}
-				else if ( dx == 0 )
-				{
-					pushVerts(vertices,  _numControlPoints  , _lastX + halfLastThickness, _lastY, _lastX - halfLastThickness, _lastY, _lastR, _lastG, _lastB, _lastA);
-					pushVerts(vertices,  _numControlPoints+1, x+halfThickness, y, x-halfThickness, y, r, g, b, a);
-				}
-				else
-				{
-					var d:Number = Math.sqrt( dx * dx + dy * dy );
-					
-					var nx:Number = -dy / d;
-					var ny:Number =  dx / d;
-					
-					var cnx:Number = nx;
-					var cny:Number = ny;
+				var d:Number = Math.sqrt( dx * dx + dy * dy );
 				
-					var cnInv:Number = (1 / Math.sqrt( cnx * cnx + cny * cny ));
-					var c:Number =  cnInv * halfLastThickness;
-					cnx = nx * c;
-					cny = ny * c;
+				var nx:Number = -dy / d;
+				var ny:Number =  dx / d;
 				
-					var v1xPos:Number = _lastX + cnx;
-					var v1yPos:Number = _lastY + cny;
-					var v1xNeg:Number = _lastX - cnx;
-					var v1yNeg:Number = _lastY - cny;
-					
-					pushVerts(vertices,  _numControlPoints, v1xPos, v1yPos, v1xNeg, v1yNeg, _lastR, _lastG, _lastB, _lastA);
-					
-					c =  cnInv * halfThickness;
-					cnx = nx * c;
-					cny = ny * c;
+				var cnx:Number = nx;
+				var cny:Number = ny;
 				
-					v1xPos = x + cnx;
-					v1yPos = y + cny;
-					v1xNeg = x - cnx;
-					v1yNeg = y - cny;
+				var cnInv:Number = (1 / Math.sqrt( cnx * cnx + cny * cny ));
+				var c:Number =  cnInv * halfLastThickness;
+				cnx = nx * c;
+				cny = ny * c;
+				
+				var v1xPos:Number = _lastX + cnx;
+				var v1yPos:Number = _lastY + cny;
+				var v1xNeg:Number = _lastX - cnx;
+				var v1yNeg:Number = _lastY - cny;
 					
-					pushVerts(vertices,  _numControlPoints+1, v1xPos, v1yPos, v1xNeg, v1yNeg, r, g, b, a);
-				}
+				pushVerts(vertices,  _numControlPoints, v1xPos, v1yPos, v1xNeg, v1yNeg, _lastR, _lastG, _lastB, _lastA);
+					
+				c =  cnInv * halfThickness;
+				cnx = nx * c;
+				cny = ny * c;
+				
+				v1xPos = x + cnx;
+				v1yPos = y + cny;
+				v1xNeg = x - cnx;
+				v1yNeg = y - cny;
+					
+				pushVerts(vertices,  _numControlPoints+1, v1xPos, v1yPos, v1xNeg, v1yNeg, r, g, b, a);
 			}
 			
 			_lastX = x;
@@ -141,7 +127,6 @@ package starling.display.graphics
 			
 			if ( _numControlPoints < (_capacity)*2 )
 			{
-				
 				var i:int = _numControlPoints;
 				var i2:int = (i << 1);
 				
@@ -163,37 +148,26 @@ package starling.display.graphics
 				setGeometryInvalid();
 		}
 		
-		public function setCurrentPosition(x:Number, y:Number) : void
-		{
-			_lastX = x;
-			_lastY = y;
-		}
 		
-		public function setCurrentColor(color:uint, alpha:Number = 1 ) :void
+		override public function dispose():void
 		{
-			_lastR =  (color >> 16) / 255;
-			_lastG = ((color & 0x00FF00) >> 8) / 255;
-			_lastB =  (color & 0x0000FF) / 255;
-			_lastA = alpha;	
+			clear();
+			vertices = new Vector.<Number>();
+			indices = new Vector.<uint>();
+			
+			super.dispose();
+			_capacity = -1;
 		}
-		
-		public function setCurrentThickness(thickness:Number) : void
-		{
-			_lastThickness = thickness;
-		}
-		
-		public function setCurrentPositionColorThickness(x:Number, y:Number, color:uint, alpha:Number = 1, thickness:Number = 1) : void
-		{
-			setCurrentPosition(x, y);
-			setCurrentColor(color, alpha);
-			setCurrentThickness(thickness);
-		}
-		
+
 		public function clear():void
 		{
 			_numControlPoints = 0;
 			_numVerts = 0;
 			_numVertIndex = 0;
+			_lastX = 0;
+			_lastY = 0;
+			_lastThickness = 1;
+			_lastR = _lastG = _lastB = _lastA = 1.0
 			
 			setGeometryInvalid();
 		}
@@ -203,6 +177,25 @@ package starling.display.graphics
 			
 		}
 		
+		
+		protected function setCurrentPosition(x:Number, y:Number) : void
+		{
+			_lastX = x;
+			_lastY = y;
+		}
+		
+		protected function setCurrentColor(color:uint, alpha:Number = 1 ) :void
+		{
+			_lastR =  (color >> 16) / 255;
+			_lastG = ((color & 0x00FF00) >> 8) / 255;
+			_lastB =  (color & 0x0000FF) / 255;
+			_lastA = alpha;	
+		}
+		
+		protected function setCurrentThickness(thickness:Number) : void
+		{
+			_lastThickness = thickness;
+		}
 		
 		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
 		{

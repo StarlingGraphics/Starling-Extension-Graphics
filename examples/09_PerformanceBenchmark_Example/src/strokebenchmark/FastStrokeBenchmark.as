@@ -48,7 +48,6 @@ package strokebenchmark
 				randomArray[i] = Math.random();
 			currentRandom = 0;
 			
-			
 		}
 		
 		override public function endBenchmark() : void
@@ -86,6 +85,7 @@ package strokebenchmark
 				stroke = allStrokes[si];
 				stroke.setCapacity(maxVertsTotal);
 				stroke.clear();
+				stroke.moveTo(100, 100);
 				for ( var i:int = 0; i < numVerts; i++ )
 				{
 					if ( currentRandom + 4 > maxRandom )
@@ -96,7 +96,7 @@ package strokebenchmark
 					var color1:uint = randomArray[currentRandom++] * 0xFFFFFF;
 					var color2:uint = randomArray[currentRandom++] * 0xFFFFFF;
 					
-					stroke.addVertex( xVal, yVal, 1, color1, 1);
+					stroke.lineTo( xVal, yVal, 1, color1, 1);
 					numCalls++;
 				}
 			}
