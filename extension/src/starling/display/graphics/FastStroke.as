@@ -22,6 +22,7 @@ package starling.display.graphics
 		protected var _lastG:Number;
 		protected var _lastB:Number;
 		protected var _lastA:Number;
+		protected var _lastThickness:Number;
 		
 		protected var _numControlPoints :int;
 		protected var _capacity:int = -1;
@@ -30,7 +31,7 @@ package starling.display.graphics
 		
 		protected const INDEX_STRIDE_FOR_QUAD:int = 6;
 		
-		public function FastStroke(capacity:int = 10)
+		public function FastStroke()
 		{
 			
 		}
@@ -58,32 +59,7 @@ package starling.display.graphics
 			_capacity = -1;
 		}
 
-		[inline]
-		protected static function pushVerts(vertices:Vector.<Number>, _numControlPoints:Number, x1:Number, y1:Number, x2:Number, y2:Number, r:Number, g:Number, b:Number, a:Number) : void
-		{
-			var u:Number = 0; // Todo uv mapping in this case?
-			var i:int = _numControlPoints * 18;
-			vertices[i++] = x1;
-			vertices[i++] = y1;
-			vertices[i++] = 0;
-			vertices[i++] = r;
-			vertices[i++] = g;
-			vertices[i++] = b;
-			vertices[i++] = a;
-			vertices[i++] = u;
-			vertices[i++] = 0;
-			
-			vertices[i++] = x2;
-			vertices[i++] = y2;
-			vertices[i++] = 0;
-			vertices[i++] = r;
-			vertices[i++] = g;
-			vertices[i++] = b;
-			vertices[i++] = a;
-			vertices[i++] = u;
-			vertices[i++] = 0;
-			
-		}
+	
 		
 		public function addVertex(x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, a:Number = 1  ):void
 		{
@@ -94,30 +70,24 @@ package starling.display.graphics
 			var halfThickness:Number = (0.5 * thickness);
 			
 			if ( _numControlPoints == 0 )
-			{
-				pushVerts(vertices, _numControlPoints, x, y + halfThickness, x, y - halfThickness, r, g, b, a);
-				pushVerts(vertices, _numControlPoints+1, x, y+halfThickness, x, y-halfThickness, r, g, b, a);
-				_lastX = x;
-				_lastY = y;
+			{ // Not optimal, first vertex adds a zero sized quad. This should be polished, not sure how.
+				pushVerts(vertices, _numControlPoints  , x, y + halfThickness, x, y - halfThickness, r, g, b, a);
+				pushVerts(vertices, _numControlPoints+1, x, y + halfThickness, x, y - halfThickness, r, g, b, a);
 			}
 			else
 			{
 				var dx:Number = x - _lastX;
 				var dy:Number = y - _lastY;
-				
+				var halfLastThickness:Number = _lastThickness * 0.5;
 				if ( dy == 0 )
 				{
-					pushVerts(vertices,  _numControlPoints, _lastX, _lastY+halfThickness, _lastX, _lastY-halfThickness, _lastR, _lastG, _lastB, _lastA );
-					pushVerts(vertices,  _numControlPoints+1, x, y+halfThickness, x, y-halfThickness, r, g, b, a);
-					_lastX = x;
-					_lastY = y;
+					pushVerts(vertices,  _numControlPoints  , _lastX, _lastY+halfLastThickness, _lastX, _lastY-halfLastThickness, _lastR, _lastG, _lastB, _lastA );
+					pushVerts(vertices,  _numControlPoints+1, x     , y+halfThickness, x, y-halfThickness, r, g, b, a);
 				}
 				else if ( dx == 0 )
 				{
-					pushVerts(vertices,  _numControlPoints, _lastX + halfThickness, _lastY, _lastX - halfThickness, _lastY, _lastR, _lastG, _lastB, _lastA);
+					pushVerts(vertices,  _numControlPoints  , _lastX + halfLastThickness, _lastY, _lastX - halfLastThickness, _lastY, _lastR, _lastG, _lastB, _lastA);
 					pushVerts(vertices,  _numControlPoints+1, x+halfThickness, y, x-halfThickness, y, r, g, b, a);
-					_lastX = x;
-					_lastY = y;
 				}
 				else
 				{
@@ -129,9 +99,10 @@ package starling.display.graphics
 					var cnx:Number = nx;
 					var cny:Number = ny;
 				
-					var c:Number = (1/Math.sqrt( cnx*cnx + cny*cny )) * halfThickness;
-					cnx *= c;
-					cny *= c;
+					var cnInv:Number = (1 / Math.sqrt( cnx * cnx + cny * cny ));
+					var c:Number =  cnInv * halfLastThickness;
+					cnx = nx * c;
+					cny = ny * c;
 				
 					var v1xPos:Number = _lastX + cnx;
 					var v1yPos:Number = _lastY + cny;
@@ -140,22 +111,26 @@ package starling.display.graphics
 					
 					pushVerts(vertices,  _numControlPoints, v1xPos, v1yPos, v1xNeg, v1yNeg, _lastR, _lastG, _lastB, _lastA);
 					
+					c =  cnInv * halfThickness;
+					cnx = nx * c;
+					cny = ny * c;
+				
 					v1xPos = x + cnx;
 					v1yPos = y + cny;
 					v1xNeg = x - cnx;
 					v1yNeg = y - cny;
 					
 					pushVerts(vertices,  _numControlPoints+1, v1xPos, v1yPos, v1xNeg, v1yNeg, r, g, b, a);
-					
-					_lastX = x;
-					_lastY = y;
 				}
 			}
 			
+			_lastX = x;
+			_lastY = y;
 			_lastR = r;
 			_lastG = g;
 			_lastB = b;
 			_lastA = a;
+			_lastThickness = thickness;
 			
 			// This needs fixing, not accurate at the moment, since thickness is ignored here.
 			minBounds.x = x < minBounds.x ? x : minBounds.x; 
@@ -186,6 +161,32 @@ package starling.display.graphics
 			
 			if ( isInvalid == false )
 				setGeometryInvalid();
+		}
+		
+		public function setCurrentPosition(x:Number, y:Number) : void
+		{
+			_lastX = x;
+			_lastY = y;
+		}
+		
+		public function setCurrentColor(color:uint, alpha:Number = 1 ) :void
+		{
+			_lastR =  (color >> 16) / 255;
+			_lastG = ((color & 0x00FF00) >> 8) / 255;
+			_lastB =  (color & 0x0000FF) / 255;
+			_lastA = alpha;	
+		}
+		
+		public function setCurrentThickness(thickness:Number) : void
+		{
+			_lastThickness = thickness;
+		}
+		
+		public function setCurrentPositionColorThickness(x:Number, y:Number, color:uint, alpha:Number = 1, thickness:Number = 1) : void
+		{
+			setCurrentPosition(x, y);
+			setCurrentColor(color, alpha);
+			setCurrentThickness(thickness);
 		}
 		
 		public function clear():void
@@ -275,6 +276,32 @@ package starling.display.graphics
 			context.setVertexBufferAt(1, null);
 			context.setVertexBufferAt(2, null);
 		} 
-
+	
+		[inline]
+		protected static function pushVerts(vertices:Vector.<Number>, _numControlPoints:Number, x1:Number, y1:Number, x2:Number, y2:Number, r:Number, g:Number, b:Number, a:Number) : void
+		{
+			var u:Number = 0; // Todo uv mapping in this case?
+			var i:int = _numControlPoints * 18;
+			vertices[i++] = x1;
+			vertices[i++] = y1;
+			vertices[i++] = 0;
+			vertices[i++] = r;
+			vertices[i++] = g;
+			vertices[i++] = b;
+			vertices[i++] = a;
+			vertices[i++] = u;
+			vertices[i++] = 0;
+			
+			vertices[i++] = x2;
+			vertices[i++] = y2;
+			vertices[i++] = 0;
+			vertices[i++] = r;
+			vertices[i++] = g;
+			vertices[i++] = b;
+			vertices[i++] = a;
+			vertices[i++] = u;
+			vertices[i++] = 0;
+			
+		}
 	}
 }
