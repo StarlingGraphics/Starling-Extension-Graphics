@@ -58,9 +58,9 @@ package starling.display.graphics
 				return;
 			}
 			var lastVertex:StrokeVertex = _line[_numVertices-1];
-			addVertex(lastVertex.x, lastVertex.y, 0.0);
+			addVertexInternal(lastVertex.x, lastVertex.y, 0.0);
 			setLastVertexAsDegenerate(c_degenerateUseLast);
-			addVertex(destX, destY, 0.0);
+			addVertexInternal(destX, destY, 0.0);
 			setLastVertexAsDegenerate(c_degenerateUseNext);
 			_hasDegenerates = true;
 		}
@@ -71,10 +71,31 @@ package starling.display.graphics
 			_line[_numVertices-1].u = 0.0;
 		}
 		
+		public function lineTo(	x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF,  alpha:Number = 1) : void
+		{
+			addVertexInternal(x, y, thickness, color, alpha, color, alpha);
+		}
+		
+		public function moveTo( x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1.0 ) : void
+		{
+			addDegenerates(x, y);
+		}
+		
+		
+	//	[Deprecated(replacement="starling.display.graphics.Stroke.lineTo()")]
 		public function addVertex( 	x:Number, y:Number, thickness:Number = 1,
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
+			
+			addVertexInternal(x, y, thickness, color0, alpha0, color1, alpha1);
+		}
+		
+		protected function addVertexInternal(	x:Number, y:Number, thickness:Number = 1,
+									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
+									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
+		{							
+									
 			var u:Number = 0;
 			
 			if ( _materialNumTextures > 0 && _line.length > 0 )

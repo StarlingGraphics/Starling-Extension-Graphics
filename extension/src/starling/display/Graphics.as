@@ -270,11 +270,11 @@ package starling.display
 				
 				if ( _strokeInterrupted || _currentStroke.numVertices == 0  )
 				{
-					_currentStroke.addVertex( _penPosX, _penPosY, _strokeThickness );
+					_currentStroke.lineTo( _penPosX, _penPosY, _strokeThickness );
 					_strokeInterrupted  = false;
 				}
 				
-				_currentStroke.addVertex( x, y, _strokeThickness );
+				_currentStroke.lineTo( x, y, _strokeThickness );
 			}
 						
 			if ( _fillStyleSet ) 
