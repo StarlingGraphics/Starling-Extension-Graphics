@@ -3,14 +3,15 @@ package strokebenchmark
 	import flash.utils.getTimer;
 	import starling.core.Starling;
 	import starling.display.Sprite;
-	import starling.display.graphics.Stroke;
+	
+	import starling.display.graphics.FastStroke;
 	import starling.events.Event;
 	
-	public class StrokeBenchmark extends Benchmark
+	public class FastStrokeBenchmark extends Benchmark
 	{
-		private var stroke			:Stroke = null;
+		private var stroke			:FastStroke = null;
 		
-		private var allStrokes:Vector.<Stroke>;
+		private var allStrokes:Vector.<FastStroke>;
 		
 		private var startTime		:int;
 		private var numFrames:int = 0;
@@ -19,22 +20,22 @@ package strokebenchmark
 		private var currentRandom:int;
 		private var maxRandom:int = 101797;
 		
-		public function StrokeBenchmark( )
+		public function FastStrokeBenchmark( )
 		{
 			
 		}
 		
 		override public function startBenchmark() : void
 		{
-			allStrokes = new Vector.<Stroke>();
+			allStrokes = new Vector.<FastStroke>();
 			var i:int = 0;
 			for ( i = 0; i < 10 ; i++ )
 			{
-				stroke = new Stroke();
+				stroke = new FastStroke();
 				allStrokes.push(stroke);
 				addChild(stroke);
 			}
-		
+
 			stage.color = 0xFFFFFF;
 			
 			randomArray = new Vector.<Number>(maxRandom, true);
@@ -69,6 +70,10 @@ package strokebenchmark
 			var L:int = 200;
 			if ( numFrames < 240 )
 				L = 20;
+			
+			var maxVertsTotal:int = L * 50 + 50;
+			stroke.setCapacity(maxVertsTotal);
+			
 			var numVerts:int = L * 50 + Math.random() * 50;
 			for ( var si:int = 0;  si < allStrokes.length; si++ )
 			{
@@ -87,7 +92,7 @@ package strokebenchmark
 					stroke.addVertex( xVal, yVal, 1, color1, 1);
 				}
 			}
-	
+			
 			numFrames++;
 		}
 	}

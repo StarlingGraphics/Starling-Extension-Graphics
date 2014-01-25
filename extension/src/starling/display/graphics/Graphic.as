@@ -32,8 +32,8 @@ package starling.display.graphics
 		protected static var defaultFragmentShaderDictionary	:Dictionary = new Dictionary(true);
 		
 		protected var _material		:IMaterial;
-		private var vertexBuffer	:VertexBuffer3D;
-		private var indexBuffer		:IndexBuffer3D;
+		protected var vertexBuffer	:VertexBuffer3D;
+		protected var indexBuffer		:IndexBuffer3D;
 		protected var vertices		:Vector.<Number>;
 		protected var indices		:Vector.<uint>;
 		protected var _uvMatrix		:Matrix;
