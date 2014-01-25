@@ -24,11 +24,18 @@ package strokebenchmark
 			
 		}
 		
+		
+		override public function get benchmarkName() : String
+		{
+			return "StrokeBenchmark";
+		}
+		
+		
 		override public function startBenchmark() : void
 		{
 			allStrokes = new Vector.<Stroke>();
 			var i:int = 0;
-			for ( i = 0; i < 10 ; i++ )
+			for ( i = 0; i < 5 ; i++ )
 			{
 				stroke = new Stroke();
 				allStrokes.push(stroke);

@@ -18,6 +18,13 @@ package startupbenchmark
 			
 		}
 		
+		
+		override public function get benchmarkName() : String
+		{
+			return "EmptyBenchmark";
+		}
+		
+		
 		override public function isDone() : Boolean
 		{
 			return (_numFrames > 120 );

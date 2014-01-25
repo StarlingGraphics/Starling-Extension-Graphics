@@ -21,6 +21,11 @@ package strokegraphicsbenchmark
 			
 		}
 		
+		override public function get benchmarkName() : String
+		{
+			return "StrokeGraphicsBenchmark";
+		}
+		
 		override public function startBenchmark() : void
 		{
 			shape = new Shape();

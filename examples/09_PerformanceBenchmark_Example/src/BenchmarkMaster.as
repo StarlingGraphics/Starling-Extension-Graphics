@@ -1,9 +1,8 @@
 package  
 {
 	import fillbenchmark.FillBenchmark;
-	import flash.filters.DropShadowFilter;
-	import flash.filters.GlowFilter;
 	import starling.display.graphics.FastStroke;
+	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.EnterFrameEvent;
 	import starling.events.Event;
@@ -18,7 +17,6 @@ package
 	
 	import starling.text.TextField;
 	import starling.core.Starling;
-	import flash.text.TextField;
 	
 	public class BenchmarkMaster extends Sprite
 	{
@@ -27,7 +25,7 @@ package
 		protected var _currentBenchmark:Benchmark = null;
 		protected var _currentBenchmarkIndex:int = -1;
 	
-		protected var _fastStroke:FastStroke;
+		protected var _textField:TextField;
 		
 		public function BenchmarkMaster() 
 		{
@@ -37,10 +35,7 @@ package
 			
 			_benchmarks.push(new EmptyBenchmark());
 			_benchmarks.push(new FastStrokeBenchmark());
-			_benchmarks.push(new EmptyBenchmark());
 			_benchmarks.push(new StrokeBenchmark());
-			
-			
 			
 			_benchmarks.push(new TriangleStripBenchmark());
 			
@@ -58,20 +53,20 @@ package
 		protected function onAdded ( e:Event ):void
 		{	
 			
-			/*_fastStroke = new FastStroke();
-			_fastStroke.clear();
-			
-			_fastStroke.setCapacity(10);
-			_fastStroke.addVertex(100, 100, 1, 0xFF0000, 1);
-			_fastStroke.addVertex(200, 100, 1, 0x0000FF, 1);
-			_fastStroke.addVertex(250, 200, 1, 0x00FF00, 1);
-			_fastStroke.addVertex(300, 200, 1, 0xFF0000, 1);
-			_fastStroke.addVertex(400, 200, 1, 0xFF00FF, 1);
-			_fastStroke.addVertex(100, 100, 1, 0x00FFFF, 1);
-			
-			addChild(_fastStroke); */
-			
 			addEventListener(EnterFrameEvent.ENTER_FRAME, enterFrameHandler);
+			
+			var quad:Quad = new Quad(300, 30, 0);
+			quad.alpha = 0.75;
+			quad.y = 0;
+			quad.x = stage.stageWidth - 300;
+			addChild(quad);
+			
+			
+			_textField = new TextField(300, 30, "", "Verdana", 20, 0xFF0000);
+			addChild(_textField);
+			_textField.y = 0;
+			_textField.x = stage.stageWidth - 300;
+			
 		}
 		
 		protected function initBenchmark() : Boolean
@@ -93,6 +88,7 @@ package
 			if ( _currentBenchmark != null )
 			{
 				addChildAt(_currentBenchmark, 0);
+				_textField.text = _currentBenchmark.benchmarkName;
 				_currentBenchmark.startBenchmark();
 			}
 			return true;

@@ -24,6 +24,12 @@ package boxbenchmark
 			numEntities = 0;
 		}
 		
+		override public function get benchmarkName() : String
+		{
+			return "BoxesShapeBenchmark";
+		}
+		
+		
 		override public function isDone() : Boolean
 		{
 			if ( _numCompleteFrames > 120 )

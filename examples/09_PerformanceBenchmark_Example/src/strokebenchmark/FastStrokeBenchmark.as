@@ -25,11 +25,16 @@ package strokebenchmark
 			
 		}
 		
+		override public function get benchmarkName() : String
+		{
+			return "FastStrokeBenchmark";
+		}
+		
 		override public function startBenchmark() : void
 		{
 			allStrokes = new Vector.<FastStroke>();
 			var i:int = 0;
-			for ( i = 0; i < 10 ; i++ )
+			for ( i = 0; i < 5 ; i++ )
 			{
 				stroke = new FastStroke();
 				allStrokes.push(stroke);

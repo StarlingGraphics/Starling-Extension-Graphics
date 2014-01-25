@@ -30,6 +30,10 @@ package
 			
 		}
 		
+		public function get benchmarkName() : String
+		{
+			return "Benchmark Base Class";
+		}
 	}
 
 }

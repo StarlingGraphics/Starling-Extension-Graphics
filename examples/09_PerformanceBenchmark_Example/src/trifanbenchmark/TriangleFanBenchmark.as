@@ -19,6 +19,12 @@ package trifanbenchmark
 		{
 			
 		}
+		
+		override public function get benchmarkName() : String
+		{
+			return "TriangleFanBenchmark";
+		}
+		
 		override public function startBenchmark() : void
 		{
 			triFan = new TriangleFan();

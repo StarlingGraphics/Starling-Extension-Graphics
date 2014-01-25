@@ -21,6 +21,11 @@ package tristripbenchmark
 			
 		}
 		
+		override public function get benchmarkName() : String
+		{
+			return "TriangleStripBenchmark";
+		}
+		
 		override public function startBenchmark() : void
 		{
 			triStrip = new TriangleStrip();

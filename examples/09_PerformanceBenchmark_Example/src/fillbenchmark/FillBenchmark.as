@@ -21,6 +21,13 @@ package fillbenchmark
 		{
 			
 		}
+		
+		override public function get benchmarkName() : String
+		{
+			return "FillBenchmark";
+		}
+		
+		
 		override public function startBenchmark() : void
 		{
 			shape = new Shape();
