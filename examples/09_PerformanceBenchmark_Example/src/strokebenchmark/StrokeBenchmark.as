@@ -84,7 +84,7 @@ package strokebenchmark
 					var color1:uint = randomArray[currentRandom++] * 0xFFFFFF;
 					var color2:uint = randomArray[currentRandom++] * 0xFFFFFF;
 					
-					stroke.addVertex( xVal, yVal, 1, color1, 1);
+					stroke.addVertex( xVal, yVal, 1, color1, 1, color2, 1);
 				}
 			}
 	
