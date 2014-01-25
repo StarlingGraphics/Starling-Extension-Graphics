@@ -37,7 +37,10 @@ package
 			
 			_benchmarks.push(new EmptyBenchmark());
 			_benchmarks.push(new FastStrokeBenchmark());
+			_benchmarks.push(new EmptyBenchmark());
 			_benchmarks.push(new StrokeBenchmark());
+			
+			
 			
 			_benchmarks.push(new TriangleStripBenchmark());
 			

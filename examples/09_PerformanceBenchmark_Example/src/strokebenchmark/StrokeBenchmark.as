@@ -70,6 +70,7 @@ package strokebenchmark
 			if ( numFrames < 240 )
 				L = 20;
 			var numVerts:int = L * 50 + Math.random() * 50;
+			var numCalls:int = 0;
 			for ( var si:int = 0;  si < allStrokes.length; si++ )
 			{
 				stroke = allStrokes[si];
@@ -85,9 +86,10 @@ package strokebenchmark
 					var color2:uint = randomArray[currentRandom++] * 0xFFFFFF;
 					
 					stroke.addVertex( xVal, yVal, 1, color1, 1, color2, 1);
+					numCalls++;
 				}
 			}
-	
+		//	trace("NumCalls: " + numCalls);
 			numFrames++;
 		}
 	}
