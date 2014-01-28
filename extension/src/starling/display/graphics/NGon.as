@@ -36,6 +36,9 @@ package starling.display.graphics
 			this.startAngle = startAngle;
 			this.endAngle = endAngle;
 			
+			minBounds.x = minBounds.y = -radius;
+			maxBounds.x = maxBounds.y = radius;
+			
 			if ( !_uv )
 			{
 				_uv = new Point();
@@ -165,7 +168,12 @@ package starling.display.graphics
 		{
 			var numIndices:int = indices.length;
 			if ( numIndices < 2 )
-				return false;
+			{
+				validateNow();
+				numIndices = indices.length;
+				if ( numIndices < 2 )
+					return false;
+			}
 			
 			if ( _innerRadius == 0 && _radius > 0 && _startAngle == 0 && _endAngle == 360 && _numSides > 20 )  
 			{  // simple - faster - if ngon is circle shape and numsides more than 20, assume circle is desired.
