@@ -1,6 +1,7 @@
 package starling.display.graphics.util 
 {
-
+	import flash.geom.Point;
+	
 	public class TriangleUtil 
 	{
 		
@@ -51,6 +52,33 @@ package starling.display.graphics.util
 				return true;
 				
 			return false;	
+		}
+		
+		public static function lineIntersectLine(line1V0x:Number, line1V0y:Number, line1V1x:Number, line1V1y:Number, line2V0x:Number, line2V0y:Number, line2V1x:Number, line2V1y:Number, intersectPoint:Point ) : Boolean
+		{
+ 
+			var a1:Number = line1V1y-line1V0y;
+			var b1:Number = line1V0x-line1V1x;
+			var c1:Number = line1V1x * line1V0y - line1V0x * line1V1y;
+			
+			var a2:Number = line2V1y-line2V0y;
+			var b2:Number = line2V0x-line2V1x;
+			var c2:Number = line2V1x * line2V0y - line2V0x * line2V1y;
+			
+			var d:Number=a1*b2 - a2*b1;
+			if (d == 0) 
+				return false;
+			var invD:Number = 1.0 / d;
+			var ptx:Number = (b1*c2 - b2*c1) * invD;
+			var pty:Number = (a2*c1 - a1*c2) * invD;
+ 	
+			if ( isPointOnLine(line1V0x, line1V0y, line1V1x, line1V1y, ptx, pty, 0) && isPointOnLine(line2V0x, line2V0y, line2V1x, line2V1y, ptx, pty, 0) )
+			{
+				intersectPoint.x = ptx;
+				intersectPoint.y = pty;
+				return true;
+			}
+			return false;
 		}
 	}
 

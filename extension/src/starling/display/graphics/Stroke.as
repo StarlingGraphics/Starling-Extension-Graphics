@@ -1,9 +1,11 @@
 package starling.display.graphics
 {
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	
 	import starling.display.graphics.StrokeVertex;
 	import starling.textures.Texture;
+	import starling.display.graphics.util.TriangleUtil;
 		
 	public class Stroke extends Graphic
 	{
@@ -13,6 +15,8 @@ package starling.display.graphics
 		protected static const c_degenerateUseNext:uint = 1;
 		protected static const c_degenerateUseLast:uint = 2;
 		protected var _hasDegenerates:Boolean = false;
+		
+		protected static var sCollissionHelper:StrokeCollisionHelper = null;
 		
 		public function Stroke()
 		{
@@ -551,5 +555,71 @@ package starling.display.graphics
 			return false;
 		}
 		
+		public static function strokeCollideTest(s1:Stroke, s2:Stroke, intersectPoint:Point ) : Boolean
+		{
+			if ( s1 == null || s2 == null ||  s1._line == null || s1._line == null )
+				return false;
+				
+			if ( sCollissionHelper == null )
+				sCollissionHelper  = new StrokeCollisionHelper();
+			
+			s1.getBounds(s1.stage, sCollissionHelper.bounds1);
+			s2.getBounds(s2.stage, sCollissionHelper.bounds2);
+			if ( sCollissionHelper.bounds1.intersects(sCollissionHelper.bounds2) == false )
+				return false;
+			
+		
+			if ( intersectPoint == null )
+				intersectPoint = new Point();
+			
+			var numLinesS1:int = s1._line.length;
+			for ( var i: int = 1; i < numLinesS1; i++ )
+			{
+				var s1v0:StrokeVertex = s1._line[i - 1];
+				var s1v1:StrokeVertex = s1._line[i];
+				sCollissionHelper.localPT1.setTo(s1v0.x, s1v0.y);
+				sCollissionHelper.localPT2.setTo(s1v1.x, s1v1.y);
+				s1.localToGlobal(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
+				s1.localToGlobal(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
+				
+				var numLinesS2:int = s2._line.length;
+				for	( var j: int = 1; j < numLinesS2; j++ )
+				{
+					var s2v0:StrokeVertex = s2._line[j - 1];
+					var s2v1:StrokeVertex = s2._line[j];
+					
+					sCollissionHelper.localPT3.setTo(s2v0.x, s2v0.y);
+					sCollissionHelper.localPT4.setTo(s2v1.x, s2v1.y);
+					
+					s2.localToGlobal(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
+					s2.localToGlobal(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
+					
+					if ( TriangleUtil.lineIntersectLine(sCollissionHelper.globalPT1.x, sCollissionHelper.globalPT1.y, sCollissionHelper.globalPT2.x, sCollissionHelper.globalPT2.y, sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y, sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y, intersectPoint) )
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 	}
+}
+
+import flash.geom.Point;
+import flash.geom.Rectangle;
+
+class StrokeCollisionHelper
+{
+	public var localPT1:Point = new Point();	
+	public var localPT2:Point = new Point();	
+	public var localPT3:Point = new Point();	
+	public var localPT4:Point = new Point();	
+			
+	public var globalPT1:Point = new Point();	
+	public var globalPT2:Point = new Point();	
+	public var globalPT3:Point = new Point();		
+	public var globalPT4:Point = new Point();	
+	
+	public var bounds1:Rectangle = new Rectangle();
+	public var bounds2:Rectangle = new Rectangle();
 }
