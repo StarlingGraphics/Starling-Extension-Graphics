@@ -55,8 +55,6 @@ package starling.display.graphics
 		protected var _precisionHitTest:Boolean = false;
 		protected var _precisionHitTestDistance:Number = 0; // This is added to the thickness of the line when doing precisionHitTest to make it easier to hit 1px lines etc
 		
-		protected var _materialNumTextures:int = 0;
-		
 		public function Graphic()
 		{
 			indices = new Vector.<uint>();
@@ -79,7 +77,6 @@ package starling.display.graphics
 			}
 			
 			_material = new StandardMaterial( vertexShader, fragmentShader );
-			_materialNumTextures = _material.textures.length;
 			
 			minBounds = new Point();
 			maxBounds = new Point();
@@ -124,7 +121,6 @@ package starling.display.graphics
 				material.dispose();
 				material = null;
 			}
-			_materialNumTextures = 0;
 			
 			vertices = null;
 			indices = null;
@@ -138,11 +134,6 @@ package starling.display.graphics
 		public function set material( value:IMaterial ):void
 		{
 			_material = value;
-			
-			if ( value != null )
-				_materialNumTextures = value.textures.length;
-			else
-				_materialNumTextures = 0;
 			
 		}
 		

@@ -97,10 +97,10 @@ package starling.display.graphics
 		{							
 									
 			var u:Number = 0;
-			
-			if ( _materialNumTextures > 0 && _line.length > 0 )
+			var textures:Vector.<Texture> = _material.textures;
+			if ( textures.length > 0 && _line.length > 0 )
 			{
-				var textures:Vector.<Texture> = _material.textures;
+			
 				var prevVertex:StrokeVertex = _line[_line.length - 1];
 				var dx:Number = x - prevVertex.x;
 				var dy:Number = y - prevVertex.y;
