@@ -29,12 +29,26 @@ package
 		
 		private var shape5			:ShapeEx;
 		
+		private var shape6			:ShapeEx;
+		private var shape7			:ShapeEx;
+	
+		
 		private var starStroke1: Stroke;
 		private var starStroke2: Stroke;
 		private var starStroke3: Stroke;
 		
+		private var largeCircle:Stroke;
+		private var smallCircle:Stroke;
+		
 		private var startTime		:int;
 		private var pt:Point = new Point();
+		private var normalAtPoint:Point = new Point();
+		
+		private var gravitation:Number = 0.13;
+		private var speed:Point = new Point();
+		
+		
+		private var ptVector:Vector.<Point>;
 		
 		public function GeometryHitTest()
 		{
@@ -43,6 +57,10 @@ package
 		
 		private function onAdded ( e:Event ):void
 		{
+			ptVector = new Vector.<Point>(100, true);
+			for ( var i:int = 0; i < 100; i++ )
+				ptVector[i] = new Point();
+				
 			shape1 = new ShapeEx();
 			shape1.graphics.precisionHitTest = true;
 			createStarShape(shape1);
@@ -77,6 +95,17 @@ package
 			shape4.x = 160;
 			shape4.y = 60;
 			
+			shape6 = new ShapeEx();
+			shape6.graphics.precisionHitTest = true;
+			shape6.graphics.lineStyle(1, 0);
+			shape6.graphics.drawEllipse(0, 0, 400, 300);
+			shape6.graphics.drawRect(-0, -0, 300, 300);
+			shape6.x = 800;
+			shape6.y = 400;
+		
+			
+			addChild(shape6);
+			
 			shape1.addEventListener(TouchEvent.TOUCH, onShape1Touch);
 			shape2.addEventListener(TouchEvent.TOUCH, onShape2Touch);
 			shape3.addEventListener(TouchEvent.TOUCH, onShape3Touch);
@@ -87,6 +116,25 @@ package
 	
 		}
 		
+		private  function extractStrokes() : void
+		{
+			var i:int;
+			for (i = 0; i < shape1.numChildren; i++ )
+				if ( shape1.getChildAt(i) is Stroke )
+					starStroke1 = Stroke(shape1.getChildAt(i));
+
+			for (i = 0; i < shape2.numChildren; i++ )
+				if ( shape2.getChildAt(i) is Stroke )
+					starStroke2 = Stroke(shape2.getChildAt(i));						
+			for (i = 0; i < shape3.numChildren; i++ )
+				if ( shape3.getChildAt(i) is Stroke )
+					starStroke3 = Stroke(shape3.getChildAt(i));		
+				
+			for (i = 0; i < shape6.numChildren; i++ )
+				if ( shape6.getChildAt(i) is Stroke )
+					largeCircle = Stroke(shape6.getChildAt(i));		
+						
+		}
 		
 		private var numFrames:int = 0;
 		private function enterFrameHandler( event:Event ):void
@@ -96,61 +144,98 @@ package
 			shape1.rotation -= 0.007;
 			shape2.rotation -= 0.01;
 			shape3.rotation += 0.02;
+			shape4.rotation -= 0.006;
+			shape6.rotation += 0.003;
+			shape6.x = 700 + 100 * Math.sin(getTimer() / 1000 );
+			shape6.y = 400 + 100 * Math.cos(getTimer() / 1000 );
 			
-			shape4.rotation -= 0.003;
-		
 			var i:int = 0;
 			if ( starStroke1 == null )
 			{
-				for (i = 0; i < shape1.numChildren; i++ )
-					if ( shape1.getChildAt(i) is Stroke )
-						starStroke1 = Stroke(shape1.getChildAt(i));
-
-				for (i = 0; i < shape2.numChildren; i++ )
-					if ( shape2.getChildAt(i) is Stroke )
-						starStroke2 = Stroke(shape2.getChildAt(i));						
-				for (i = 0; i < shape3.numChildren; i++ )
-					if ( shape3.getChildAt(i) is Stroke )
-						starStroke3 = Stroke(shape3.getChildAt(i));						
+				extractStrokes();
 			}
 			else
 			{
-				var hitPoint:NGon;
-				if ( Stroke.strokeCollideTest(starStroke1, starStroke2, pt))
+				var hitPoint:Graphic;
+					
+				if ( Stroke.strokeCollideTest(starStroke1, starStroke2, pt, ptVector))
 				{
-					hitPoint = new NGon(5);
-					hitPoint.x = pt.x;
-					hitPoint.y = pt.y;
-					addChild(hitPoint);
-					Starling.juggler.delayCall(disposeGraphic, 0.5, hitPoint);
-					hitPoint.color = 0xFF0000;
+					for ( i = 0; i < ptVector.length; i++ )
+					{
+						if ( ptVector[i].x == ptVector[i].x ) 
+							drawBall(hitPoint, ptVector[i], 0xFF0000);
+						else break;
+					}
 				}
-				if ( Stroke.strokeCollideTest(starStroke1, starStroke3, pt))
+				if ( Stroke.strokeCollideTest(starStroke1, starStroke3, pt, ptVector))
 				{
-					hitPoint  = new NGon(5);
-					hitPoint.x = pt.x;
-					hitPoint.y = pt.y;
-					addChild(hitPoint);
-					Starling.juggler.delayCall(disposeGraphic, 0.5, hitPoint);
-					hitPoint.color = 0x0000FF;
+					for ( i = 0; i < ptVector.length; i++ )
+					{
+						if ( ptVector[i].x == ptVector[i].x ) 
+							drawBall(hitPoint, ptVector[i], 0x0000FF);
+						else break;
+					}
 				}
-				if ( Stroke.strokeCollideTest(starStroke2, starStroke3, pt))
+					
+				if ( Stroke.strokeCollideTest(starStroke2, starStroke3, pt, ptVector))
 				{
-					hitPoint  = new NGon(5);
-					hitPoint.x = pt.x;
-					hitPoint.y = pt.y;
-					addChild(hitPoint);
-					Starling.juggler.delayCall(disposeGraphic, 0.5, hitPoint);
-					hitPoint.color = 0x00FF00;
+					for ( i = 0; i < ptVector.length; i++ )
+					{
+						if ( ptVector[i].x == ptVector[i].x ) 
+							drawBall(hitPoint, ptVector[i], 0x00FF00);
+						else break;
+					}
 				}
+				if ( Stroke.strokeCollideTest(largeCircle, starStroke3, pt, ptVector))
+				{
+					for ( i = 0; i < ptVector.length; i++ )
+					{
+						if ( ptVector[i].x == ptVector[i].x ) 
+							drawBall(hitPoint, ptVector[i], 0x00FFFF);
+						else break;
+					}
+				}
+				
+				if ( Stroke.strokeCollideTest(largeCircle, starStroke2, pt, ptVector))
+				{
+					for ( i = 0; i < ptVector.length; i++ )
+					{
+						if ( ptVector[i].x == ptVector[i].x ) 
+							drawBall(hitPoint, ptVector[i], 0xFFFF00);
+						else break;
+					}
+				}
+				if ( Stroke.strokeCollideTest(largeCircle, starStroke1, pt, ptVector))
+				{
+					for ( i = 0; i < ptVector.length; i++ )
+					{
+						if ( ptVector[i].x == ptVector[i].x ) 
+							drawBall(hitPoint, ptVector[i], 0xFF00FF);
+						else break;
+					}
+				}
+				
 			}
 		}
+		
+		private function drawBall(hitPoint:Graphic, pt:Point, color:uint) : void
+		{
+			
+			hitPoint  = new NGon(5);
+			hitPoint.x = pt.x;
+			hitPoint.y = pt.y;
+			addChild(hitPoint);
+			Starling.juggler.delayCall(disposeGraphic, 0.5, hitPoint);
+			NGon(hitPoint).color = color;
+		}
+		
 		
 		private function disposeGraphic(g:Graphic) : void
 		{
 			removeChild(g);
 			g.dispose();
 		}
+		
 		
 		private function onShape1Touch(event:TouchEvent) : void
 		{
