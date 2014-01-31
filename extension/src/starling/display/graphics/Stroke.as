@@ -86,6 +86,17 @@ package starling.display.graphics
 		}
 		
 		
+		public function fromBounds(boundingBox:Rectangle) : void
+		{
+			clear();
+			addVertex(boundingBox.x, boundingBox.y); 
+			addVertex(boundingBox.x+boundingBox.width, boundingBox.y);
+			addVertex(boundingBox.x+boundingBox.width, boundingBox.y+boundingBox.height);
+			addVertex(boundingBox.x, boundingBox.y+boundingBox.height);
+			addVertex(boundingBox.x, boundingBox.y);
+		}
+		
+		
 	//	[Deprecated(replacement="starling.display.graphics.Stroke.lineTo()")]
 		public function addVertex( 	x:Number, y:Number, thickness:Number = 1,
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
@@ -630,7 +641,6 @@ package starling.display.graphics
 						sCollissionHelper.globalPT4.x = sCollissionHelper.s2v1Vector[j].x;
 						sCollissionHelper.globalPT4.y = sCollissionHelper.s2v1Vector[j].y;
 					}	
-					
 					if ( TriangleUtil.lineIntersectLine(sCollissionHelper.globalPT1.x, sCollissionHelper.globalPT1.y, sCollissionHelper.globalPT2.x, sCollissionHelper.globalPT2.y, sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y, sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y, sCollissionHelper.testIntersectPoint) )
 					{
 						if ( staticLenIntersectPoints != null && pointCounter < (maxPointCounter-1) )
