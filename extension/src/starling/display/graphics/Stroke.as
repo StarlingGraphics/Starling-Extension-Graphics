@@ -592,7 +592,7 @@ package starling.display.graphics
 			var hasHit:Boolean = false;
 			
 		
-			if ( sCollissionHelper.s2v0Vector == null || sCollissionHelper.s2v0Vector.length < numLinesS1 )
+			if ( sCollissionHelper.s2v0Vector == null || sCollissionHelper.s2v0Vector.length < numLinesS2 )
 			{
 				sCollissionHelper.s2v0Vector = new Vector.<Point>(numLinesS2, true);
 				sCollissionHelper.s2v1Vector = new Vector.<Point>(numLinesS2, true);
@@ -623,7 +623,13 @@ package starling.display.graphics
 					{
 						sCollissionHelper.localPT3.setTo(s2v0.x, s2v0.y);
 						s2.localToGlobal(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
-						sCollissionHelper.s2v0Vector[j] = new Point(sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y);
+						if ( sCollissionHelper.s2v0Vector[j] == null )
+							sCollissionHelper.s2v0Vector[j] = new Point(sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y);
+						else
+						{
+							sCollissionHelper.s2v0Vector[j].x = sCollissionHelper.globalPT3.x
+							sCollissionHelper.s2v0Vector[j].y = sCollissionHelper.globalPT3.y;
+						}
 					}
 					else
 					{
@@ -634,7 +640,13 @@ package starling.display.graphics
 					{
 						sCollissionHelper.localPT4.setTo(s2v1.x, s2v1.y);
 						s2.localToGlobal(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
-						sCollissionHelper.s2v1Vector[j] = new Point(sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y);
+						if ( sCollissionHelper.s2v1Vector[j] == null )
+							sCollissionHelper.s2v1Vector[j] = new Point(sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y);
+						else
+						{
+							sCollissionHelper.s2v1Vector[j].x = sCollissionHelper.globalPT4.x
+							sCollissionHelper.s2v1Vector[j].y = sCollissionHelper.globalPT4.y;
+						}
 					}
 					else
 					{
