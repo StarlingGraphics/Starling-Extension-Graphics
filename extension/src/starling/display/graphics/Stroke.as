@@ -3,9 +3,11 @@ package starling.display.graphics
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	
+	import starling.display.DisplayObject;
 	import starling.display.graphics.StrokeVertex;
 	import starling.textures.Texture;
 	import starling.display.graphics.util.TriangleUtil;
+	import starling.utils.MatrixUtil;
 		
 	public class Stroke extends Graphic
 	{
@@ -566,6 +568,15 @@ package starling.display.graphics
 			return false;
 		}
 		
+		/** Transforms a point from the local coordinate system to parent coordinates.
+         *  If you pass a 'resultPoint', the result will be stored in this point instead of 
+         *  creating a new object. */
+        public function localToParent(localPoint:Point, resultPoint:Point=null):Point
+        {
+            return MatrixUtil.transformCoords(transformationMatrix, localPoint.x, localPoint.y, resultPoint);
+        }
+		
+		
 		public static function strokeCollideTest(s1:Stroke, s2:Stroke, intersectPoint:Point, staticLenIntersectPoints:Vector.<Point> = null ) : Boolean
 		{
 			if ( s1 == null || s2 == null ||  s1._line == null || s1._line == null )
@@ -578,9 +589,12 @@ package starling.display.graphics
 			sCollissionHelper.testIntersectPoint.y = 0;
 			intersectPoint.x = 0;
 			intersectPoint.y = 0;
-				
-			s1.getBounds(s1.stage, sCollissionHelper.bounds1);
-			s2.getBounds(s2.stage, sCollissionHelper.bounds2);
+			var hasSameParent:Boolean = false;
+			if ( s1.parent == s2.parent )
+				hasSameParent = true;
+
+			s1.getBounds(hasSameParent ? s1.parent: s1.stage, sCollissionHelper.bounds1);
+			s2.getBounds(hasSameParent ? s2.parent: s2.stage, sCollissionHelper.bounds2);
 			if ( sCollissionHelper.bounds1.intersects(sCollissionHelper.bounds2) == false )
 				return false;
 			
@@ -591,7 +605,7 @@ package starling.display.graphics
 			var numLinesS2:int = s2._line.length;
 			var hasHit:Boolean = false;
 			
-		
+			
 			if ( sCollissionHelper.s2v0Vector == null || sCollissionHelper.s2v0Vector.length < numLinesS2 )
 			{
 				sCollissionHelper.s2v0Vector = new Vector.<Point>(numLinesS2, true);
@@ -609,10 +623,18 @@ package starling.display.graphics
 				var s1v1:StrokeVertex = s1._line[i];
 				
 				sCollissionHelper.localPT1.setTo(s1v0.x, s1v0.y);
-				s1.localToGlobal(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
-			
 				sCollissionHelper.localPT2.setTo(s1v1.x, s1v1.y);
-				s1.localToGlobal(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
+				if ( hasSameParent )
+				{
+					s1.localToParent(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
+					s1.localToParent(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
+				}
+				else
+				{
+					s1.localToGlobal(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
+					s1.localToGlobal(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
+				}
+			
 			
 				for	( var j: int = 1; j < numLinesS2; j++ )
 				{
@@ -620,45 +642,54 @@ package starling.display.graphics
 					var s2v1:StrokeVertex = s2._line[j];
 				
 					if ( i == 1 )
-					{
+					{ // when we do the first loop through this set, we can cache all global points in s2v0Vector and s2v1Vector, to avoid slow localToGlobals on next loop passes
 						sCollissionHelper.localPT3.setTo(s2v0.x, s2v0.y);
-						s2.localToGlobal(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
+						sCollissionHelper.localPT4.setTo(s2v1.x, s2v1.y);
+						
+						if ( hasSameParent )
+						{
+							s2.localToParent(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
+							s2.localToParent(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
+						}
+						else	
+						{
+							s2.localToGlobal(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
+							s2.localToGlobal(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
+						}
+							
 						if ( sCollissionHelper.s2v0Vector[j] == null )
+						{
 							sCollissionHelper.s2v0Vector[j] = new Point(sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y);
+							sCollissionHelper.s2v1Vector[j] = new Point(sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y);
+						}
 						else
 						{
-							sCollissionHelper.s2v0Vector[j].x = sCollissionHelper.globalPT3.x
+							sCollissionHelper.s2v0Vector[j].x = sCollissionHelper.globalPT3.x;
 							sCollissionHelper.s2v0Vector[j].y = sCollissionHelper.globalPT3.y;
+							sCollissionHelper.s2v1Vector[j].x = sCollissionHelper.globalPT4.x;
+							sCollissionHelper.s2v1Vector[j].y = sCollissionHelper.globalPT4.y;
 						}
 					}
 					else
 					{
 						sCollissionHelper.globalPT3.x = sCollissionHelper.s2v0Vector[j].x;
 						sCollissionHelper.globalPT3.y = sCollissionHelper.s2v0Vector[j].y;
-					}
-					if ( i == 1 )
-					{
-						sCollissionHelper.localPT4.setTo(s2v1.x, s2v1.y);
-						s2.localToGlobal(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
-						if ( sCollissionHelper.s2v1Vector[j] == null )
-							sCollissionHelper.s2v1Vector[j] = new Point(sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y);
-						else
-						{
-							sCollissionHelper.s2v1Vector[j].x = sCollissionHelper.globalPT4.x
-							sCollissionHelper.s2v1Vector[j].y = sCollissionHelper.globalPT4.y;
-						}
-					}
-					else
-					{
+						
 						sCollissionHelper.globalPT4.x = sCollissionHelper.s2v1Vector[j].x;
 						sCollissionHelper.globalPT4.y = sCollissionHelper.s2v1Vector[j].y;
-					}	
+					}
+						
 					if ( TriangleUtil.lineIntersectLine(sCollissionHelper.globalPT1.x, sCollissionHelper.globalPT1.y, sCollissionHelper.globalPT2.x, sCollissionHelper.globalPT2.y, sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y, sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y, sCollissionHelper.testIntersectPoint) )
 					{
 						if ( staticLenIntersectPoints != null && pointCounter < (maxPointCounter-1) )
 						{
-							staticLenIntersectPoints[pointCounter].x = sCollissionHelper.testIntersectPoint.x;
-							staticLenIntersectPoints[pointCounter].y = sCollissionHelper.testIntersectPoint.y;
+							if ( hasSameParent )
+								s1.parent.localToGlobal(sCollissionHelper.testIntersectPoint, staticLenIntersectPoints[pointCounter])
+							else
+							{
+								staticLenIntersectPoints[pointCounter].x = sCollissionHelper.testIntersectPoint.x;
+								staticLenIntersectPoints[pointCounter].y = sCollissionHelper.testIntersectPoint.y;
+							}
 							pointCounter++;
 							staticLenIntersectPoints[pointCounter].x = NaN;
 							staticLenIntersectPoints[pointCounter].y = NaN;
@@ -666,8 +697,14 @@ package starling.display.graphics
 						
 						if ( sCollissionHelper.testIntersectPoint.length > intersectPoint.length )
 						{
-							intersectPoint.x = sCollissionHelper.testIntersectPoint.x;
-							intersectPoint.y = sCollissionHelper.testIntersectPoint.y;
+							if ( hasSameParent )
+								s1.parent.localToGlobal(sCollissionHelper.testIntersectPoint, intersectPoint);
+							else
+							{
+								intersectPoint.x = sCollissionHelper.testIntersectPoint.x;
+								intersectPoint.y = sCollissionHelper.testIntersectPoint.y;
+							}
+							
 						}
 						hasHit = true;
 					}
