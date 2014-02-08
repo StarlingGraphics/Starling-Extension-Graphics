@@ -87,15 +87,23 @@ package starling.display.graphics
 			addDegenerates(x, y);
 		}
 		
+		public function modifyVertexPosition(index:int, x:Number, y:Number) : void
+		{
+			var v:StrokeVertex = _line[index];
+			v.x = x;
+			v.y = y;
+			if ( isInvalid == false )
+				setGeometryInvalid();
+		}
 		
-		public function fromBounds(boundingBox:Rectangle) : void
+		public function fromBounds(boundingBox:Rectangle, thickness:int = 1) : void
 		{
 			clear();
-			addVertex(boundingBox.x, boundingBox.y); 
-			addVertex(boundingBox.x+boundingBox.width, boundingBox.y);
-			addVertex(boundingBox.x+boundingBox.width, boundingBox.y+boundingBox.height);
-			addVertex(boundingBox.x, boundingBox.y+boundingBox.height);
-			addVertex(boundingBox.x, boundingBox.y);
+			addVertex(boundingBox.x, boundingBox.y, thickness); 
+			addVertex(boundingBox.x+boundingBox.width, boundingBox.y, thickness);
+			addVertex(boundingBox.x+boundingBox.width, boundingBox.y+boundingBox.height, thickness);
+			addVertex(boundingBox.x, boundingBox.y+boundingBox.height, thickness);
+			addVertex(boundingBox.x, boundingBox.y, thickness);
 		}
 		
 		

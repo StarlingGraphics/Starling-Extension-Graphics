@@ -16,7 +16,7 @@ package starling.display.graphics
 		
 		public function addVertex( 	x:Number, y:Number, u:Number = 0, v:Number = 0, r:Number = 1, g:Number = 1, b:Number = 1, a:Number = 1 ):void
 		{
-			vertices.push( x, y, 0, r, b, b, a, u, v );
+			vertices.push( x, y, 0, r, g, b, a, u, v );
 			numVertices++;
 			
 			minBounds.x = x < minBounds.x ? x : minBounds.x;
@@ -32,6 +32,14 @@ package starling.display.graphics
 			setGeometryInvalid();
 		}
 		
+		public function modifyVertexPosition(index:int, x:Number, y:Number) : void
+		{
+			vertices[index * 9] = x;
+			vertices[index * 9 + 1] = y;
+			
+			if ( isInvalid == false )
+				setGeometryInvalid();
+		}
 		
 		public function clear():void
 		{
