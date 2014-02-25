@@ -47,7 +47,7 @@ package starling.display.materials
 		{
 			if ( program )
 			{
-				Program3DCache.releaseProgram3D(program);
+				Program3DCache.releaseProgram3D(program, true);
 				program = null;
 			}
 		}

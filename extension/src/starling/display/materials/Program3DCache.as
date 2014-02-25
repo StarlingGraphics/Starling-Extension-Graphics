@@ -58,16 +58,17 @@ package starling.display.materials
 			return program3D;
 		}
 		
-		public static function releaseProgram3D( program3D:Program3D ):void
+		public static function releaseProgram3D( program3D:Program3D, forceFlush:Boolean = false ):void
 		{
 			if ( !numReferencesByProgramTable[program3D] )
 			{
 				throw( new Error( "Program3D is not in cache" ) );
 				return;
 			}
-			
-			var numReferences:int = numReferencesByProgramTable[program3D];
-			numReferences--;
+	
+			numReferencesByProgramTable[program3D]--;
+			if ( forceFlush )
+				flush();
 		}
 		
 		/**
