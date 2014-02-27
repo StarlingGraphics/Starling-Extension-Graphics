@@ -117,7 +117,7 @@ package starling.display.materials
 		}
 
 		
-		public function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1 ):void
+		public function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1, numTriangles:int = -1 ):void
 		{
 			context.setVertexBufferAt( 0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3 );
 			context.setVertexBufferAt( 1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_4 );
@@ -140,7 +140,7 @@ package starling.display.materials
 			context.setProgramConstantsFromVector( Context3DProgramType.FRAGMENT, 0, colorVector );
 			_fragmentShader.setConstants(context, 1);
 			
-			context.drawTriangles(indexBuffer);
+			context.drawTriangles(indexBuffer, 0, numTriangles);
 		}
 	}
 }
