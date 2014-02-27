@@ -29,6 +29,9 @@ package starling.display.graphics
 		protected var _numVertIndex:int = 0;
 		protected var _numVerts:int = 0;
 		
+		protected var _verticesBufferAllocLen:int = 0;
+		protected var _indicesBufferAllocLen:int = 0;
+		
 		protected const INDEX_STRIDE_FOR_QUAD:int = 6;
 		
 		public function FastStroke()
@@ -231,22 +234,60 @@ package starling.display.graphics
 			return false;
 		}
 		
+		override public function validateNow():void
+		{
+			if ( hasValidatedGeometry )
+				return;
+			
+			hasValidatedGeometry = true;
+			
+			if ( vertexBuffer && (isInvalid || uvsInvalid) )
+			{
+		//		vertexBuffer.dispose();
+		//		indexBuffer.dispose();
+			}
+			
+			if ( isInvalid )
+			{
+				buildGeometry();
+				applyUVMatrix();
+			}
+			else if ( uvsInvalid )
+			{
+				applyUVMatrix();
+			}
+		}
+		
 		override public function render( renderSupport:RenderSupport, parentAlpha:Number ):void
 		{
 			validateNow();
 			
 			if ( indices.length < 3 ) return;
 			
+			var numIndices:int = _numVertIndex;
 			if ( isInvalid || uvsInvalid )
 			{
 				// Upload vertex/index buffers.
 				
-				var numVertices:int = (_numControlPoints*2);
-				vertexBuffer = Starling.context.createVertexBuffer( numVertices, VERTEX_STRIDE );
-				vertexBuffer.uploadFromVector( vertices, 0, numVertices )
+				var numVertices:int = (_numControlPoints * 2);
+				if ( numVertices > _verticesBufferAllocLen )
+				{
+					if ( vertexBuffer != null )
+						vertexBuffer.dispose();
+					vertexBuffer = Starling.context.createVertexBuffer( numVertices, VERTEX_STRIDE );
+					_verticesBufferAllocLen = numVertices;					
+				}
 				
-				var numIndices:int = _numVertIndex;
-				indexBuffer = Starling.context.createIndexBuffer( numIndices );
+				vertexBuffer.uploadFromVector( vertices, 0, numVertices );
+				
+				if ( numIndices > _indicesBufferAllocLen )
+				{
+					if ( indexBuffer != null )
+						indexBuffer.dispose();
+					indexBuffer = Starling.context.createIndexBuffer( numIndices );
+					_indicesBufferAllocLen = numIndices;
+				}
+				
 				indexBuffer.uploadFromVector( indices, 0, numIndices );
 				
 				isInvalid = uvsInvalid = false;
@@ -261,7 +302,7 @@ package starling.display.graphics
 			if (context == null) throw new MissingContextError();
 			
 			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha );
+			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, _numVertIndex / 3 );
 			
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);
@@ -296,5 +337,7 @@ package starling.display.graphics
 			vertices[i++] = 0;
 			
 		}
+		
+		
 	}
 }
