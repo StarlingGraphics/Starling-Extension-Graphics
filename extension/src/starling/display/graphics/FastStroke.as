@@ -334,7 +334,7 @@ package starling.display.graphics
 			vertices[i++] = b;
 			vertices[i++] = a;
 			vertices[i++] = u;
-			vertices[i++] = 0;
+			vertices[i++] = 1;
 			
 		}
 		
