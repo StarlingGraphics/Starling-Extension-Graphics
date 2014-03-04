@@ -1,8 +1,10 @@
 package fillbenchmark 
 {
+	import flash.utils.getTimer;
+	
 	import starling.core.Starling;
-	import starling.display.Sprite;
 	import starling.display.Shape;
+	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
@@ -52,6 +54,7 @@ package fillbenchmark
 		{
 			shape.graphics.clear();
 			
+			var startTime:int = getTimer();
 			if ( numFrames < 240 )
 			{
 				shape.graphics.beginTextureFill( checkerTexture , null, 0x36E44A, Math.random());
@@ -68,6 +71,7 @@ package fillbenchmark
 			}
 			
 			shape.graphics.endFill();
+			addTiming(getTimer() - startTime);
 			
 			numFrames++;
 			

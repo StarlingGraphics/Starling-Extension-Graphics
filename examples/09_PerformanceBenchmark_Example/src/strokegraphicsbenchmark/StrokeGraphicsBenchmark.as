@@ -56,12 +56,13 @@ package strokegraphicsbenchmark
 			shape.graphics.clear();
 			shape.graphics.lineStyle( 1, 0xFFFFFF );
 			
+			var startTime:int = getTimer();
 			for ( var i:int = 0; i < 100; i++ )
 			{
 				var L:int = 200;
 				
 				if ( numFrames < 240 )
-					L = 20;
+					L = 10;
 				shape.graphics.lineStyle( 1, 0xFFFFFF * Math.random() );
 				
 				shape.graphics.moveTo( Math.random() * Starling.current.nativeStage.stageWidth, Math.random() * Starling.current.nativeStage.stageHeight );
@@ -76,6 +77,7 @@ package strokegraphicsbenchmark
 					shape.graphics.lineTo( xVal, yVal);
 				}
 			}
+			addTiming(getTimer() - startTime);
 			
 			numFrames++;
 		}

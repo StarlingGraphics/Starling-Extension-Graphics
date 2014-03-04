@@ -6,31 +6,32 @@ package
 	import starling.display.Sprite;
 	import starling.display.graphics.Stroke;
 	import starling.events.Event;
-	
+
 	public class StrokeJointTest extends Sprite
 	{
 		private var stroke			:Stroke;
 		private var startTime		:int;
-		
+		private var timeLog         :TimeLog;
+
 		public function StrokeJointTest()
 		{
+			timeLog = new TimeLog();
 			addEventListener(Event.ADDED_TO_STAGE, onAdded);
 		}
-		
+
 		private function onAdded ( e:Event ):void
 		{
 			stroke = new Stroke();
 			addChild(stroke);
-			
-			
+
 			addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 		}
-		
+
 		private var numFrames:int = 0;
 		private function enterFrameHandler( event:Event ):void
 		{
 			startTime = getTimer();
-			
+
 			for ( var i:int = 0; i < 1600; i++ )
 			{
 				stroke.clear();
@@ -39,7 +40,7 @@ package
 				stroke.addVertex( Starling.current.nativeStage.mouseX, Starling.current.nativeStage.mouseY, 50 );
 			}
 			stroke.validateNow();
-			trace(getTimer()-startTime);
+			timeLog.logTime(getTimer()-startTime);
 		}
 	}
 }

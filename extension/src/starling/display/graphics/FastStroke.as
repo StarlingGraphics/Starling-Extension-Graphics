@@ -1,13 +1,9 @@
 package starling.display.graphics
 {
-	import flash.geom.Point;
-	
-	import starling.display.graphics.StrokeVertex;
-	import starling.textures.Texture;
-	import starling.core.Starling;
 	import flash.display3D.Context3D;
-	import flash.display3D.IndexBuffer3D;
-	import flash.display3D.VertexBuffer3D;
+
+	import starling.display.graphics.StrokeVertex;
+	import starling.core.Starling;
 	import starling.core.RenderSupport;
 	import starling.display.BlendMode;
 	import starling.errors.MissingContextError;
