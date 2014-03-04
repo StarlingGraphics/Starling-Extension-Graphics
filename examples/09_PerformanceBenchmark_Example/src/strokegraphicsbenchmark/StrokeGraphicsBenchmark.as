@@ -55,18 +55,19 @@ package strokegraphicsbenchmark
 	
 			shape.graphics.clear();
 			shape.graphics.lineStyle( 1, 0xFFFFFF );
-			
-			var startTime:int = getTimer();
-			for ( var i:int = 0; i < 100; i++ )
-			{
-				var L:int = 200;
+			var L:int = 200;
 				
-				if ( numFrames < 240 )
-					L = 10;
+			if ( numFrames < 240 )
+				L = 10;
+
+			var numVerts:int = L * 50 + Math.random() * 50;
+			var startTime:int = getTimer();
+			for ( var i:int = 0; i < 5; i++ )
+			{
 				shape.graphics.lineStyle( 1, 0xFFFFFF * Math.random() );
 				
 				shape.graphics.moveTo( Math.random() * Starling.current.nativeStage.stageWidth, Math.random() * Starling.current.nativeStage.stageHeight );
-				for ( var j:int = 0; j < L; j++ )
+				for ( var j:int = 0; j < numVerts; j++ )
 				{
 					if ( currentRandom + 2 > maxRandom )
 						currentRandom = 0;

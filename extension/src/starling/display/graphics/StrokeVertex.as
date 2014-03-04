@@ -16,7 +16,6 @@ package starling.display.graphics
 		public var b2:Number;
 		public var a2:Number;
 		public var thickness:Number;
-		public var degenerate:uint;
 		
 		public function StrokeVertex()
 		{
@@ -34,7 +33,6 @@ package starling.display.graphics
 			vertex.a1 = a1;
 			vertex.u = u;
 			vertex.v = v;
-			vertex.degenerate = degenerate;
 			return vertex;
 		}
 		

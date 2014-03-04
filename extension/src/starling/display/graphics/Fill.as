@@ -50,24 +50,6 @@ package starling.display.graphics
 			super.dispose();
 		}
 		
-		public function addDegenerates( destX:Number, destY:Number, color:uint = 0xFFFFFF, alpha:Number = 1  ):void
-		{
-			if (_numVertices < 1)
-			{
-				return;
-			}
-			var lastVertex:Vector.<Number> = fillVertices.prev.vertex;
-			var lastColor:uint;
-			lastColor = uint( lastVertex[3] * 255 ) << 16; // R
-			lastColor |= uint( lastVertex[4] * 255 ) << 8; // G
-			lastColor |= uint( lastVertex[5] * 255 ); // B
-			var r:Number = ( color >> 16 ) / 255;
-			var g:Number = (( color & 0x00FF00 ) >> 8) / 255;
-			var b:Number = ( color & 0x0000FF ) / 255;
-			addVertex(lastVertex[0], lastVertex[1], lastColor, lastVertex[6]);
-			addVertex(destX, destY, color, alpha);
-		}
-		
 		public function addVertexInConvexShape(x:Number, y:Number, color:uint = 0xFFFFFF, alpha:Number = 1 ):void
 		{
 			addVertexInternal(x, y, color, alpha);

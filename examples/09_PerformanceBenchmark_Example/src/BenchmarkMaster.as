@@ -100,7 +100,7 @@ package
 
 		private function addResultText( text:String, yLoc:Number ):void
 		{
-			var textField:TextField = new TextField(stage.stageWidth, 30, text, "Verdana", 20, 0xFF0000);
+			var textField:TextField = new TextField(stage.stageWidth, 30, text, "Verdana", 16, 0xFF0000);
 			textField.x = 0;
 			textField.y = yLoc;
 			textField.hAlign = HAlign.CENTER;
@@ -116,14 +116,17 @@ package
 				if ( initBenchmark() == false )
 				{
 					var yLoc:Number = 30.0;
-					addResultText("Results (Lower is better)", yLoc);
+					addResultText("Average CPU times (Lower is better)", yLoc);
 					yLoc += 30.0;
 					for each (var benchmark:Benchmark in _benchmarks)
 					{
 						var numCalls:uint = benchmark.getNumCalls();
 						if (numCalls > 0) {
-							var average:Number = benchmark.getAverageDuration();
-							var text:String = benchmark.benchmarkName + ": " + average;
+							var average:Number = benchmark.getAverageUpdateDuration();
+							var renderAverage:Number = benchmark.getAverageRenderDuration();
+							average = int(average * 100)/100;
+							renderAverage = int(renderAverage * 100)/100;
+							var text:String = benchmark.benchmarkName + ": " + average + " Render: " + renderAverage;
 							addResultText(text, yLoc);
 							yLoc += 30.0;
 						}

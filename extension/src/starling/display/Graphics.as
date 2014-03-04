@@ -226,25 +226,24 @@ package starling.display
 		
 		public function moveTo( x:Number, y:Number ):void
 		{
-			// Use degenerate methods for moveTo calls.
-			// Degenerates allow for better performance as they do not terminate
-			// the vertex buffer but instead use zero size polygons to translate
-			// from the end point of the last section of the stroke to the
-			// start of the new point.
-			if ( _strokeStyleSet && _currentStroke )
+			if ( _strokeStyleSet )
 			{
-				_currentStroke.addDegenerates( x, y );
+				if ( _currentStroke != null ) 
+				{ 
+					endStroke();
+				}
+				createStroke();
+				_currentStroke.moveTo( x, y );
 			}
 			
 			if ( _fillStyleSet ) 
 			{
-				if ( _currentFill == null )
-				{ // Added to make sure that the first vertex in a shape gets added to the fill as well.
-					createFill();
-					_currentFill.addVertex(x, y);
+				if ( _currentFill != null )
+				{ 
+					endFill();
 				}
-				else
-					_currentFill.addDegenerates( x, y );
+				createFill();
+				_currentFill.addVertex(x, y);
 			}
 			
 			_penPosX = x;
