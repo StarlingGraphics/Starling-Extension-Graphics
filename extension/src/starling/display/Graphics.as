@@ -46,7 +46,6 @@ package starling.display
 		protected var _strokeAlpha				:Number;
 		protected var _strokeTexture			:Texture;
 		protected var _strokeMaterial			:IMaterial;
-		protected var _strokeInterrupted		:Boolean;
 		
      	protected var _precisionHitTest			:Boolean = false;
 		protected var _precisionHitTestDistance	:Number = 0; 
@@ -228,12 +227,10 @@ package starling.display
 		{
 			if ( _strokeStyleSet )
 			{
-				if ( _currentStroke != null ) 
-				{ 
-					endStroke();
+				if ( _currentStroke == null ) {
+					createStroke();
 				}
-				createStroke();
-				_currentStroke.moveTo( x, y );
+				_currentStroke.moveTo( x, y, _strokeThickness, _strokeColor, _strokeAlpha );
 			}
 			
 			if ( _fillStyleSet ) 
@@ -248,7 +245,6 @@ package starling.display
 			
 			_penPosX = x;
 			_penPosY = y;
-			_strokeInterrupted = true;
 		}
 		
 		public function lineTo( x:Number, y:Number ):void
@@ -267,13 +263,7 @@ package starling.display
 					createStroke();
 				}
 				
-				if ( _strokeInterrupted || _currentStroke.numVertices == 0  )
-				{
-					_currentStroke.lineTo( _penPosX, _penPosY, _strokeThickness );
-					_strokeInterrupted  = false;
-				}
-				
-				_currentStroke.lineTo( x, y, _strokeThickness );
+				_currentStroke.lineTo( x, y, _strokeThickness, _strokeColor, _strokeAlpha );
 			}
 						
 			if ( _fillStyleSet ) 
@@ -399,7 +389,9 @@ package starling.display
 				// end up adding any points to a current fill (as we've already done
 				// this in a more efficient manner above).
 				var storedFill:Fill = _currentFill;
+				var fillStyleSet:Boolean = _fillStyleSet;
 				_currentFill = null;
+				_fillStyleSet = false;
 				
 				var halfWidth:Number = width*0.5;
 				var halfHeight:Number = height*0.5;
@@ -430,6 +422,7 @@ package starling.display
 				
 				// Reinstate the fill
 				_currentFill = storedFill;
+				_fillStyleSet = fillStyleSet;
 			}
 		}
 		
@@ -463,7 +456,9 @@ package starling.display
 				// end up adding any points to a current fill (as we've already done
 				// this in a more efficient manner above).
 				var storedFill:Fill = _currentFill;
+				var fillStyleSet:Boolean = _fillStyleSet;
 				_currentFill = null;
+				_fillStyleSet = false;
 				
 				moveTo( x, y );
 				lineTo( x + width, y );
@@ -472,6 +467,7 @@ package starling.display
 				lineTo( x, y );
 				
 				_currentFill = storedFill;
+				_fillStyleSet = fillStyleSet;
 			}
 		}
 		
@@ -519,7 +515,9 @@ package starling.display
 				// end up adding any points to a current fill (as we've already done
 				// this in a more efficient manner above).
 				var storedFill:Fill = _currentFill;
+				var fillStyleSet:Boolean = _fillStyleSet;
 				_currentFill = null;
+				_fillStyleSet = false;
 				
 				var strokePoints:Vector.<Number> = roundedRect.getStrokePoints();
 				for ( var i:int = 0; i < strokePoints.length; i+=2 )
@@ -535,6 +533,7 @@ package starling.display
 				}
 				
 				_currentFill = storedFill;
+				_fillStyleSet = fillStyleSet;
 			}
 		}
 		
