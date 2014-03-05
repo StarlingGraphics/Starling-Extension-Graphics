@@ -2,10 +2,11 @@ package starling.display.graphics
 {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-
+	
+	import starling.core.RenderSupport;
 	import starling.display.graphics.StrokeVertex;
-	import starling.textures.Texture;
 	import starling.display.graphics.util.TriangleUtil;
+	import starling.textures.Texture;
 	import starling.utils.MatrixUtil;
 
 	public class Stroke extends Graphic
@@ -59,6 +60,7 @@ package starling.display.graphics
 			_numVertices = 0;
 			_numLines = 1;
 			_lineLengths[0] = 0;
+			_moved = true;
 			setGeometryInvalid();
 		}
 
@@ -113,6 +115,8 @@ package starling.display.graphics
 		{
 
 			addVertexInternal(x, y, thickness, color0, alpha0, color1, alpha1);
+			_moved = false;
+			_lineLengths[_numLines-1]++;
 		}
 
 		protected function addVertexInternal(	x:Number, y:Number, thickness:Number = 1,
@@ -201,8 +205,8 @@ package starling.display.graphics
 			var indexOffset:int = 0;
 
 			// Then use the line lenght to pre allocate the vertex vectors
-			var numVerts:int = _line.length * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
-			var numIndices:int = (_line.length - 1) * 6; // this looks odd, but for each StrokeVertex-1, we generate 6 indices in createPolyLine
+			var numVerts:int = _numVertices * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
+			var numIndices:int = (_numVertices - 1) * 6; // this looks odd, but for each StrokeVertex-1, we generate 6 indices in createPolyLine
 
 			// In special cases, there is some time to save here.
 			// If the new number of vertices is the same or less as in the previous
@@ -550,6 +554,11 @@ package starling.display.graphics
 			}
 
 			return hasHit;
+		}
+
+		override public function render(renderSupport:RenderSupport, parentAlpha:Number):void {
+			validateNow();
+			renderInternal( renderSupport, parentAlpha, vertices, _numVertices * 18, indices, _numVertices-1 * 6 );
 		}
 	}
 }
