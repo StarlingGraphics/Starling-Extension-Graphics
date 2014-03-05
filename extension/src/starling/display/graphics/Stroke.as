@@ -11,28 +11,40 @@ package starling.display.graphics
 
 	public class Stroke extends Graphic
 	{
-		protected var _line	        :Vector.<StrokeVertex>;
-		protected var _lineLengths  :Vector.<uint>;
-		protected var _numVertices  :uint;
-		protected var _numLines     :uint;
 		protected var _moved        :Boolean;
 		protected var _moveX        :Number;
 		protected var _moveY        :Number;
 		protected var _moveThickness:Number;
-		protected var _moveColor   :Number;
+		protected var _moveColor    :Number;
 		protected var _moveAlpha    :Number;
+		protected var _prevX        :Number;
+		protected var _prevY        :Number;
+		protected var _prevThickness:Number;
+		protected var _prevX2       :Number;
+		protected var _prevY2       :Number;
+		protected var _prevU        :Number;
+		protected var _prevColor0   :uint;
+		protected var _prevColor1   :uint;
+		protected var _prevAlpha0   :uint;
+		protected var _prevAlpha1   :uint;
+		protected var _numVertices  :uint;
+		protected var _numIndices   :uint;
+		protected var _numInSegment :uint;
 
 		protected static var sCollissionHelper:StrokeCollisionHelper = null;
 
-		public function Stroke()
+		public function Stroke(initialVerts:uint = 0)
 		{
-			_lineLengths = new Vector.<uint>;
+			vertices = new Vector.<Number>(initialVerts * (Graphic.VERTEX_STRIDE * 2));
+			indices = new Vector.<uint>((initialVerts > 0) ? ((initialVerts-1) * 6) : 0);
 			clear();
 		}
 
+		// Legacy function - effectly the number of points in the line
+		// not the amount of vertices used to build the solid line shape.
 		public function get numVertices():uint
 		{
-			return _numVertices;
+			return _numVertices / (Graphic.VERTEX_STRIDE * 2);
 		}
 
 		override public function dispose():void
@@ -49,18 +61,11 @@ package starling.display.graphics
 				maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
 			}
 
-			if (_line)
-			{
-				StrokeVertex.returnInstances(_line);
-				_line.length = 0;
-			}
-			else
-				_line = new Vector.<StrokeVertex>;
-
 			_numVertices = 0;
-			_numLines = 1;
-			_lineLengths[0] = 0;
+			_numIndices = 0;
+			_numInSegment = 0;
 			_moved = true;
+			isInvalid = true;
 			setGeometryInvalid();
 		}
 
@@ -68,36 +73,30 @@ package starling.display.graphics
 		{
 			if (_moved == true) {
 				_moved = false;
-				addVertexInternal(_moveX, _moveY, _moveThickness, _moveColor, _moveAlpha, _moveColor, _moveAlpha);
-				_lineLengths[_numLines-1]++;
+				addVertexInternal(_moveX, _moveY, _moveThickness, _moveColor, _moveAlpha, _moveColor, _moveAlpha, true);
 			}
 			addVertexInternal(x, y, thickness, color, alpha, color, alpha);
-			_lineLengths[_numLines-1]++;
+			isInvalid = true;
 		}
 
 		public function moveTo( x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1.0 ) : void
 		{
-			if (_lineLengths[_numLines-1] > 0) {
-				_numLines++;
-				_lineLengths[_numLines-1] = 0;
-			}
 			_moved = true;
 			_moveX = x;
 			_moveY = y;
 			_moveThickness = thickness;
 			_moveColor = color;
 			_moveAlpha = alpha;
+			isInvalid = true;
 		}
 
 		public function modifyVertexPosition(index:int, x:Number, y:Number) : void
 		{
-			var v:StrokeVertex = _line[index];
-			v.x = x;
-			v.y = y;
-			if ( isInvalid == false )
-				setGeometryInvalid();
+			setX(index, x);
+			setY(index, y);
+			isInvalid = true;
 		}
-
+		
 		public function fromBounds(boundingBox:Rectangle, thickness:int = 1) : void
 		{
 			clear();
@@ -113,52 +112,12 @@ package starling.display.graphics
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
-
 			addVertexInternal(x, y, thickness, color0, alpha0, color1, alpha1);
 			_moved = false;
-			_lineLengths[_numLines-1]++;
+			isInvalid = true;
 		}
 
-		protected function addVertexInternal(	x:Number, y:Number, thickness:Number = 1,
-									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
-									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
-		{
-			var u:Number = 0;
-			var textures:Vector.<Texture> = _material.textures;
-			if ( textures.length > 0 && _line.length > 0 )
-			{
-
-				var prevVertex:StrokeVertex = _line[_line.length - 1];
-				var dx:Number = x - prevVertex.x;
-				var dy:Number = y - prevVertex.y;
-				var d:Number = Math.sqrt(dx*dx+dy*dy);
-				u = prevVertex.u + (d / textures[0].width);
-			}
-
-			var r0:Number = (color0 >> 16) / 255;
-			var g0:Number = ((color0 & 0x00FF00) >> 8) / 255;
-			var b0:Number = (color0 & 0x0000FF) / 255;
-			var r1:Number = (color1 >> 16) / 255;
-			var g1:Number = ((color1 & 0x00FF00) >> 8) / 255;
-			var b1:Number = (color1 & 0x0000FF) / 255;
-
-			var v:StrokeVertex = StrokeVertex.getInstance();
-			_line[_numVertices] = v;
-			v.x = x;
-			v.y = y;
-			v.r1 = r0;
-			v.g1 = g0;
-			v.b1 = b0;
-			v.a1 = alpha0;
-			v.r2 = r1;
-			v.g2 = g1;
-			v.b2 = b1;
-			v.a2 = alpha1;
-			v.u = u;
-			v.v = 0;
-			v.thickness = thickness;
-			_numVertices++;
-
+		protected function updateBounds( x:Number, y:Number ):void {
 			if(x < minBounds.x)
 			{
 				minBounds.x = x;
@@ -181,8 +140,164 @@ package starling.display.graphics
 				maxBounds.x = x;
 			if ( maxBounds.y == Number.NEGATIVE_INFINITY )
 				maxBounds.y = y;
-			if ( isInvalid == false )
-				setGeometryInvalid();
+		}
+
+		private function adjustPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number):void {
+			nX *= thickness;
+			nY *= thickness;
+			var v1xPos:Number = x + nX;
+			var v1yPos:Number = y + nY;
+			var v1xNeg:Number = x - nX;
+			var v1yNeg:Number = y - nY;
+
+			var prevIndices:uint = _numVertices - Graphic.VERTEX_STRIDE * 2;
+			vertices[prevIndices++] = v1xPos;
+			vertices[prevIndices++] = v1yPos;
+			prevIndices += Graphic.VERTEX_STRIDE - 2;
+			vertices[prevIndices++] = v1xNeg;
+			vertices[prevIndices++] = v1yNeg;
+		}
+
+		private function addPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number,
+									col0:uint, col1:uint, alpha0:Number, alpha1:Number, u:Number ):void {
+			nX *= thickness;
+			nY *= thickness;
+			var v1xPos:Number = x + nX;
+			var v1yPos:Number = y + nY;
+			var v1xNeg:Number = x - nX;
+			var v1yNeg:Number = y - nY;
+
+			var r0:Number = (col0 >> 16) / 255;
+			var g0:Number = ((col0 & 0x00FF00) >> 8) / 255;
+			var b0:Number = (col0 & 0x0000FF) / 255;
+			var r1:Number = (col1 >> 16) / 255;
+			var g1:Number = ((col1 & 0x00FF00) >> 8) / 255;
+			var b1:Number = (col1 & 0x0000FF) / 255;
+
+			vertices[_numVertices++] = v1xPos;
+			vertices[_numVertices++] = v1yPos;
+			vertices[_numVertices++] = 0;
+			vertices[_numVertices++] = r1;
+			vertices[_numVertices++] = g1;
+			vertices[_numVertices++] = b1;
+			vertices[_numVertices++] = alpha1;
+			vertices[_numVertices++] = u;
+			vertices[_numVertices++] = 1;
+			vertices[_numVertices++] = v1xNeg;
+			vertices[_numVertices++] = v1yNeg;
+			vertices[_numVertices++] = 0;
+			vertices[_numVertices++] = r0;
+			vertices[_numVertices++] = g0;
+			vertices[_numVertices++] = b0;
+			vertices[_numVertices++] = alpha0;
+			vertices[_numVertices++] = u;
+			vertices[_numVertices++] = 0;
+		}
+
+		protected function addVertexInternal(	x:Number, y:Number, thickness:Number = 1,
+									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
+									color1:uint = 0xFFFFFF, alpha1:Number = 1,
+									start:Boolean = false):void
+		{
+			if (start) {
+				_prevX = x;
+				_prevY = y;
+				_prevColor0 = color0;
+				_prevColor1 = color1;
+				_prevAlpha0 = alpha0;
+				_prevAlpha1 = alpha1;
+				_prevThickness = thickness;
+				_prevU = 0;
+				_numInSegment = 0;
+				return;
+			}
+			updateBounds(x,y);
+			var u:Number = 0;
+			var v:Number = 0;
+			var textures:Vector.<Texture> = _material.textures;
+			if ( textures.length > 0 )
+			{
+				var dx:Number = x - _prevX;
+				var dy:Number = y - _prevY;
+				var d:Number = Math.sqrt(dx*dx+dy*dy);
+				u = (d / textures[0].width) + _prevU;
+			}
+
+
+			var dX:Number = x - _prevX;
+			var dY:Number = y - _prevY;
+			var len:Number = Math.sqrt(dX * dX + dY * dY);
+			var invLen:Number = 1.0 / len;
+			dX *= invLen;
+			dY *= invLen;
+			const nX:Number = -dY;
+			const nY:Number = dX;
+
+			// If only 1 vertex is in the segment
+			// add the first two points
+			if (_numInSegment == 0) {
+				addPoints(_prevX, _prevY, nX, nY, _prevThickness * 0.5, _prevColor0, _prevColor1, _prevAlpha0, _prevAlpha1, 0.0);
+				_numInSegment++;
+			}
+			// If 2 vertices are already in the segment
+			// adjust the two previous points to be elbowed
+			else if (_numInSegment > 1)
+			{
+				var dX2:Number = _prevX - _prevX2;
+				var dY2:Number = _prevY - _prevY2;
+				var len2:Number = Math.sqrt(dX2 * dX2 + dY2 * dY2);
+				var invLen2:Number = 1.0 / len2;
+				dX2 *= invLen2;
+				dY2 *= invLen2;
+				const nX2:Number = -dY2;
+				const nY2:Number = dX2;
+				var elbowThickness:Number = _prevThickness*0.5;
+				
+				// For future reference, dot product has this equality:
+				// vA.vB = |vA||vB|cos(theta) 
+				// where theta is the angle betwen vectors vA and vB.
+				var dot:Number = (nX * nX2 + nY * nY2);
+				var arcCosDot:Number = Math.acos(dot);
+				elbowThickness /= Math.sin( (Math.PI-arcCosDot) * 0.5);
+				
+				if ( elbowThickness > _prevThickness * 4 )
+				{
+					elbowThickness = _prevThickness * 4;
+				}
+				
+				if ( elbowThickness != elbowThickness ) // faster NaN comparison
+				{
+					elbowThickness = _prevThickness*0.5;
+				}
+				
+				var cnx:Number = nX2 + nX;
+				var cny:Number = nY2 + nY;
+				var c:Number = (1/Math.sqrt( cnx*cnx + cny*cny ));
+				cnx *= c;
+				cny *= c;
+				
+				adjustPoints(_prevX, _prevY, cnx, cny, elbowThickness);
+			}
+
+			// Add two vertices as if it is the end
+			addPoints(x, y, nX, nY, thickness * 0.5, color0, color1, alpha0, alpha1, u);
+			_numInSegment++;
+
+			// Add indices
+			var i2:int = _numVertices / Graphic.VERTEX_STRIDE - 4;
+			indices[_numIndices++] = i2;
+			indices[_numIndices++] = i2+2;
+			indices[_numIndices++] = i2+1;
+			indices[_numIndices++] = i2+1;
+			indices[_numIndices++] = i2+2;
+			indices[_numIndices++] = i2+3;
+			_prevX2 = _prevX;
+			_prevY2 = _prevY;
+			_prevX = x;
+			_prevY = y;
+			_prevU = u;
+			_prevThickness = thickness;
+			_numInSegment++;
 		}
 
 		public function getVertexPosition(index:int, prealloc:Point = null):Point
@@ -191,40 +306,10 @@ package starling.display.graphics
 			if ( point == null )
 				point = new Point();
 
-			point.x = _line[index].x;
-			point.y = _line[index].y;
+			var vertIndex:uint = index * 2;
+			point.x = (getX(vertIndex) + getX(vertIndex + 1)) * 0.5;
+			point.y = (getY(vertIndex) + getY(vertIndex + 1)) * 0.5;
 			return point;
-		}
-
-		override protected function buildGeometry():void
-		{
-			if ( _line == null || _line.length == 0 )
-				return; // block against odd cases.
-
-			// This is the code that uses the preAllocated code path for createPolyLinePreAlloc
-			var indexOffset:int = 0;
-
-			// Then use the line lenght to pre allocate the vertex vectors
-			var numVerts:int = _numVertices * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
-			var numIndices:int = (_numVertices - 1) * 6; // this looks odd, but for each StrokeVertex-1, we generate 6 indices in createPolyLine
-
-			// In special cases, there is some time to save here.
-			// If the new number of vertices is the same or less as in the previous
-			// list of vertices, there's no need to recreate the buffer of vertices and indices
-			if ( vertices == null || numVerts > vertices.length )
-			{
-				vertices = new Vector.<Number>(numVerts, true);
-			}
-			if ( indices == null || numIndices > indices.length )
-			{
-				indices = new Vector.<uint>(numIndices, true);
-			}
-			createPolyLinePreAlloc( _line, _lineLengths, _numLines, vertices, indices);
-
-			var oldVerticesLength:int = 0; // this is always zero in the old code, even if we use vertices.length in the original code. Not sure why it is here.
-			const oneOverVertexStride:Number = 1 / VERTEX_STRIDE;
-			indexOffset += (vertices.length - oldVerticesLength) * oneOverVertexStride;
-
 		}
 
 		///////////////////////////////////
@@ -307,22 +392,22 @@ package starling.display.graphics
 							d0 = lastD0;
 						else
 							lastD0 = d0;
-	
+
 						if ( d1 == 0 )
 							d1 = lastD1;
 						else
 							lastD1 = d1;
-	
+
 						// Thanks to Tom Clapham for spotting this relationship.
 						var dot:Number = (d0x * d1x + d0y * d1y) / (d0 * d1);
 						var arcCosDot:Number = Math.acos(dot);
 						elbowThickness /= Math.sin( (PI-arcCosDot) * 0.5);
-	
+
 						if ( elbowThickness > vThickness * 4 )
 						{
 							elbowThickness = vThickness * 4;
 						}
-	
+
 						if ( elbowThickness != elbowThickness ) // faster NaN comparison
 						{
 							elbowThickness = vThickness*0.5;
@@ -381,38 +466,46 @@ package starling.display.graphics
 			}
 		}
 
+		// Now dynamically making geometry during the update cycle in
+		// a sensible fashion, drastically reducing CPU and memory load
+		// and moving processing out of the render phase.
+		override protected function buildGeometry():void {
+		}
+
 		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
 		{
-			if ( _line == null ) return false;
-			if ( _line.length < 2 ) return false;
-
-			var numLines:int = _line.length;
-
-			for ( var i: int = 1; i < numLines; i++ )
-			{
-				var v0:StrokeVertex = _line[i - 1];
-				var v1:StrokeVertex = _line[i];
-
-				var lineLengthSquared:Number = (v1.x - v0.x) * (v1.x - v0.x) + (v1.y - v0.y) * (v1.y - v0.y);
-
-				var interpolation:Number = ( ( ( localX - v0.x ) * ( v1.x - v0.x ) ) + ( ( localY - v0.y ) * ( v1.y - v0.y ) ) )  /	( lineLengthSquared );
-				if( interpolation < 0.0 || interpolation > 1.0 )
-					continue;   // closest point does not fall within the line segment
-
-				var intersectionX:Number = v0.x + interpolation * ( v1.x - v0.x );
-				var intersectionY:Number = v0.y + interpolation * ( v1.y - v0.y );
-
-				var distanceSquared:Number = (localX - intersectionX) * (localX - intersectionX) + (localY - intersectionY) * (localY - intersectionY);
-
-				var intersectThickness:Number = (v0.thickness * (1.0 - interpolation) + v1.thickness * interpolation); // Support for varying thicknesses
-
-				intersectThickness += _precisionHitTestDistance;
-
-				if ( distanceSquared <= intersectThickness * intersectThickness)
-					return true;
-			}
-
 			return false;
+//
+//			if ( _line == null ) return false;
+//			if ( _line.length < 2 ) return false;
+//
+//			var numLines:int = _line.length;
+//
+//			for ( var i: int = 1; i < numLines; i++ )
+//			{
+//				var v0:StrokeVertex = _line[i - 1];
+//				var v1:StrokeVertex = _line[i];
+//
+//				var lineLengthSquared:Number = (v1.x - v0.x) * (v1.x - v0.x) + (v1.y - v0.y) * (v1.y - v0.y);
+//
+//				var interpolation:Number = ( ( ( localX - v0.x ) * ( v1.x - v0.x ) ) + ( ( localY - v0.y ) * ( v1.y - v0.y ) ) )  /	( lineLengthSquared );
+//				if( interpolation < 0.0 || interpolation > 1.0 )
+//					continue;   // closest point does not fall within the line segment
+//
+//				var intersectionX:Number = v0.x + interpolation * ( v1.x - v0.x );
+//				var intersectionY:Number = v0.y + interpolation * ( v1.y - v0.y );
+//
+//				var distanceSquared:Number = (localX - intersectionX) * (localX - intersectionX) + (localY - intersectionY) * (localY - intersectionY);
+//
+//				var intersectThickness:Number = (v0.thickness * (1.0 - interpolation) + v1.thickness * interpolation); // Support for varying thicknesses
+//
+//				intersectThickness += _precisionHitTestDistance;
+//
+//				if ( distanceSquared <= intersectThickness * intersectThickness)
+//					return true;
+//			}
+//
+//			return false;
 		}
 
 		/** Transforms a point from the local coordinate system to parent coordinates.
@@ -425,141 +518,182 @@ package starling.display.graphics
 
 		public static function strokeCollideTest(s1:Stroke, s2:Stroke, intersectPoint:Point, staticLenIntersectPoints:Vector.<Point> = null ) : Boolean
 		{
-			if ( s1 == null || s2 == null ||  s1._line == null || s1._line == null )
-				return false;
-
-			if ( sCollissionHelper == null )
-				sCollissionHelper  = new StrokeCollisionHelper();
-			sCollissionHelper.testIntersectPoint.x = 0;
-			sCollissionHelper.testIntersectPoint.y = 0;
-			intersectPoint.x = 0;
-			intersectPoint.y = 0;
-			var hasSameParent:Boolean = false;
-			if ( s1.parent == s2.parent )
-				hasSameParent = true;
-
-			s1.getBounds(hasSameParent ? s1.parent: s1.stage, sCollissionHelper.bounds1);
-			s2.getBounds(hasSameParent ? s2.parent: s2.stage, sCollissionHelper.bounds2);
-			if ( sCollissionHelper.bounds1.intersects(sCollissionHelper.bounds2) == false )
-				return false;
-
-			if ( intersectPoint == null )
-				intersectPoint = new Point();
-			var numLinesS1:int = s1._line.length;
-			var numLinesS2:int = s2._line.length;
-			var hasHit:Boolean = false;
-
-			if ( sCollissionHelper.s2v0Vector == null || sCollissionHelper.s2v0Vector.length < numLinesS2 )
-			{
-				sCollissionHelper.s2v0Vector = new Vector.<Point>(numLinesS2, true);
-				sCollissionHelper.s2v1Vector = new Vector.<Point>(numLinesS2, true);
-			}
-
-			var pointCounter:int = 0;
-			var maxPointCounter:int = 0;
-			if ( staticLenIntersectPoints != null )
-				maxPointCounter = staticLenIntersectPoints.length;
-
-			for ( var i: int = 1; i < numLinesS1; i++ )
-			{
-				var s1v0:StrokeVertex = s1._line[i - 1];
-				var s1v1:StrokeVertex = s1._line[i];
-
-				sCollissionHelper.localPT1.setTo(s1v0.x, s1v0.y);
-				sCollissionHelper.localPT2.setTo(s1v1.x, s1v1.y);
-				if ( hasSameParent )
-				{
-					s1.localToParent(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
-					s1.localToParent(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
-				}
-				else
-				{
-					s1.localToGlobal(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
-					s1.localToGlobal(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
-				}
-
-				for	( var j: int = 1; j < numLinesS2; j++ )
-				{
-					var s2v0:StrokeVertex = s2._line[j - 1];
-					var s2v1:StrokeVertex = s2._line[j];
-
-					if ( i == 1 )
-					{ // when we do the first loop through this set, we can cache all global points in s2v0Vector and s2v1Vector, to avoid slow localToGlobals on next loop passes
-						sCollissionHelper.localPT3.setTo(s2v0.x, s2v0.y);
-						sCollissionHelper.localPT4.setTo(s2v1.x, s2v1.y);
-
-						if ( hasSameParent )
-						{
-							s2.localToParent(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
-							s2.localToParent(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
-						}
-						else
-						{
-							s2.localToGlobal(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
-							s2.localToGlobal(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
-						}
-
-						if ( sCollissionHelper.s2v0Vector[j] == null )
-						{
-							sCollissionHelper.s2v0Vector[j] = new Point(sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y);
-							sCollissionHelper.s2v1Vector[j] = new Point(sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y);
-						}
-						else
-						{
-							sCollissionHelper.s2v0Vector[j].x = sCollissionHelper.globalPT3.x;
-							sCollissionHelper.s2v0Vector[j].y = sCollissionHelper.globalPT3.y;
-							sCollissionHelper.s2v1Vector[j].x = sCollissionHelper.globalPT4.x;
-							sCollissionHelper.s2v1Vector[j].y = sCollissionHelper.globalPT4.y;
-						}
-					}
-					else
-					{
-						sCollissionHelper.globalPT3.x = sCollissionHelper.s2v0Vector[j].x;
-						sCollissionHelper.globalPT3.y = sCollissionHelper.s2v0Vector[j].y;
-
-						sCollissionHelper.globalPT4.x = sCollissionHelper.s2v1Vector[j].x;
-						sCollissionHelper.globalPT4.y = sCollissionHelper.s2v1Vector[j].y;
-					}
-
-					if ( TriangleUtil.lineIntersectLine(sCollissionHelper.globalPT1.x, sCollissionHelper.globalPT1.y, sCollissionHelper.globalPT2.x, sCollissionHelper.globalPT2.y, sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y, sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y, sCollissionHelper.testIntersectPoint) )
-					{
-						if ( staticLenIntersectPoints != null && pointCounter < (maxPointCounter-1) )
-						{
-							if ( hasSameParent )
-								s1.parent.localToGlobal(sCollissionHelper.testIntersectPoint, staticLenIntersectPoints[pointCounter])
-							else
-							{
-								staticLenIntersectPoints[pointCounter].x = sCollissionHelper.testIntersectPoint.x;
-								staticLenIntersectPoints[pointCounter].y = sCollissionHelper.testIntersectPoint.y;
-							}
-							pointCounter++;
-							staticLenIntersectPoints[pointCounter].x = NaN;
-							staticLenIntersectPoints[pointCounter].y = NaN;
-						}
-
-						if ( sCollissionHelper.testIntersectPoint.length > intersectPoint.length )
-						{
-							if ( hasSameParent )
-								s1.parent.localToGlobal(sCollissionHelper.testIntersectPoint, intersectPoint);
-							else
-							{
-								intersectPoint.x = sCollissionHelper.testIntersectPoint.x;
-								intersectPoint.y = sCollissionHelper.testIntersectPoint.y;
-							}
-
-						}
-						hasHit = true;
-					}
-				}
-			}
-
-			return hasHit;
+			return false;
+//			
+//			if ( s1 == null || s2 == null ||  s1._line == null || s1._line == null )
+//				return false;
+//
+//			if ( sCollissionHelper == null )
+//				sCollissionHelper  = new StrokeCollisionHelper();
+//			sCollissionHelper.testIntersectPoint.x = 0;
+//			sCollissionHelper.testIntersectPoint.y = 0;
+//			intersectPoint.x = 0;
+//			intersectPoint.y = 0;
+//			var hasSameParent:Boolean = false;
+//			if ( s1.parent == s2.parent )
+//				hasSameParent = true;
+//
+//			s1.getBounds(hasSameParent ? s1.parent: s1.stage, sCollissionHelper.bounds1);
+//			s2.getBounds(hasSameParent ? s2.parent: s2.stage, sCollissionHelper.bounds2);
+//			if ( sCollissionHelper.bounds1.intersects(sCollissionHelper.bounds2) == false )
+//				return false;
+//
+//			if ( intersectPoint == null )
+//				intersectPoint = new Point();
+//			var numLinesS1:int = s1._line.length;
+//			var numLinesS2:int = s2._line.length;
+//			var hasHit:Boolean = false;
+//
+//			if ( sCollissionHelper.s2v0Vector == null || sCollissionHelper.s2v0Vector.length < numLinesS2 )
+//			{
+//				sCollissionHelper.s2v0Vector = new Vector.<Point>(numLinesS2, true);
+//				sCollissionHelper.s2v1Vector = new Vector.<Point>(numLinesS2, true);
+//			}
+//
+//			var pointCounter:int = 0;
+//			var maxPointCounter:int = 0;
+//			if ( staticLenIntersectPoints != null )
+//				maxPointCounter = staticLenIntersectPoints.length;
+//
+//			for ( var i: int = 1; i < numLinesS1; i++ )
+//			{
+//				var s1v0:StrokeVertex = s1._line[i - 1];
+//				var s1v1:StrokeVertex = s1._line[i];
+//
+//				sCollissionHelper.localPT1.setTo(s1v0.x, s1v0.y);
+//				sCollissionHelper.localPT2.setTo(s1v1.x, s1v1.y);
+//				if ( hasSameParent )
+//				{
+//					s1.localToParent(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
+//					s1.localToParent(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
+//				}
+//				else
+//				{
+//					s1.localToGlobal(sCollissionHelper.localPT1, sCollissionHelper.globalPT1);
+//					s1.localToGlobal(sCollissionHelper.localPT2, sCollissionHelper.globalPT2);
+//				}
+//
+//				for	( var j: int = 1; j < numLinesS2; j++ )
+//				{
+//					var s2v0:StrokeVertex = s2._line[j - 1];
+//					var s2v1:StrokeVertex = s2._line[j];
+//
+//					if ( i == 1 )
+//					{ // when we do the first loop through this set, we can cache all global points in s2v0Vector and s2v1Vector, to avoid slow localToGlobals on next loop passes
+//						sCollissionHelper.localPT3.setTo(s2v0.x, s2v0.y);
+//						sCollissionHelper.localPT4.setTo(s2v1.x, s2v1.y);
+//
+//						if ( hasSameParent )
+//						{
+//							s2.localToParent(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
+//							s2.localToParent(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
+//						}
+//						else
+//						{
+//							s2.localToGlobal(sCollissionHelper.localPT3, sCollissionHelper.globalPT3);
+//							s2.localToGlobal(sCollissionHelper.localPT4, sCollissionHelper.globalPT4);
+//						}
+//
+//						if ( sCollissionHelper.s2v0Vector[j] == null )
+//						{
+//							sCollissionHelper.s2v0Vector[j] = new Point(sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y);
+//							sCollissionHelper.s2v1Vector[j] = new Point(sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y);
+//						}
+//						else
+//						{
+//							sCollissionHelper.s2v0Vector[j].x = sCollissionHelper.globalPT3.x;
+//							sCollissionHelper.s2v0Vector[j].y = sCollissionHelper.globalPT3.y;
+//							sCollissionHelper.s2v1Vector[j].x = sCollissionHelper.globalPT4.x;
+//							sCollissionHelper.s2v1Vector[j].y = sCollissionHelper.globalPT4.y;
+//						}
+//					}
+//					else
+//					{
+//						sCollissionHelper.globalPT3.x = sCollissionHelper.s2v0Vector[j].x;
+//						sCollissionHelper.globalPT3.y = sCollissionHelper.s2v0Vector[j].y;
+//
+//						sCollissionHelper.globalPT4.x = sCollissionHelper.s2v1Vector[j].x;
+//						sCollissionHelper.globalPT4.y = sCollissionHelper.s2v1Vector[j].y;
+//					}
+//
+//					if ( TriangleUtil.lineIntersectLine(sCollissionHelper.globalPT1.x, sCollissionHelper.globalPT1.y, sCollissionHelper.globalPT2.x, sCollissionHelper.globalPT2.y, sCollissionHelper.globalPT3.x, sCollissionHelper.globalPT3.y, sCollissionHelper.globalPT4.x, sCollissionHelper.globalPT4.y, sCollissionHelper.testIntersectPoint) )
+//					{
+//						if ( staticLenIntersectPoints != null && pointCounter < (maxPointCounter-1) )
+//						{
+//							if ( hasSameParent )
+//								s1.parent.localToGlobal(sCollissionHelper.testIntersectPoint, staticLenIntersectPoints[pointCounter])
+//							else
+//							{
+//								staticLenIntersectPoints[pointCounter].x = sCollissionHelper.testIntersectPoint.x;
+//								staticLenIntersectPoints[pointCounter].y = sCollissionHelper.testIntersectPoint.y;
+//							}
+//							pointCounter++;
+//							staticLenIntersectPoints[pointCounter].x = NaN;
+//							staticLenIntersectPoints[pointCounter].y = NaN;
+//						}
+//
+//						if ( sCollissionHelper.testIntersectPoint.length > intersectPoint.length )
+//						{
+//							if ( hasSameParent )
+//								s1.parent.localToGlobal(sCollissionHelper.testIntersectPoint, intersectPoint);
+//							else
+//							{
+//								intersectPoint.x = sCollissionHelper.testIntersectPoint.x;
+//								intersectPoint.y = sCollissionHelper.testIntersectPoint.y;
+//							}
+//
+//						}
+//						hasHit = true;
+//					}
+//				}
+//			}
+//
+//			return hasHit;
 		}
 
 		override public function render(renderSupport:RenderSupport, parentAlpha:Number):void {
 			validateNow();
-			renderInternal( renderSupport, parentAlpha, vertices, _numVertices * 2, indices, (_numVertices-1) * 6 );
+			renderInternal( renderSupport, parentAlpha, vertices, _numVertices / (Graphic.VERTEX_STRIDE), indices, _numIndices );
 		}
+
+		[inline]
+		public function getX(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_X]; }
+		[inline]
+		public function getY(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Y]; }
+		[inline]
+		public function getZ(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Z]; }
+		[inline]
+		public function getR(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_R]; }
+		[inline]
+		public function getG(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_G]; }
+		[inline]
+		public function getB(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_B]; }
+		[inline]
+		public function getA(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_A]; }
+		[inline]
+		public function getU(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_U]; }
+		[inline]
+		public function getV(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_V]; }
+
+		[inline]
+		public function setX(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_X] = value; }
+		[inline]
+		public function setY(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Y] = value; }
+		[inline]
+		public function setZ(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Z] = value; }
+		[inline]
+		public function setR(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_R] = value; }
+		[inline]
+		public function setG(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_G] = value; }
+		[inline]
+		public function setB(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_B] = value; }
+		[inline]
+		public function setA(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_A] = value; }
+		[inline]
+		public function setU(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_U] = value; }
+		[inline]
+		public function setV(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_V] = value; }
+
 	}
 }
 

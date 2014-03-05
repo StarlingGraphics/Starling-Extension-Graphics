@@ -26,7 +26,16 @@ package starling.display.graphics
 	 */
 	public class Graphic extends DisplayObject
 	{
-		protected static const VERTEX_STRIDE		:int = 9;
+		protected static const VERTEX_X             :uint = 0;
+		protected static const VERTEX_Y             :uint = 1;
+		protected static const VERTEX_Z             :uint = 2;
+		protected static const VERTEX_R             :uint = 3;
+		protected static const VERTEX_G             :uint = 4;
+		protected static const VERTEX_B             :uint = 5;
+		protected static const VERTEX_A             :uint = 6;
+		protected static const VERTEX_U             :uint = 7;
+		protected static const VERTEX_V             :uint = 8;
+		protected static const VERTEX_STRIDE		:uint = 9;
 		protected static var sHelperMatrix			:Matrix = new Matrix();
 		protected static var defaultVertexShaderDictionary		:Dictionary = new Dictionary(true);
 		protected static var defaultFragmentShaderDictionary	:Dictionary = new Dictionary(true);
@@ -358,6 +367,7 @@ package starling.display.graphics
 			context.setVertexBufferAt(1, null);
 			context.setVertexBufferAt(2, null);
 		}
+
 
 	}
 }

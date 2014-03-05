@@ -382,7 +382,7 @@ package starling.display
 			}
 			
 			// Draw the stroke
-			if ( _strokeStyleSet )
+			if ( false ) // _strokeStyleSet )
 			{
 				// Null the currentFill after storing it in a local var.
 				// This ensures the moveTo/lineTo calls for the stroke below don't
