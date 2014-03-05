@@ -323,22 +323,21 @@ package starling.display.graphics
 		override public function render( renderSupport:RenderSupport, parentAlpha:Number ):void
 		{
 			validateNow();
-			renderInternal( renderSupport, parentAlpha, vertices, vertices.length, indices, indices.length );
+			renderInternal( renderSupport, parentAlpha, vertices, vertices.length / VERTEX_STRIDE, indices, indices.length );
 		}
 
 		protected function renderInternal( renderSupport:RenderSupport, parentAlpha:Number, 
-										   vertexArray:Vector.<Number>, vertexArraySize:uint, 
-										   indexArray:Vector.<uint>, indexArraySize:uint ):void
+										   vertexArray:Vector.<Number>, numVerts:uint, 
+										   indexArray:Vector.<uint>, numIndices:uint ):void
 		{
-			if ( indexArray == null || indexArraySize < 3 ) return;
+			if ( indexArray == null || numIndices < 3 ) return;
 			if ( isInvalid || uvsInvalid )
 			{
 				// Upload vertex/index buffers.
-				var numVertices:int = vertexArraySize / VERTEX_STRIDE;
-				vertexBuffer = Starling.context.createVertexBuffer( numVertices, VERTEX_STRIDE );
-				vertexBuffer.uploadFromVector( vertexArray, 0, numVertices )
-				indexBuffer = Starling.context.createIndexBuffer( indexArraySize );
-				indexBuffer.uploadFromVector( indexArray, 0, indexArraySize );
+				vertexBuffer = Starling.context.createVertexBuffer( numVerts, VERTEX_STRIDE );
+				vertexBuffer.uploadFromVector( vertexArray, 0, numVerts );
+				indexBuffer = Starling.context.createIndexBuffer( numIndices );
+				indexBuffer.uploadFromVector( indexArray, 0, numIndices );
 
 				isInvalid = uvsInvalid = false;
 			}

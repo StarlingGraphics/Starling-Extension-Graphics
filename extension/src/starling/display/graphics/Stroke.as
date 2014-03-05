@@ -558,7 +558,7 @@ package starling.display.graphics
 
 		override public function render(renderSupport:RenderSupport, parentAlpha:Number):void {
 			validateNow();
-			renderInternal( renderSupport, parentAlpha, vertices, _numVertices * 18, indices, _numVertices-1 * 6 );
+			renderInternal( renderSupport, parentAlpha, vertices, _numVertices * 2, indices, (_numVertices-1) * 6 );
 		}
 	}
 }
