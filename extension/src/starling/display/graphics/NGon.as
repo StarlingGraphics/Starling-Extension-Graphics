@@ -155,19 +155,19 @@ package starling.display.graphics
 			var isSegment:Boolean = sa != 0 || ea != 0;
 			if ( innerRadius == 0 && !isSegment )
 			{
-				buildSimpleNGon(radius, _numSides, vertices, indices, _uvMatrix , _color);
+				buildSimpleNGon(radius, _numSides, vertices, indices, _color);
 			}
 			else if ( innerRadius != 0 && !isSegment )
 			{
-				buildHoop(innerRadius, radius, _numSides, vertices, indices, _uvMatrix , _color);
+				buildHoop(innerRadius, radius, _numSides, vertices, indices, _color);
 			}
 			else if ( innerRadius == 0 )
 			{
-				buildFan(radius, sa, ea, _numSides, vertices, indices, _uvMatrix , _color);
+				buildFan(radius, sa, ea, _numSides, vertices, indices, _color);
 			}
 			else
 			{
-				buildArc( innerRadius, radius, sa, ea, _numSides, vertices, indices, _uvMatrix , _color);
+				buildArc( innerRadius, radius, sa, ea, _numSides, vertices, indices, _color);
 			}
 		}
 		
@@ -207,14 +207,12 @@ package starling.display.graphics
 			return false;
 		}
 		
-		private static function buildSimpleNGon( radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix, color:uint ):void
+		private static function buildSimpleNGon( radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, color:uint ):void
 		{
 			var numVertices:int = 0;
 			
-			_uv.x = 0;
-			_uv.y = 0;
-			if ( uvMatrix ) 
-				_uv = uvMatrix.transformPoint(_uv);
+			_uv.x = 0.5;
+			_uv.y = 0.5;
 			
 			var r:Number = (color >> 16) / 255;
 			var g:Number = ((color & 0x00FF00) >> 8) / 255;
@@ -233,10 +231,8 @@ package starling.display.graphics
 			{
 				var x:Number = s * radius;
 				var y:Number = -c * radius;
-				_uv.x = x;
-				_uv.y = y;
-				if ( uvMatrix ) 
-					_uv = uvMatrix.transformPoint(_uv);
+				_uv.x = s * 0.5 + 0.5;
+				_uv.y = -c * 0.5 + 0.5;
 				
 				vertices.push( x, y, 0, r, g, b, 1, _uv.x, _uv.y );
 				numVertices++;
@@ -249,7 +245,7 @@ package starling.display.graphics
 			}
 		}
 		
-		private static function buildHoop( innerRadius:Number, radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint):void
+		private static function buildHoop( innerRadius:Number, radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, color:uint):void
 		{
 			var numVertices:int = 0;
 			
@@ -258,6 +254,7 @@ package starling.display.graphics
 			var sinB:Number = Math.sin(anglePerSide);
 			var s:Number = 0.0;
 			var c:Number = 1.0;
+			var uvInnerRadius:Number = innerRadius / radius * 0.5;
 			
 			var r:Number = (color >> 16) / 255;
 			var g:Number = ((color & 0x00FF00) >> 8) / 255;
@@ -267,20 +264,16 @@ package starling.display.graphics
 			{
 				var x:Number = s * radius;
 				var y:Number = -c * radius;
-				_uv.x = x;
-				_uv.y = y;
-				if ( uvMatrix ) 
-					_uv = uvMatrix.transformPoint(_uv);
+				_uv.x = s * 0.5 + 0.5;
+				_uv.y = -c * 0.5 + 0.5;
 				
 				vertices.push( x, y, 0, r, g, b, 1, _uv.x, _uv.y );
 				numVertices++;
 				
 				x = s * innerRadius;
 				y = -c * innerRadius;
-				_uv.x = x;
-				_uv.y = y;
-				if ( uvMatrix ) 
-					_uv = uvMatrix.transformPoint(_uv);
+				_uv.x = s * uvInnerRadius + 0.5;
+				_uv.y = -c * uvInnerRadius + 0.5;
 				
 				vertices.push( x, y, 0, r, g, b, 1, _uv.x, _uv.y );
 				numVertices++;
@@ -301,7 +294,7 @@ package starling.display.graphics
 			}
 		}
 		
-		private static function buildFan( radius:Number, startAngle:Number, endAngle:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint):void
+		private static function buildFan( radius:Number, startAngle:Number, endAngle:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, color:uint):void
 		{
 			var numVertices:int = 0;
 			vertices.push( 0, 0, 0, 1, 1, 1, 1, 0.5, 0.5 );
@@ -322,33 +315,22 @@ package starling.display.graphics
 				var nextRadians:Number = radians + radiansPerDivision;
 				if ( nextRadians < startAngle ) continue;
 				
-				var x:Number = Math.sin( radians ) * radius;
-				var y:Number = -Math.cos( radians ) * radius;
 				var prevRadians:Number = radians-radiansPerDivision;
-				
-				var t:Number
 				if ( radians < startAngle && nextRadians > startAngle )
 				{
-					var nextX:Number = Math.sin(nextRadians) * radius;
-					var nextY:Number = -Math.cos(nextRadians) * radius;
-					t = (startAngle-radians) / radiansPerDivision;
-					x += t * (nextX-x);
-					y += t * (nextY-y);
+					radians = startAngle;
 				}
 				else if ( radians > endAngle && prevRadians < endAngle )
 				{
-					var prevX:Number = Math.sin(prevRadians) * radius;
-					var prevY:Number = -Math.cos(prevRadians) * radius;
-					
-					t = (endAngle-prevRadians) / radiansPerDivision;
-					x = prevX + t * (x-prevX);
-					y = prevY + t * (y-prevY);
+					radians = endAngle;
 				}
-				
-				_uv.x = x;
-				_uv.y = y;
-				if ( uvMatrix ) 
-					_uv = uvMatrix.transformPoint(_uv);
+
+				var s:Number = Math.sin( radians );
+				var c:Number = Math.cos( radians );
+				var x:Number = s * radius;
+				var y:Number = -c * radius;
+				_uv.x = s * 0.5 + 0.5;
+				_uv.y = -c * 0.5 + 0.5;
 				
 				vertices.push( x, y, 0, r, g, b, 1, _uv.x, _uv.y );
 				numVertices++;
@@ -365,7 +347,7 @@ package starling.display.graphics
 			}
 		}
 		
-		private static function buildArc( innerRadius:Number, radius:Number, startAngle:Number, endAngle:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint):void
+		private static function buildArc( innerRadius:Number, radius:Number, startAngle:Number, endAngle:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, color:uint):void
 		{
 			var nv:int = 0;
 			var radiansPerDivision:Number = (Math.PI * 2) / numSides;
@@ -375,66 +357,39 @@ package starling.display.graphics
 			var r:Number = (color >> 16) / 255;
 			var g:Number = ((color & 0x00FF00) >> 8) / 255;
 			var b:Number = (color & 0x0000FF) / 255;
-			
+			var uvInnerRadius:Number = innerRadius / radius * 0.5;	
+
 			for ( var i:int = 0; i <= numSides+1; i++ )
 			{
 				var angle:Number = startRadians + i*radiansPerDivision;
 				var nextAngle:Number = angle + radiansPerDivision;
 				if ( nextAngle < startAngle ) continue;
 				
-				var sin:Number = Math.sin(angle);
-				var cos:Number = Math.cos(angle);
-				
-				var x:Number = sin * radius;
-				var y:Number = -cos * radius;
-				var x2:Number = sin * innerRadius;
-				var y2:Number = -cos * innerRadius;
-				
 				var prevAngle:Number = angle-radiansPerDivision;
-				
-				var t:Number
 				if ( angle < startAngle && nextAngle > startAngle )
 				{
-					sin = Math.sin(nextAngle);
-					cos = Math.cos(nextAngle);
-					var nextX:Number = sin * radius;
-					var nextY:Number = -cos * radius;
-					var nextX2:Number = sin * innerRadius;
-					var nextY2:Number = -cos * innerRadius;
-					t = (startAngle-angle) / radiansPerDivision;
-					x += t * (nextX-x);
-					y += t * (nextY-y);
-					x2 += t * (nextX2-x2);
-					y2 += t * (nextY2-y2);
+					angle = startAngle;
 				}
 				else if ( angle > endAngle && prevAngle < endAngle )
 				{
-					sin = Math.sin(prevAngle);
-					cos = Math.cos(prevAngle);
-					var prevX:Number = sin * radius;
-					var prevY:Number = -cos * radius;
-					var prevX2:Number = sin * innerRadius;
-					var prevY2:Number = -cos * innerRadius;
-					
-					t = (endAngle-prevAngle) / radiansPerDivision;
-					x = prevX + t * (x-prevX);
-					y = prevY + t * (y-prevY);
-					x2 = prevX2 + t * (x2-prevX2);
-					y2 = prevY2 + t * (y2-prevY2);
+					angle = endAngle;
 				}
 				
-				_uv.x = x;
-				_uv.y = y;
-				if ( uvMatrix ) 
-					_uv = uvMatrix.transformPoint(_uv);
+				var s:Number = Math.sin(angle);
+				var c:Number = Math.cos(angle);
 				
+				var x:Number = s * radius;
+				var y:Number = -c * radius;
+				_uv.x = s * 0.5 + 0.5;
+				_uv.y = -c * 0.5 + 0.5;				
+
 				vertices.push( x, y, 0, r, g, b, 1, _uv.x, _uv.y );
 				nv++;
 				
-				_uv.x = x2;
-				_uv.y = y2;
-				if ( uvMatrix ) 
-					_uv = uvMatrix.transformPoint(_uv);
+				var x2:Number = s * innerRadius;
+				var y2:Number = -c * innerRadius;
+				_uv.x = s * uvInnerRadius + 0.5;
+				_uv.y = -c * uvInnerRadius + 0.5;
 				
 				vertices.push( x2, y2, 0, r, g, b, 1, _uv.x, _uv.y );
 				nv++;

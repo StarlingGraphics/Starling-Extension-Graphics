@@ -380,7 +380,9 @@ package starling.display
 				applyFillStyleToGraphic(nGon);
 				
 				var m:Matrix = new Matrix();
-				m.scale( width, height );
+				var textureWidth:Number = _fillTexture ? _fillTexture.width : 0;
+				var textureHeight:Number = _fillTexture ? _fillTexture.height : 0;
+				m.scale(textureWidth, textureHeight);
 				if ( _fillMatrix )
 				{
 					m.concat( _fillMatrix );
@@ -401,6 +403,8 @@ package starling.display
 				// this in a more efficient manner above).
 				var storedFill:Fill = _currentFill;
 				_currentFill = null;
+				var fillStyleSet:Boolean = _fillStyleSet;
+				_fillStyleSet = false;
 				
 				var halfWidth:Number = width*0.5;
 				var halfHeight:Number = height*0.5;
@@ -431,6 +435,7 @@ package starling.display
 				
 				// Reinstate the fill
 				_currentFill = storedFill;
+				_fillStyleSet = fillStyleSet;
 			}
 		}
 		
@@ -465,6 +470,8 @@ package starling.display
 				// this in a more efficient manner above).
 				var storedFill:Fill = _currentFill;
 				_currentFill = null;
+				var fillStyleSet:Boolean = _fillStyleSet;
+				_fillStyleSet = false;
 				
 				moveTo( x, y );
 				lineTo( x + width, y );
@@ -473,6 +480,7 @@ package starling.display
 				lineTo( x, y );
 				
 				_currentFill = storedFill;
+				_fillStyleSet = fillStyleSet;
 			}
 		}
 		
@@ -521,6 +529,8 @@ package starling.display
 				// this in a more efficient manner above).
 				var storedFill:Fill = _currentFill;
 				_currentFill = null;
+				var fillStyleSet:Boolean = _fillStyleSet;
+				_fillStyleSet = false;
 				
 				var strokePoints:Vector.<Number> = roundedRect.getStrokePoints();
 				for ( var i:int = 0; i < strokePoints.length; i+=2 )
@@ -536,6 +546,7 @@ package starling.display
 				}
 				
 				_currentFill = storedFill;
+				_fillStyleSet = fillStyleSet;
 			}
 		}
 		
