@@ -2,6 +2,7 @@ package starling.display.graphics
 {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.profiler.Telemetry;
 	
 	import starling.core.RenderSupport;
 	import starling.display.graphics.StrokeVertex;
@@ -72,8 +73,7 @@ package starling.display.graphics
 		public function lineTo(	x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF,  alpha:Number = 1) : void
 		{
 			if (_moved == true) {
-				_moved = false;
-				addVertexInternal(_moveX, _moveY, _moveThickness, _moveColor, _moveAlpha, _moveColor, _moveAlpha, true);
+				move(_moveX, _moveY, _moveThickness, _moveColor, _moveAlpha, _moveColor, _moveAlpha);
 			}
 			addVertexInternal(x, y, thickness, color, alpha, color, alpha);
 			isInvalid = true;
@@ -112,12 +112,33 @@ package starling.display.graphics
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
-			addVertexInternal(x, y, thickness, color0, alpha0, color1, alpha1);
-			_moved = false;
+			if (_moved) {
+				move(x, y, thickness, color0, alpha0, color1, alpha1);
+			} else {
+				addVertexInternal(x, y, thickness, color0, alpha0, color1, alpha1);
+			}
 			isInvalid = true;
 		}
+		
+		[inline]
+		private final function move( x:Number, y:Number, thickness:Number = 1,
+									 color0:uint = 0xFFFFFF,  alpha0:Number = 1,
+									 color1:uint = 0xFFFFFF, alpha1:Number = 1) :void
+		{
+			_prevX = x;
+			_prevY = y;
+			_prevColor0 = color0;
+			_prevColor1 = color1;
+			_prevAlpha0 = alpha0;
+			_prevAlpha1 = alpha1;
+			_prevThickness = thickness;
+			_prevU = 0;
+			_numInSegment = 0;
+			_moved = false;
+		}
 
-		protected function updateBounds( x:Number, y:Number ):void {
+		[inline]
+		private final function updateBounds( x:Number, y:Number ):void {
 			if(x < minBounds.x)
 			{
 				minBounds.x = x;
@@ -142,7 +163,8 @@ package starling.display.graphics
 				maxBounds.y = y;
 		}
 
-		private function adjustPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number):void {
+		[inline]
+		private final function adjustPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number):void {
 			nX *= thickness;
 			nY *= thickness;
 			var v1xPos:Number = x + nX;
@@ -150,16 +172,18 @@ package starling.display.graphics
 			var v1xNeg:Number = x - nX;
 			var v1yNeg:Number = y - nY;
 
-			var prevIndices:uint = _numVertices - Graphic.VERTEX_STRIDE * 2;
-			vertices[prevIndices++] = v1xPos;
-			vertices[prevIndices++] = v1yPos;
-			prevIndices += Graphic.VERTEX_STRIDE - 2;
-			vertices[prevIndices++] = v1xNeg;
-			vertices[prevIndices++] = v1yNeg;
+			var prevIdx:uint = _numVertices - Graphic.VERTEX_STRIDE * 2;
+			vertices[prevIdx++] = v1xPos;
+			vertices[prevIdx++] = v1yPos;
+			prevIdx += Graphic.VERTEX_STRIDE - 2;
+			vertices[prevIdx++] = v1xNeg;
+			vertices[prevIdx++] = v1yNeg;
 		}
-
-		private function addPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number,
+		
+		[inline]
+		private final function addPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number,
 									col0:uint, col1:uint, alpha0:Number, alpha1:Number, u:Number ):void {
+			const c_u8MaxDivisor:Number = 1.0 / 255;
 			nX *= thickness;
 			nY *= thickness;
 			var v1xPos:Number = x + nX;
@@ -167,12 +191,12 @@ package starling.display.graphics
 			var v1xNeg:Number = x - nX;
 			var v1yNeg:Number = y - nY;
 
-			var r0:Number = (col0 >> 16) / 255;
-			var g0:Number = ((col0 & 0x00FF00) >> 8) / 255;
-			var b0:Number = (col0 & 0x0000FF) / 255;
-			var r1:Number = (col1 >> 16) / 255;
-			var g1:Number = ((col1 & 0x00FF00) >> 8) / 255;
-			var b1:Number = (col1 & 0x0000FF) / 255;
+			var r0:Number = (col0 >> 16) * c_u8MaxDivisor;
+			var g0:Number = ((col0 & 0x00FF00) >> 8) * c_u8MaxDivisor;
+			var b0:Number = (col0 & 0x0000FF) * c_u8MaxDivisor;
+			var r1:Number = (col1 >> 16) * c_u8MaxDivisor;
+			var g1:Number = ((col1 & 0x00FF00) >> 8) * c_u8MaxDivisor;
+			var b1:Number = (col1 & 0x0000FF) * c_u8MaxDivisor;
 
 			vertices[_numVertices++] = v1xPos;
 			vertices[_numVertices++] = v1yPos;
@@ -196,59 +220,44 @@ package starling.display.graphics
 
 		protected function addVertexInternal(	x:Number, y:Number, thickness:Number = 1,
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
-									color1:uint = 0xFFFFFF, alpha1:Number = 1,
-									start:Boolean = false):void
+									color1:uint = 0xFFFFFF, alpha1:Number = 1):void
 		{
-			if (start) {
-				_prevX = x;
-				_prevY = y;
-				_prevColor0 = color0;
-				_prevColor1 = color1;
-				_prevAlpha0 = alpha0;
-				_prevAlpha1 = alpha1;
-				_prevThickness = thickness;
-				_prevU = 0;
-				_numInSegment = 0;
-				return;
-			}
 			updateBounds(x,y);
-			var u:Number = 0;
-			var v:Number = 0;
-			var textures:Vector.<Texture> = _material.textures;
-			if ( textures.length > 0 )
-			{
-				var dx:Number = x - _prevX;
-				var dy:Number = y - _prevY;
-				var d:Number = Math.sqrt(dx*dx+dy*dy);
-				u = (d / textures[0].width) + _prevU;
-			}
-
-
 			var dX:Number = x - _prevX;
 			var dY:Number = y - _prevY;
 			var len:Number = Math.sqrt(dX * dX + dY * dY);
-			var invLen:Number = 1.0 / len;
-			dX *= invLen;
-			dY *= invLen;
+
+			var u:Number = 0;
+			var textures:Vector.<Texture> = _material.textures;
+			if ( textures.length > 0 )
+			{
+				u = (len / textures[0].width) + _prevU;
+				_prevU = u;
+			}
+
+			dX /= len;
+			dY /= len;
 			const nX:Number = -dY;
 			const nY:Number = dX;
-
+			
 			// If only 1 vertex is in the segment
 			// add the first two points
 			if (_numInSegment == 0) {
+//				var mark1:Number = Telemetry.spanMarker;
 				addPoints(_prevX, _prevY, nX, nY, _prevThickness * 0.5, _prevColor0, _prevColor1, _prevAlpha0, _prevAlpha1, 0.0);
 				_numInSegment++;
+//				Telemetry.sendSpanMetric("mark1", mark1);
 			}
 			// If 2 vertices are already in the segment
 			// adjust the two previous points to be elbowed
 			else if (_numInSegment > 1)
 			{
+//				var mark2:Number = Telemetry.spanMarker;
 				var dX2:Number = _prevX - _prevX2;
 				var dY2:Number = _prevY - _prevY2;
 				var len2:Number = Math.sqrt(dX2 * dX2 + dY2 * dY2);
-				var invLen2:Number = 1.0 / len2;
-				dX2 *= invLen2;
-				dY2 *= invLen2;
+				dX2 /= len2;
+				dY2 /= len2;
 				const nX2:Number = -dY2;
 				const nY2:Number = dX2;
 				var elbowThickness:Number = _prevThickness*0.5;
@@ -277,8 +286,10 @@ package starling.display.graphics
 				cny *= c;
 				
 				adjustPoints(_prevX, _prevY, cnx, cny, elbowThickness);
+//				Telemetry.sendSpanMetric("mark2", mark2);
 			}
 
+//			var mark3:Number = Telemetry.spanMarker;
 			// Add two vertices as if it is the end
 			addPoints(x, y, nX, nY, thickness * 0.5, color0, color1, alpha0, alpha1, u);
 			_numInSegment++;
@@ -295,9 +306,9 @@ package starling.display.graphics
 			_prevY2 = _prevY;
 			_prevX = x;
 			_prevY = y;
-			_prevU = u;
 			_prevThickness = thickness;
 			_numInSegment++;
+//			Telemetry.sendSpanMetric("mark3", mark3);
 		}
 
 		public function getVertexPosition(index:int, prealloc:Point = null):Point
@@ -310,160 +321,6 @@ package starling.display.graphics
 			point.x = (getX(vertIndex) + getX(vertIndex + 1)) * 0.5;
 			point.y = (getY(vertIndex) + getY(vertIndex + 1)) * 0.5;
 			return point;
-		}
-
-		///////////////////////////////////
-		// Static helper methods
-		///////////////////////////////////
-		[inline]
-		protected static function createPolyLinePreAlloc( _line:Vector.<StrokeVertex>,
-												lines:Vector.<uint>,
-												numLines:uint,
-												vertices:Vector.<Number>,
-												indices:Vector.<uint>
-		):void
-		{
-			const numVertices:int = _line.length;
-			const PI:Number = Math.PI;
-			var vertCounter:int = 0;
-			var indiciesCounter:int = 0;
-			var lastD0:Number = 0;
-			var lastD1:Number = 0;
-			var idx:uint = 0;
-			var treatAsFirst:Boolean;
-			var treatAsLast:Boolean;
-
-			var i:int = 0;
-			for (var j:uint = 0; j < numLines; j++) {
-				var lineVerts:uint = lines[j];
-				for (var k:uint = 0; k < lineVerts; k++) {
-					idx = i;
-					treatAsFirst = (k == 0);
-					treatAsLast = (k == lineVerts - 1)
-					var treatAsRegular:Boolean = treatAsFirst == false && treatAsLast == false;
-
-					var idx0:uint = treatAsFirst ? idx : ( idx - 1 );
-					var idx2:uint = treatAsLast ? idx : ( idx + 1 );
-
-					var v0:StrokeVertex = _line[idx0];
-					var v1:StrokeVertex = _line[idx];
-					var v2:StrokeVertex = _line[idx2];
-
-					var vThickness:Number = v1.thickness;
-
-					var v0x:Number = v0.x;
-					var v0y:Number = v0.y;
-					var v1x:Number = v1.x;
-					var v1y:Number = v1.y;
-					var v2x:Number = v2.x;
-					var v2y:Number = v2.y;
-
-					// Line segments before and after
-					var d0x:Number = v1x - v0x;
-					var d0y:Number = v1y - v0y;
-					var d1x:Number = v2x - v1x;
-					var d1y:Number = v2y - v1y;
-
-					if ( treatAsRegular == false )
-					{
-						// Extend first and last points
-						if ( treatAsLast )
-						{
-							v2x += d0x;
-							v2y += d0y;
-							d1x = v2x - v1x;
-							d1y = v2y - v1y;
-						}
-						if ( treatAsFirst )
-						{
-							v0x -= d1x;
-							v0y -= d1y;
-							d0x = v1x - v0x;
-							d0y = v1y - v0y;;
-						}
-					}
-
-					var d0:Number = Math.sqrt( d0x*d0x + d0y*d0y );
-					var d1:Number = Math.sqrt( d1x*d1x + d1y*d1y );
-
-					var elbowThickness:Number = vThickness*0.5;
-					if ( !(treatAsFirst || treatAsLast) ) {
-						if ( d0 == 0 )
-							d0 = lastD0;
-						else
-							lastD0 = d0;
-
-						if ( d1 == 0 )
-							d1 = lastD1;
-						else
-							lastD1 = d1;
-
-						// Thanks to Tom Clapham for spotting this relationship.
-						var dot:Number = (d0x * d1x + d0y * d1y) / (d0 * d1);
-						var arcCosDot:Number = Math.acos(dot);
-						elbowThickness /= Math.sin( (PI-arcCosDot) * 0.5);
-
-						if ( elbowThickness > vThickness * 4 )
-						{
-							elbowThickness = vThickness * 4;
-						}
-
-						if ( elbowThickness != elbowThickness ) // faster NaN comparison
-						{
-							elbowThickness = vThickness*0.5;
-						}
-					}
-
-					var n0x:Number = -d0y / d0;
-					var n0y:Number =  d0x / d0;
-					var n1x:Number = -d1y / d1;
-					var n1y:Number =  d1x / d1;
-
-					var cnx:Number = n0x + n1x;
-					var cny:Number = n0y + n1y;
-
-					var c:Number = (1/Math.sqrt( cnx*cnx + cny*cny )) * elbowThickness;
-					cnx *= c;
-					cny *= c;
-
-					var v1xPos:Number = v1x + cnx;
-					var v1yPos:Number = v1y + cny;
-					var v1xNeg:Number = v1x - cnx;
-					var v1yNeg:Number = v1y - cny;
-
-					vertices[vertCounter++] = v1xPos;
-					vertices[vertCounter++] = v1yPos;
-					vertices[vertCounter++] = 0;
-					vertices[vertCounter++] = v1.r2;
-					vertices[vertCounter++] = v1.g2;
-					vertices[vertCounter++] = v1.b2;
-					vertices[vertCounter++] = v1.a2;
-					vertices[vertCounter++] = v1.u;
-					vertices[vertCounter++] = 1;
-					vertices[vertCounter++] = v1xNeg;
-					vertices[vertCounter++] = v1yNeg;
-					vertices[vertCounter++] = 0;
-					vertices[vertCounter++] = v1.r1;
-					vertices[vertCounter++] = v1.g1;
-					vertices[vertCounter++] = v1.b1;
-					vertices[vertCounter++] = v1.a1;
-					vertices[vertCounter++] = v1.u;
-					vertices[vertCounter++] = 0;
-
-					if ( k < lineVerts - 1 )
-					{
-						var i2:int = (i << 1);
-						indices[indiciesCounter++] = i2;
-						indices[indiciesCounter++] = i2+2;
-						indices[indiciesCounter++] = i2+1;
-						indices[indiciesCounter++] = i2+1;
-						indices[indiciesCounter++] = i2+2;
-						indices[indiciesCounter++] = i2+3;
-					}
-
-					i++;
-				}
-			}
 		}
 
 		// Now dynamically making geometry during the update cycle in
@@ -657,42 +514,42 @@ package starling.display.graphics
 		}
 
 		[inline]
-		public function getX(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_X]; }
+		public final function getX(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_X]; }
 		[inline]
-		public function getY(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Y]; }
+		public final function getY(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Y]; }
 		[inline]
-		public function getZ(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Z]; }
+		public final function getZ(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Z]; }
 		[inline]
-		public function getR(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_R]; }
+		public final function getR(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_R]; }
 		[inline]
-		public function getG(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_G]; }
+		public final function getG(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_G]; }
 		[inline]
-		public function getB(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_B]; }
+		public final function getB(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_B]; }
 		[inline]
-		public function getA(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_A]; }
+		public final function getA(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_A]; }
 		[inline]
-		public function getU(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_U]; }
+		public final function getU(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_U]; }
 		[inline]
-		public function getV(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_V]; }
+		public final function getV(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_V]; }
 
 		[inline]
-		public function setX(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_X] = value; }
+		public final function setX(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_X] = value; }
 		[inline]
-		public function setY(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Y] = value; }
+		public final function setY(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Y] = value; }
 		[inline]
-		public function setZ(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Z] = value; }
+		public final function setZ(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Z] = value; }
 		[inline]
-		public function setR(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_R] = value; }
+		public final function setR(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_R] = value; }
 		[inline]
-		public function setG(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_G] = value; }
+		public final function setG(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_G] = value; }
 		[inline]
-		public function setB(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_B] = value; }
+		public final function setB(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_B] = value; }
 		[inline]
-		public function setA(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_A] = value; }
+		public final function setA(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_A] = value; }
 		[inline]
-		public function setU(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_U] = value; }
+		public final function setU(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_U] = value; }
 		[inline]
-		public function setV(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_V] = value; }
+		public final function setV(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_V] = value; }
 
 	}
 }

@@ -75,7 +75,7 @@ package strokebenchmark
 
 			var maxVertsTotal:int = L * 50 + 50;
 
-			var numVerts:int = L * 50 + Math.random() * 50;
+			var numVerts:int = L * 50 + 50;//Math.random() * 50;
 			var startTime:int = getTimer();
 			for ( var si:int = 0;  si < allStrokes.length; si++ )
 			{

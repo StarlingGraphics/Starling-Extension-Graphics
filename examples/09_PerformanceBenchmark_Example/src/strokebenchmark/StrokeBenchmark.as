@@ -35,7 +35,7 @@ package strokebenchmark
 			var i:int = 0;
 			for ( i = 0; i < 5 ; i++ )
 			{
-				stroke = new Stroke();
+				stroke = new Stroke(200 * 50 + 50);
 				allStrokes.push(stroke);
 				addChild(stroke);
 			}
@@ -73,7 +73,7 @@ package strokebenchmark
 			var L:int = 200;
 			if ( numFrames < 240 )
 				L = 10;
-			var numVerts:int = L * 50 + Math.random() * 50;
+			var numVerts:int = L * 50 + 50;//Math.random() * 50;
 			var startTime:int = getTimer();
 			for ( var si:int = 0;  si < allStrokes.length; si++ )
 			{
