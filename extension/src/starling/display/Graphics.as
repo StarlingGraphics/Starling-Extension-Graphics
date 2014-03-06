@@ -227,7 +227,8 @@ package starling.display
 		{
 			if ( _strokeStyleSet )
 			{
-				if ( _currentStroke == null ) {
+				if ( _currentStroke == null )
+				{
 					createStroke();
 				}
 				_currentStroke.moveTo( x, y, _strokeThickness, _strokeColor, _strokeAlpha );
@@ -235,11 +236,10 @@ package starling.display
 			
 			if ( _fillStyleSet ) 
 			{
-				if ( _currentFill != null )
-				{ 
-					endFill();
+				if ( _currentFill == null ) 
+				{
+					createFill();
 				}
-				createFill();
 				_currentFill.addVertex(x, y);
 			}
 			
