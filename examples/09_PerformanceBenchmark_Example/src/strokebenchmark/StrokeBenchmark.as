@@ -79,17 +79,19 @@ package strokebenchmark
 			{
 				stroke = allStrokes[si];
 				stroke.clear();
+				stroke.moveToFast(100, 100);
 				for ( var i:int = 0; i < numVerts; i++ )
 				{
-					if ( currentRandom + 4 > maxRandom )
+					if ( currentRandom + 5 > maxRandom )
 						currentRandom = 0;
 
 					var xVal:Number = STAGE_WIDTH * randomArray[currentRandom++];
 					var yVal:Number = STAGE_HEIGHT * randomArray[currentRandom++];
-					var color1:uint = randomArray[currentRandom++] * 0xFFFFFF;
-					var color2:uint = randomArray[currentRandom++] * 0xFFFFFF;
+					var r0:Number = randomArray[currentRandom++];
+					var g0:Number = randomArray[currentRandom++];
+					var b0:Number = randomArray[currentRandom++];
 
-					stroke.addVertex( xVal, yVal, 1, color1, 1, color2, 1);
+					stroke.lineToFast( xVal, yVal, 1, r0, g0, b0, 1);
 				}
 			}
 			addTiming(getTimer() - startTime);

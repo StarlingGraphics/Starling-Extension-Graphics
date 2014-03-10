@@ -1,12 +1,10 @@
 package starling.display.graphics
 {
+	import flash.debugger.enterDebugger;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.profiler.Telemetry;
-	
+
 	import starling.core.RenderSupport;
-	import starling.display.graphics.StrokeVertex;
-	import starling.display.graphics.util.TriangleUtil;
 	import starling.textures.Texture;
 	import starling.utils.MatrixUtil;
 
@@ -16,7 +14,12 @@ package starling.display.graphics
 		protected var _moveX        :Number;
 		protected var _moveY        :Number;
 		protected var _moveThickness:Number;
-		protected var _moveColor    :Number;
+		protected var _moveR0       :Number;
+		protected var _moveG0       :Number;
+		protected var _moveB0       :Number;
+		protected var _moveR1       :Number;
+		protected var _moveG1       :Number;
+		protected var _moveB1       :Number;
 		protected var _moveAlpha    :Number;
 		protected var _prevX        :Number;
 		protected var _prevY        :Number;
@@ -24,14 +27,21 @@ package starling.display.graphics
 		protected var _prevX2       :Number;
 		protected var _prevY2       :Number;
 		protected var _prevU        :Number;
-		protected var _prevColor0   :uint;
-		protected var _prevColor1   :uint;
-		protected var _prevAlpha0   :uint;
-		protected var _prevAlpha1   :uint;
+		protected var _prevR0       :Number;
+		protected var _prevG0       :Number;
+		protected var _prevB0       :Number;
+		protected var _prevR1       :Number;
+		protected var _prevG1       :Number;
+		protected var _prevB1       :Number;
+		protected var _prevAlpha0   :Number;
+		protected var _prevAlpha1   :Number;
 		protected var _numVertices  :uint;
 		protected var _numIndices   :uint;
 		protected var _numInSegment :uint;
 
+		private static const c_u8MaxDivisor:Number = 1.0/255.0;
+		private static const c_halfPI:Number = Math.PI * 0.5;
+		private static const c_quarterPI:Number = Math.PI * 0.25;
 		protected static var sCollissionHelper:StrokeCollisionHelper = null;
 
 		public function Stroke(initialVerts:uint = 0)
@@ -61,7 +71,6 @@ package starling.display.graphics
 				minBounds.x = minBounds.y = Number.POSITIVE_INFINITY;
 				maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
 			}
-
 			_numVertices = 0;
 			_numIndices = 0;
 			_numInSegment = 0;
@@ -70,22 +79,69 @@ package starling.display.graphics
 			setGeometryInvalid();
 		}
 
+		[Inline]
+		private static function extractR(value:uint):Number {
+			return (value >> 16) * c_u8MaxDivisor;
+		}
+
+		[Inline]
+		private static function extractG(value:uint):Number {
+			return ((value & 0x00FF00) >> 8) * c_u8MaxDivisor;
+		}
+
+		[Inline]
+		private static function extractB(value:uint):Number {
+			return (value & 0x0000FF) * c_u8MaxDivisor;
+		}
+
 		public function lineTo(	x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF,  alpha:Number = 1) : void
 		{
 			if (_moved == true) {
-				move(_moveX, _moveY, _moveThickness, _moveColor, _moveAlpha, _moveColor, _moveAlpha);
+				move(_moveX, _moveY, _moveThickness, _moveR0, _moveG0, _moveB0, _moveAlpha,
+					_moveR1, _moveG1, _moveB1, _moveAlpha);
 			}
-			addVertexInternal(x, y, thickness, color, alpha, color, alpha);
+			var r:Number = extractR(color);
+			var g:Number = extractG(color);
+			var b:Number = extractB(color);
+			addVertexInternal(x, y, thickness, r, g, b, alpha, r, g, b, alpha);
+			isInvalid = true;
+		}
+
+		public function lineToFast(	x:Number, y:Number, thickness:Number = 1, r:Number = 1, g:Number = 1, b:Number = 1,  alpha:Number = 1) : void
+		{
+			if (_moved == true) {
+				move(_moveX, _moveY, _moveThickness, _moveR0, _moveG0, _moveB0, _moveAlpha,
+					_moveR1, _moveG1, _moveB1, _moveAlpha);
+			}
+			addVertexInternal(x, y, thickness, r, g, b, alpha, r, g, b, alpha);
 			isInvalid = true;
 		}
 
 		public function moveTo( x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1.0 ) : void
 		{
+			var r0:Number = extractR(color);
+			var g0:Number = extractG(color);
+			var b0:Number = extractB(color);
 			_moved = true;
 			_moveX = x;
 			_moveY = y;
 			_moveThickness = thickness;
-			_moveColor = color;
+			_moveR0 = r0;
+			_moveG0 = g0;
+			_moveB0 = b0;
+			_moveAlpha = alpha;
+			isInvalid = true;
+		}
+
+		public function moveToFast( x:Number, y:Number, thickness:Number = 1, r:Number = 1, g:Number = 1, b:Number = 1, alpha:Number = 1 ) : void
+		{
+			_moved = true;
+			_moveX = x;
+			_moveY = y;
+			_moveThickness = thickness;
+			_moveR0 = r;
+			_moveG0 = g;
+			_moveB0 = b;
 			_moveAlpha = alpha;
 			isInvalid = true;
 		}
@@ -96,7 +152,7 @@ package starling.display.graphics
 			setY(index, y);
 			isInvalid = true;
 		}
-		
+
 		public function fromBounds(boundingBox:Rectangle, thickness:int = 1) : void
 		{
 			clear();
@@ -112,23 +168,33 @@ package starling.display.graphics
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
-			if (_moved) {
-				move(x, y, thickness, color0, alpha0, color1, alpha1);
+			var r0:Number = extractR(color0);
+			var g0:Number = extractG(color0);
+			var b0:Number = extractB(color0);
+			var r1:Number = extractR(color1);
+			var g1:Number = extractG(color1);
+			var b1:Number = extractB(color1);
+			if (_numInSegment == 0) {
+				move(x, y, thickness, r0, b0, g0, alpha0, r1, b1, g1, alpha1);
 			} else {
-				addVertexInternal(x, y, thickness, color0, alpha0, color1, alpha1);
+				addVertexInternal(x, y, thickness, r0, b0, g0, alpha0, r1, b1, g1, alpha1);
 			}
 			isInvalid = true;
 		}
-		
-		[inline]
+
+		[Inline]
 		private final function move( x:Number, y:Number, thickness:Number = 1,
-									 color0:uint = 0xFFFFFF,  alpha0:Number = 1,
-									 color1:uint = 0xFFFFFF, alpha1:Number = 1) :void
+									 r0:Number = 1, g0:Number = 1, b0:Number = 1, alpha0:Number = 1,
+									 r1:Number = 1, g1:Number = 1, b1:Number = 1, alpha1:Number = 1) :void
 		{
 			_prevX = x;
 			_prevY = y;
-			_prevColor0 = color0;
-			_prevColor1 = color1;
+			_prevR0 = r0;
+			_prevG0 = g0;
+			_prevB0 = b0;
+			_prevR1 = r1;
+			_prevG1 = g1;
+			_prevB1 = b1;
 			_prevAlpha0 = alpha0;
 			_prevAlpha1 = alpha1;
 			_prevThickness = thickness;
@@ -137,7 +203,7 @@ package starling.display.graphics
 			_moved = false;
 		}
 
-		[inline]
+		[Inline]
 		private final function updateBounds( x:Number, y:Number ):void {
 			if(x < minBounds.x)
 			{
@@ -163,7 +229,7 @@ package starling.display.graphics
 				maxBounds.y = y;
 		}
 
-		[inline]
+		[Inline]
 		private final function adjustPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number):void {
 			nX *= thickness;
 			nY *= thickness;
@@ -179,10 +245,11 @@ package starling.display.graphics
 			vertices[prevIdx++] = v1xNeg;
 			vertices[prevIdx++] = v1yNeg;
 		}
-		
-		[inline]
+
+		[Inline]
 		private final function addPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number,
-									col0:uint, col1:uint, alpha0:Number, alpha1:Number, u:Number ):void {
+									r0:Number, g0:Number, b0:Number, r1:Number, g1:Number,
+									b1:Number, alpha0:Number, alpha1:Number, u:Number ):void {
 			const c_u8MaxDivisor:Number = 1.0 / 255;
 			nX *= thickness;
 			nY *= thickness;
@@ -191,12 +258,6 @@ package starling.display.graphics
 			var v1xNeg:Number = x - nX;
 			var v1yNeg:Number = y - nY;
 
-			var r0:Number = (col0 >> 16) * c_u8MaxDivisor;
-			var g0:Number = ((col0 & 0x00FF00) >> 8) * c_u8MaxDivisor;
-			var b0:Number = (col0 & 0x0000FF) * c_u8MaxDivisor;
-			var r1:Number = (col1 >> 16) * c_u8MaxDivisor;
-			var g1:Number = ((col1 & 0x00FF00) >> 8) * c_u8MaxDivisor;
-			var b1:Number = (col1 & 0x0000FF) * c_u8MaxDivisor;
 
 			vertices[_numVertices++] = v1xPos;
 			vertices[_numVertices++] = v1yPos;
@@ -218,9 +279,10 @@ package starling.display.graphics
 			vertices[_numVertices++] = 0;
 		}
 
-		protected function addVertexInternal(	x:Number, y:Number, thickness:Number = 1,
-									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
-									color1:uint = 0xFFFFFF, alpha1:Number = 1):void
+		[Inline]
+		private final function addVertexInternal(x:Number, y:Number, thickness:Number = 1,
+											r0:Number = 1, g0:Number = 1, b0:Number = 1, alpha0:Number = 1,
+											r1:Number = 1, g1:Number = 1, b1:Number = 1, alpha1:Number = 1):void
 		{
 			updateBounds(x,y);
 			var dX:Number = x - _prevX;
@@ -239,12 +301,13 @@ package starling.display.graphics
 			dY /= len;
 			const nX:Number = -dY;
 			const nY:Number = dX;
-			
+
 			// If only 1 vertex is in the segment
 			// add the first two points
 			if (_numInSegment == 0) {
 //				var mark1:Number = Telemetry.spanMarker;
-				addPoints(_prevX, _prevY, nX, nY, _prevThickness * 0.5, _prevColor0, _prevColor1, _prevAlpha0, _prevAlpha1, 0.0);
+				addPoints(_prevX, _prevY, nX, nY, _prevThickness * 0.5, _prevR0, _prevG0, _prevB0,
+				          _prevR1, _prevG1, _prevB1, _prevAlpha0, _prevAlpha1, 0.0);
 				_numInSegment++;
 //				Telemetry.sendSpanMetric("mark1", mark1);
 			}
@@ -261,37 +324,108 @@ package starling.display.graphics
 				const nX2:Number = -dY2;
 				const nY2:Number = dX2;
 				var elbowThickness:Number = _prevThickness*0.5;
-				
+
 				// For future reference, dot product has this equality:
-				// vA.vB = |vA||vB|cos(theta) 
+				// vA.vB = |vA||vB|cos(theta)
 				// where theta is the angle betwen vectors vA and vB.
 				var dot:Number = (nX * nX2 + nY * nY2);
-				var arcCosDot:Number = Math.acos(dot);
-				elbowThickness /= Math.sin( (Math.PI-arcCosDot) * 0.5);
-				
+
+				// Lifted from: http://stackoverflow.com/questions/11261170/c-and-maths-fast-approximation-of-a-trigonometric-function
+				// From user: njuffa
+				var ac2:Number;
+				var xa:Number = -dot;
+				if (xa < 0) xa = -xa;
+				var t:Number;
+				if (xa > 0.5625) {
+					var s:Number = Math.sqrt(0.5 * (1.0 - xa));
+					var asin_core:Number;
+					var x8:Number;
+					var x4:Number;
+					var x2:Number;
+					x2 = s * s;
+					x4 = x2 * x2;
+					x8 = x4 * x4;
+					t = (((4.5334220547132049e-2 * x2 - 1.1226216762576600e-2) * x4 +
+						(2.6334281471361822e-2 * x2 + 2.0596336163223834e-2)) * x8 +
+						(3.0582043602875735e-2 * x2 + 4.4630538556294605e-2) * x4 +
+						(7.5000364034134126e-2 * x2 + 1.6666666300567365e-1)) * x2 * s + s;
+					ac2 = 2.0 * t;
+				} else {
+					var asin_core2:Number;
+					var y8:Number;
+					var y4:Number;
+					var y2:Number;
+					y2 = xa * xa;
+					y4 = y2 * y2;
+					y8 = y4 * y4;
+					t = (((4.5334220547132049e-2 * y2 - 1.1226216762576600e-2) * y4 +
+						(2.6334281471361822e-2 * y2 + 2.0596336163223834e-2)) * y8 +
+						(3.0582043602875735e-2 * y2 + 4.4630538556294605e-2) * y4 +
+						(7.5000364034134126e-2 * y2 + 1.6666666300567365e-1)) * y2 * xa + xa;
+					ac2 = 1.5707963267948966 - t;
+				}
+				if (-dot < 0.0) ac2 = 3.1415926535897932 - ac2;
+
+				// Quadratic curve implementation
+				// lifted from: http://lab.polygonal.de/?p=205
+				// Assumse -pi < x <= pi
+				var sinIn:Number = ac2 * 0.5;
+				var sin:Number;
+				if (sinIn < 0)
+				{
+					sin = 1.27323954 * sinIn + .405284735 * sinIn * sinIn;
+					if (sin < 0)
+						sin = .225 * (sin *-sin - sin) + sin;
+					else
+						sin = .225 * (sin * sin - sin) + sin;
+				}
+				else
+				{
+					sin = 1.27323954 * sinIn - 0.405284735 * sinIn * sinIn;
+					if (sin < 0)
+						sin = .225 * (sin *-sin - sin) + sin;
+					else
+						sin = .225 * (sin * sin - sin) + sin;
+				}
+
+				elbowThickness /= sin;
+
 				if ( elbowThickness > _prevThickness * 4 )
 				{
 					elbowThickness = _prevThickness * 4;
 				}
-				
+
 				if ( elbowThickness != elbowThickness ) // faster NaN comparison
 				{
 					elbowThickness = _prevThickness*0.5;
 				}
-				
+
 				var cnx:Number = nX2 + nX;
 				var cny:Number = nY2 + nY;
 				var c:Number = (1/Math.sqrt( cnx*cnx + cny*cny ));
 				cnx *= c;
 				cny *= c;
+
+//				adjustPoints(_prevX, _prevY, cnx, cny, elbowThickness);
+				cnx *= elbowThickness;
+				cny *= elbowThickness;
+				var v1xPos:Number = _prevX + cnx;
+				var v1yPos:Number = _prevY + cny;
+				var v1xNeg:Number = _prevX - cnx;
+				var v1yNeg:Number = _prevY - cny;
 				
-				adjustPoints(_prevX, _prevY, cnx, cny, elbowThickness);
+				var prevIdx:uint = _numVertices - Graphic.VERTEX_STRIDE * 2;
+				vertices[prevIdx++] = v1xPos;
+				vertices[prevIdx++] = v1yPos;
+				prevIdx += Graphic.VERTEX_STRIDE - 2;
+				vertices[prevIdx++] = v1xNeg;
+				vertices[prevIdx++] = v1yNeg;
 //				Telemetry.sendSpanMetric("mark2", mark2);
 			}
 
 //			var mark3:Number = Telemetry.spanMarker;
 			// Add two vertices as if it is the end
-			addPoints(x, y, nX, nY, thickness * 0.5, color0, color1, alpha0, alpha1, u);
+			addPoints(x, y, nX, nY, thickness * 0.5, r0, g0, b0, r1, g1, b1, alpha0, alpha1, u);
 			_numInSegment++;
 
 			// Add indices
@@ -376,7 +510,7 @@ package starling.display.graphics
 		public static function strokeCollideTest(s1:Stroke, s2:Stroke, intersectPoint:Point, staticLenIntersectPoints:Vector.<Point> = null ) : Boolean
 		{
 			return false;
-//			
+//
 //			if ( s1 == null || s2 == null ||  s1._line == null || s1._line == null )
 //				return false;
 //
@@ -513,42 +647,42 @@ package starling.display.graphics
 			renderInternal( renderSupport, parentAlpha, vertices, _numVertices / (Graphic.VERTEX_STRIDE), indices, _numIndices );
 		}
 
-		[inline]
+		[Inline]
 		public final function getX(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_X]; }
-		[inline]
+		[Inline]
 		public final function getY(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Y]; }
-		[inline]
+		[Inline]
 		public final function getZ(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_Z]; }
-		[inline]
+		[Inline]
 		public final function getR(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_R]; }
-		[inline]
+		[Inline]
 		public final function getG(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_G]; }
-		[inline]
+		[Inline]
 		public final function getB(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_B]; }
-		[inline]
+		[Inline]
 		public final function getA(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_A]; }
-		[inline]
+		[Inline]
 		public final function getU(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_U]; }
-		[inline]
+		[Inline]
 		public final function getV(idx:uint):Number { return vertices[idx * VERTEX_STRIDE + VERTEX_V]; }
 
-		[inline]
+		[Inline]
 		public final function setX(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_X] = value; }
-		[inline]
+		[Inline]
 		public final function setY(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Y] = value; }
-		[inline]
+		[Inline]
 		public final function setZ(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_Z] = value; }
-		[inline]
+		[Inline]
 		public final function setR(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_R] = value; }
-		[inline]
+		[Inline]
 		public final function setG(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_G] = value; }
-		[inline]
+		[Inline]
 		public final function setB(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_B] = value; }
-		[inline]
+		[Inline]
 		public final function setA(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_A] = value; }
-		[inline]
+		[Inline]
 		public final function setU(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_U] = value; }
-		[inline]
+		[Inline]
 		public final function setV(idx:uint, value:Number):void { vertices[idx * VERTEX_STRIDE + VERTEX_V] = value; }
 
 	}

@@ -55,7 +55,7 @@ package strokegraphicsbenchmark
 	
 			shape.graphics.clear();
 			shape.graphics.lineStyle( 1, 0xFFFFFF );
-			var L:int = 200;
+			var L:int = 80;
 				
 			if ( numFrames < 240 )
 				L = 10;
