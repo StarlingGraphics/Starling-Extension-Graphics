@@ -1,13 +1,14 @@
 package starling.display.graphics
 {
 	import flash.display3D.Context3D;
+	import flash.display3D.Context3DBufferUsage;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
-
+	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
 	import starling.display.BlendMode;
@@ -40,14 +41,17 @@ package starling.display.graphics
 		protected static var defaultVertexShaderDictionary		:Dictionary = new Dictionary(true);
 		protected static var defaultFragmentShaderDictionary	:Dictionary = new Dictionary(true);
 
-		protected var _material		:IMaterial;
-		protected var vertexBuffer	:VertexBuffer3D;
-		protected var indexBuffer		:IndexBuffer3D;
-		protected var vertices		:Vector.<Number>;
-		protected var indices		:Vector.<uint>;
-		protected var _uvMatrix		:Matrix;
-		protected var isInvalid		:Boolean = false;
-		protected var uvsInvalid	:Boolean = false;
+		protected var _material      :IMaterial;
+		protected var vertexBuffer   :VertexBuffer3D;
+		protected var indexBuffer    :IndexBuffer3D;
+		protected var lastVBufferSize:uint;
+		protected var lastIBufferSize:uint;
+		protected var conserveBuffers:Boolean;
+		protected var vertices       :Vector.<Number>;
+		protected var indices        :Vector.<uint>;
+		protected var _uvMatrix      :Matrix;
+		protected var isInvalid      :Boolean = false;
+		protected var uvsInvalid     :Boolean = false;
 
 		protected var hasValidatedGeometry:Boolean = false;
 
@@ -66,10 +70,13 @@ package starling.display.graphics
 		protected var _precisionHitTest:Boolean = false;
 		protected var _precisionHitTestDistance:Number = 0; // This is added to the thickness of the line when doing precisionHitTest to make it easier to hit 1px lines etc
 
-		public function Graphic()
+		public function Graphic(conserveBuffers:Boolean = false)
 		{
 			indices = new Vector.<uint>();
 			vertices = new Vector.<Number>();
+			lastVBufferSize = 0;
+			lastIBufferSize = 0;
+			conserveBuffers = conserveBuffers;
 
 			var currentStarling:Starling = Starling.current;
 
@@ -119,12 +126,14 @@ package starling.display.graphics
 			{
 				vertexBuffer.dispose();
 				vertexBuffer = null;
+				lastVBufferSize = 0;
 			}
 
 			if ( indexBuffer )
 			{
 				indexBuffer.dispose();
 				indexBuffer = null;
+				lastIBufferSize = 0;
 			}
 
 			if ( material )
@@ -310,6 +319,8 @@ package starling.display.graphics
 			{
 				vertexBuffer.dispose();
 				indexBuffer.dispose();
+				lastVBufferSize = 0;
+				lastIBufferSize = 0;
 			}
 
 			if ( isInvalid )
@@ -332,20 +343,28 @@ package starling.display.graphics
 		override public function render( renderSupport:RenderSupport, parentAlpha:Number ):void
 		{
 			validateNow();
-			renderInternal( renderSupport, parentAlpha, vertices, vertices.length / VERTEX_STRIDE, indices, indices.length );
+			renderInternal( renderSupport, parentAlpha, vertices, indices, indices.length/3 );
 		}
 
 		protected function renderInternal( renderSupport:RenderSupport, parentAlpha:Number, 
-										   vertexArray:Vector.<Number>, numVerts:uint, 
-										   indexArray:Vector.<uint>, numIndices:uint ):void
+										   vertexArray:Vector.<Number>, indexArray:Vector.<uint>, numTriangles:uint ):void
 		{
-			if ( indexArray == null || numIndices < 3 ) return;
+			if ( indexArray == null || numTriangles == 0 ) return;
 			if ( isInvalid || uvsInvalid )
 			{
 				// Upload vertex/index buffers.
-				vertexBuffer = Starling.context.createVertexBuffer( numVerts, VERTEX_STRIDE );
+				var numVerts:uint = vertexArray.length / VERTEX_STRIDE;
+				var numIndices:uint = indexArray.length;
+				if (!conserveBuffers || lastVBufferSize < numVerts) {
+					vertexBuffer = Starling.context.createVertexBuffer( numVerts, VERTEX_STRIDE);
+					lastVBufferSize = numVerts;
+				}
+				if (!conserveBuffers || lastIBufferSize < numIndices) {
+					indexBuffer = Starling.context.createIndexBuffer( numIndices);
+					lastIBufferSize = numIndices;
+				}
+				// On iOS uploading less than the full vector is apparently very slow
 				vertexBuffer.uploadFromVector( vertexArray, 0, numVerts );
-				indexBuffer = Starling.context.createIndexBuffer( numIndices );
 				indexBuffer.uploadFromVector( indexArray, 0, numIndices );
 
 				isInvalid = uvsInvalid = false;
@@ -359,7 +378,7 @@ package starling.display.graphics
 			if (context == null) throw new MissingContextError();
 
 			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha );
+			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, numTriangles );
 
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);

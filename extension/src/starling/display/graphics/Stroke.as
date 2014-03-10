@@ -46,6 +46,7 @@ package starling.display.graphics
 
 		public function Stroke(initialVerts:uint = 0)
 		{
+			super(true);
 			vertices = new Vector.<Number>(initialVerts * (Graphic.VERTEX_STRIDE * 2));
 			indices = new Vector.<uint>((initialVerts > 0) ? ((initialVerts-1) * 6) : 0);
 			clear();
@@ -644,7 +645,7 @@ package starling.display.graphics
 
 		override public function render(renderSupport:RenderSupport, parentAlpha:Number):void {
 			validateNow();
-			renderInternal( renderSupport, parentAlpha, vertices, _numVertices / (Graphic.VERTEX_STRIDE), indices, _numIndices );
+			renderInternal( renderSupport, parentAlpha, vertices, indices, _numIndices /3 );
 		}
 
 		[Inline]
