@@ -17,6 +17,7 @@ package
 	
 	import strokebenchmark.FastStrokeBenchmark;
 	import strokebenchmark.StrokeBenchmark;
+	import strokebenchmark.StrokeOldBenchmark;
 	
 	import strokegraphicsbenchmark.StrokeGraphicsBenchmark;
 	
@@ -43,7 +44,8 @@ package
 //			_benchmarks.push(new EmptyBenchmark());
 			_benchmarks.push(new FastStrokeBenchmark());
 			_benchmarks.push(new StrokeBenchmark());
-			_benchmarks.push(new StrokeGraphicsBenchmark());
+			_benchmarks.push(new StrokeOldBenchmark());
+//			_benchmarks.push(new StrokeGraphicsBenchmark());
 
 //			_benchmarks.push(new TriangleStripBenchmark());
 //			_benchmarks.push(new TriangleFanBenchmark());
