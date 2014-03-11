@@ -1,7 +1,6 @@
 package starling.display.graphics
 {
 	import flash.display3D.Context3D;
-	import flash.display3D.Context3DBufferUsage;
 	import flash.display3D.IndexBuffer3D;
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix;
@@ -378,7 +377,7 @@ package starling.display.graphics
 			if (context == null) throw new MissingContextError();
 
 			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, numTriangles );
+//			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, numTriangles );
 
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);

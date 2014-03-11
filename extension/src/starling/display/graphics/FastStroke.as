@@ -298,7 +298,7 @@ package starling.display.graphics
 			if (context == null) throw new MissingContextError();
 			
 			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, _numVertIndex / 3 );
+//			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, _numVertIndex / 3 );
 			
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);

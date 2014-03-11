@@ -1,6 +1,5 @@
 package starling.display.graphics
 {
-	import flash.debugger.enterDebugger;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 
