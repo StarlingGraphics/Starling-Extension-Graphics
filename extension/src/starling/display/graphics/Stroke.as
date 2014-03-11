@@ -299,8 +299,8 @@ package starling.display.graphics
 
 			dX /= len;
 			dY /= len;
-			const nX:Number = -dY;
-			const nY:Number = dX;
+			var nX:Number = -dY;
+			var nY:Number = dX;
 
 			// If only 1 vertex is in the segment
 			// add the first two points
@@ -366,28 +366,18 @@ package starling.display.graphics
 				}
 				if (-dot < 0.0) ac2 = 3.1415926535897932 - ac2;
 
-				// Quadratic curve implementation
-				// lifted from: http://lab.polygonal.de/?p=205
-				// Assumse -pi < x <= pi
-				var sinIn:Number = ac2 * 0.5;
-				var sin:Number;
-				if (sinIn < 0)
-				{
-					sin = 1.27323954 * sinIn + .405284735 * sinIn * sinIn;
-					if (sin < 0)
-						sin = .225 * (sin *-sin - sin) + sin;
-					else
-						sin = .225 * (sin * sin - sin) + sin;
-				}
-				else
-				{
-					sin = 1.27323954 * sinIn - 0.405284735 * sinIn * sinIn;
-					if (sin < 0)
-						sin = .225 * (sin *-sin - sin) + sin;
-					else
-						sin = .225 * (sin * sin - sin) + sin;
-				}
-
+				// A pretty damn good polynomial approximation of sin(x/2)
+				// thanks to Wolfram Alpha.
+				var acos:Number = ac2;
+				var ac2_2:Number = ac2 * ac2;
+				var ac2_3:Number = ac2_2 * ac2;
+				var ac2_5:Number = ac2_3 * ac2_2;
+				const const1:Number = 0.5;
+				const const2:Number = 1/48;
+				const const3:Number = 1/3840;
+				var sin:Number = const1 *ac2 - const2 * ac2_3 + const3 * ac2_5;
+				if (sin > 1.0) sin = 1.0;
+				
 				elbowThickness /= sin;
 
 				if ( elbowThickness > _prevThickness * 4 )
@@ -425,7 +415,33 @@ package starling.display.graphics
 
 //			var mark3:Number = Telemetry.spanMarker;
 			// Add two vertices as if it is the end
-			addPoints(x, y, nX, nY, thickness * 0.5, r0, g0, b0, r1, g1, b1, alpha0, alpha1, u);
+//			addPoints(x, y, nX, nY, thickness * 0.5, r0, g0, b0, r1, g1, b1, alpha0, alpha1, u);
+			const c_u8MaxDivisor:Number = 1.0 / 255;
+			nX *= thickness;
+			nY *= thickness;
+			var v1xPos_:Number = x + nX;
+			var v1yPos_:Number = y + nY;
+			var v1xNeg_:Number = x - nX;
+			var v1yNeg_:Number = y - nY;
+			
+			vertices[_numVertices++] = v1xPos_;
+			vertices[_numVertices++] = v1yPos_;
+			vertices[_numVertices++] = 0;
+			vertices[_numVertices++] = r1;
+			vertices[_numVertices++] = g1;
+			vertices[_numVertices++] = b1;
+			vertices[_numVertices++] = alpha1;
+			vertices[_numVertices++] = u;
+			vertices[_numVertices++] = 1;
+			vertices[_numVertices++] = v1xNeg_;
+			vertices[_numVertices++] = v1yNeg_;
+			vertices[_numVertices++] = 0;
+			vertices[_numVertices++] = r0;
+			vertices[_numVertices++] = g0;
+			vertices[_numVertices++] = b0;
+			vertices[_numVertices++] = alpha0;
+			vertices[_numVertices++] = u;
+			vertices[_numVertices++] = 0;
 			_numInSegment++;
 
 			// Add indices
