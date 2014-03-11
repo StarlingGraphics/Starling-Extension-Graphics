@@ -174,7 +174,7 @@ package starling.display.graphics
 			var r1:Number = extractR(color1);
 			var g1:Number = extractG(color1);
 			var b1:Number = extractB(color1);
-			if (_numInSegment == 0) {
+			if (_moved) {
 				move(x, y, thickness, r0, b0, g0, alpha0, r1, b1, g1, alpha1);
 			} else {
 				addVertexInternal(x, y, thickness, r0, b0, g0, alpha0, r1, b1, g1, alpha1);
