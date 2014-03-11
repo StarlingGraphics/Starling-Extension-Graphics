@@ -325,60 +325,18 @@ package starling.display.graphics
 				const nY2:Number = dX2;
 				var elbowThickness:Number = _prevThickness*0.5;
 
-				// For future reference, dot product has this equality:
-				// vA.vB = |vA||vB|cos(theta)
-				// where theta is the angle betwen vectors vA and vB.
+				// Expensive trigonometric functions removed thanks
+				// to my mathematical-computing friend Matt:
+				// https://github.com/summercat
 				var dot:Number = (nX * nX2 + nY * nY2);
-
-				// Lifted from: http://stackoverflow.com/questions/11261170/c-and-maths-fast-approximation-of-a-trigonometric-function
-				// From user: njuffa
-				var ac2:Number;
-				var xa:Number = -dot;
-				if (xa < 0) xa = -xa;
-				var t:Number;
-				if (xa > 0.5625) {
-					var s:Number = Math.sqrt(0.5 * (1.0 - xa));
-					var asin_core:Number;
-					var x8:Number;
-					var x4:Number;
-					var x2:Number;
-					x2 = s * s;
-					x4 = x2 * x2;
-					x8 = x4 * x4;
-					t = (((4.5334220547132049e-2 * x2 - 1.1226216762576600e-2) * x4 +
-						(2.6334281471361822e-2 * x2 + 2.0596336163223834e-2)) * x8 +
-						(3.0582043602875735e-2 * x2 + 4.4630538556294605e-2) * x4 +
-						(7.5000364034134126e-2 * x2 + 1.6666666300567365e-1)) * x2 * s + s;
-					ac2 = 2.0 * t;
-				} else {
-					var asin_core2:Number;
-					var y8:Number;
-					var y4:Number;
-					var y2:Number;
-					y2 = xa * xa;
-					y4 = y2 * y2;
-					y8 = y4 * y4;
-					t = (((4.5334220547132049e-2 * y2 - 1.1226216762576600e-2) * y4 +
-						(2.6334281471361822e-2 * y2 + 2.0596336163223834e-2)) * y8 +
-						(3.0582043602875735e-2 * y2 + 4.4630538556294605e-2) * y4 +
-						(7.5000364034134126e-2 * y2 + 1.6666666300567365e-1)) * y2 * xa + xa;
-					ac2 = 1.5707963267948966 - t;
-				}
-				if (-dot < 0.0) ac2 = 3.1415926535897932 - ac2;
-
-				// A pretty damn good polynomial approximation of sin(x/2)
-				// thanks to Wolfram Alpha.
-				var acos:Number = ac2;
-				var ac2_2:Number = ac2 * ac2;
-				var ac2_3:Number = ac2_2 * ac2;
-				var ac2_5:Number = ac2_3 * ac2_2;
-				const const1:Number = 0.5;
-				const const2:Number = 1/48;
-				const const3:Number = 1/3840;
-				var sin:Number = const1 *ac2 - const2 * ac2_3 + const3 * ac2_5;
-				if (sin > 1.0) sin = 1.0;
-				
-				elbowThickness /= sin;
+				var midX:Number = (nX + nX2);
+				var midY:Number = (nY + nY2);
+				var midLen:Number = Math.sqrt(midX*midX + midY*midY);
+				midX /= midLen;
+				midY /= midLen;
+				var midDot:Number = (midX * nX + midY * nY);
+				var cosHalf:Number = midDot;
+				elbowThickness /= cosHalf;
 
 				if ( elbowThickness > _prevThickness * 4 )
 				{
