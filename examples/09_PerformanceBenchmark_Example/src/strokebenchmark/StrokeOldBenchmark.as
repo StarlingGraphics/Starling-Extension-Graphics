@@ -79,6 +79,7 @@ package strokebenchmark
 			{
 				stroke = allStrokeOlds[si];
 				stroke.clear();
+				stroke.addVertex( 100, 100, 1, 0, 1, 0, 1);
 				for ( var i:int = 0; i < numVerts; i++ )
 				{
 					if ( currentRandom + 4 > maxRandom )

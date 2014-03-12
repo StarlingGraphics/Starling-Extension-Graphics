@@ -77,13 +77,17 @@ package starling.display.graphics
 			_line[_numVertices-1].u = 0.0;
 		}
 		
+		public static var numLines:uint = 0;
 		public function lineTo(	x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF,  alpha:Number = 1) : void
 		{
+			numLines++;
 			addVertexInternal(x, y, thickness, color, alpha, color, alpha);
 		}
 		
+		public static var numMoves:uint = 0;
 		public function moveTo( x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1.0 ) : void
 		{
+			numMoves++;
 			addDegenerates(x, y);
 		}
 		
@@ -112,7 +116,7 @@ package starling.display.graphics
 									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
 									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
 		{
-			
+			numLines++;
 			addVertexInternal(x, y, thickness, color0, alpha0, color1, alpha1);
 		}
 		

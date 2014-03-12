@@ -107,8 +107,10 @@ package starling.display.graphics
 			isInvalid = true;
 		}
 
+		public static var numLines:uint = 0;
 		public function lineToFast(	x:Number, y:Number, thickness:Number = 1, r:Number = 1, g:Number = 1, b:Number = 1,  alpha:Number = 1) : void
 		{
+			numLines ++;
 			if (_moved == true) {
 				move(_moveX, _moveY, _moveThickness, _moveR0, _moveG0, _moveB0, _moveAlpha,
 					_moveR1, _moveG1, _moveB1, _moveAlpha);
@@ -133,8 +135,10 @@ package starling.display.graphics
 			isInvalid = true;
 		}
 
+		public static var numMoves:uint = 0;
 		public function moveToFast( x:Number, y:Number, thickness:Number = 1, r:Number = 1, g:Number = 1, b:Number = 1, alpha:Number = 1 ) : void
 		{
+			numMoves++;
 			_moved = true;
 			_moveX = x;
 			_moveY = y;

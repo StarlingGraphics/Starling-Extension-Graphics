@@ -8,6 +8,8 @@ package
 	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.display.graphics.FastStroke;
+	import starling.display.graphics.Stroke;
+	import starling.display.graphics.StrokeOld;
 	import starling.events.EnterFrameEvent;
 	import starling.events.Event;
 	import starling.text.TextField;
@@ -133,6 +135,13 @@ package
 							yLoc += 30.0;
 						}
 					}
+					
+					yLoc += 30.0;
+					addResultText("FS: Moves - " + FastStroke.numMoves + " Lines - " + FastStroke.numLines, yLoc);
+					yLoc += 30.0;
+					addResultText("S: Moves - " + Stroke.numMoves + " Lines - " + Stroke.numLines, yLoc);
+					yLoc += 30.0;
+					addResultText("SO: Moves - " + StrokeOld.numMoves + " Lines - " + StrokeOld.numLines, yLoc);
 
 					removeEventListener(EnterFrameEvent.ENTER_FRAME, enterFrameHandler); // We are done
 					return;

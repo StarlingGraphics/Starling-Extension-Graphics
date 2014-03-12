@@ -46,16 +46,20 @@ package starling.display.graphics
 			}
 		}
 
+		public static var numMoves:uint = 0;
 		public function moveTo(x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1 ) : void
 		{
+			numMoves++;
 			setCurrentPosition(x, y);
 			setCurrentColor(color, alpha);
 			setCurrentThickness(thickness);
 		}
 
 		
+		public static var numLines:uint = 0;
 		public function lineTo(x:Number, y:Number, thickness:Number = 1.0, color:uint = 0xFFFFFF, a:Number = 1.0  ):void
 		{
+			numLines++;
 			var r:Number = (color >> 16) / 255;
 			var g:Number = ((color & 0x00FF00) >> 8) / 255;
 			var b:Number = (color & 0x0000FF) / 255;
