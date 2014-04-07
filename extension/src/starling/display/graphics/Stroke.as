@@ -13,12 +13,9 @@ package starling.display.graphics
 		protected var _moveX        :Number;
 		protected var _moveY        :Number;
 		protected var _moveThickness:Number;
-		protected var _moveR0       :Number;
-		protected var _moveG0       :Number;
-		protected var _moveB0       :Number;
-		protected var _moveR1       :Number;
-		protected var _moveG1       :Number;
-		protected var _moveB1       :Number;
+		protected var _moveR       :Number;
+		protected var _moveG       :Number;
+		protected var _moveB       :Number;
 		protected var _moveAlpha    :Number;
 		protected var _prevX        :Number;
 		protected var _prevY        :Number;
@@ -26,14 +23,10 @@ package starling.display.graphics
 		protected var _prevX2       :Number;
 		protected var _prevY2       :Number;
 		protected var _prevU        :Number;
-		protected var _prevR0       :Number;
-		protected var _prevG0       :Number;
-		protected var _prevB0       :Number;
-		protected var _prevR1       :Number;
-		protected var _prevG1       :Number;
-		protected var _prevB1       :Number;
-		protected var _prevAlpha0   :Number;
-		protected var _prevAlpha1   :Number;
+		protected var _prevR       :Number;
+		protected var _prevG       :Number;
+		protected var _prevB       :Number;
+		protected var _prevAlpha   :Number;
 		protected var _numVertices  :uint;
 		protected var _numIndices   :uint;
 		protected var _numInSegment :uint;
@@ -96,43 +89,18 @@ package starling.display.graphics
 
 		public function lineTo(	x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF,  alpha:Number = 1) : void
 		{
-			if (_moved == true) {
-				move(_moveX, _moveY, _moveThickness, _moveR0, _moveG0, _moveB0, _moveAlpha,
-					_moveR1, _moveG1, _moveB1, _moveAlpha);
-			}
 			var r:Number = extractR(color);
 			var g:Number = extractG(color);
 			var b:Number = extractB(color);
-			addVertexInternal(x, y, thickness, r, g, b, alpha, r, g, b, alpha);
-			isInvalid = true;
-		}
-
-		public static var numLines:uint = 0;
-		public function lineToFast(	x:Number, y:Number, thickness:Number = 1, r:Number = 1, g:Number = 1, b:Number = 1,  alpha:Number = 1) : void
-		{
-			numLines ++;
-			if (_moved == true) {
-				move(_moveX, _moveY, _moveThickness, _moveR0, _moveG0, _moveB0, _moveAlpha,
-					_moveR1, _moveG1, _moveB1, _moveAlpha);
-			}
-			addVertexInternal(x, y, thickness, r, g, b, alpha, r, g, b, alpha);
-			isInvalid = true;
+			lineToFast(x, y, thickness, r, g, b, alpha);
 		}
 
 		public function moveTo( x:Number, y:Number, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1.0 ) : void
 		{
-			var r0:Number = extractR(color);
-			var g0:Number = extractG(color);
-			var b0:Number = extractB(color);
-			_moved = true;
-			_moveX = x;
-			_moveY = y;
-			_moveThickness = thickness;
-			_moveR0 = r0;
-			_moveG0 = g0;
-			_moveB0 = b0;
-			_moveAlpha = alpha;
-			isInvalid = true;
+			var r:Number = extractR(color);
+			var g:Number = extractG(color);
+			var b:Number = extractB(color);
+			moveToFast(x, y, thickness, r, g, b, alpha);
 		}
 
 		public static var numMoves:uint = 0;
@@ -143,9 +111,9 @@ package starling.display.graphics
 			_moveX = x;
 			_moveY = y;
 			_moveThickness = thickness;
-			_moveR0 = r;
-			_moveG0 = g;
-			_moveB0 = b;
+			_moveR = r;
+			_moveG = g;
+			_moveB = b;
 			_moveAlpha = alpha;
 			isInvalid = true;
 		}
@@ -160,77 +128,27 @@ package starling.display.graphics
 		public function fromBounds(boundingBox:Rectangle, thickness:int = 1) : void
 		{
 			clear();
-			addVertex(boundingBox.x, boundingBox.y, thickness);
-			addVertex(boundingBox.x+boundingBox.width, boundingBox.y, thickness);
-			addVertex(boundingBox.x+boundingBox.width, boundingBox.y+boundingBox.height, thickness);
-			addVertex(boundingBox.x, boundingBox.y+boundingBox.height, thickness);
-			addVertex(boundingBox.x, boundingBox.y, thickness);
-		}
-
-	//	[Deprecated(replacement="starling.display.graphics.Stroke.lineTo()")]
-		public function addVertex( 	x:Number, y:Number, thickness:Number = 1,
-									color0:uint = 0xFFFFFF,  alpha0:Number = 1,
-									color1:uint = 0xFFFFFF, alpha1:Number = 1 ):void
-		{
-			var r0:Number = extractR(color0);
-			var g0:Number = extractG(color0);
-			var b0:Number = extractB(color0);
-			var r1:Number = extractR(color1);
-			var g1:Number = extractG(color1);
-			var b1:Number = extractB(color1);
-			if (_moved) {
-				move(x, y, thickness, r0, b0, g0, alpha0, r1, b1, g1, alpha1);
-			} else {
-				addVertexInternal(x, y, thickness, r0, b0, g0, alpha0, r1, b1, g1, alpha1);
-			}
-			isInvalid = true;
+			moveTo(boundingBox.x, boundingBox.y, thickness);
+			lineTo(boundingBox.x+boundingBox.width, boundingBox.y, thickness);
+			lineTo(boundingBox.x+boundingBox.width, boundingBox.y+boundingBox.height, thickness);
+			lineTo(boundingBox.x, boundingBox.y+boundingBox.height, thickness);
+			lineTo(boundingBox.x, boundingBox.y, thickness);
 		}
 
 		[Inline]
 		private final function move( x:Number, y:Number, thickness:Number = 1,
-									 r0:Number = 1, g0:Number = 1, b0:Number = 1, alpha0:Number = 1,
-									 r1:Number = 1, g1:Number = 1, b1:Number = 1, alpha1:Number = 1) :void
+									 r:Number = 1, g:Number = 1, b:Number = 1, alpha:Number = 1) :void
 		{
 			_prevX = x;
 			_prevY = y;
-			_prevR0 = r0;
-			_prevG0 = g0;
-			_prevB0 = b0;
-			_prevR1 = r1;
-			_prevG1 = g1;
-			_prevB1 = b1;
-			_prevAlpha0 = alpha0;
-			_prevAlpha1 = alpha1;
+			_prevR = r;
+			_prevG = g;
+			_prevB = b;
+			_prevAlpha = alpha;
 			_prevThickness = thickness;
 			_prevU = 0;
 			_numInSegment = 0;
 			_moved = false;
-		}
-
-		[Inline]
-		private final function updateBounds( x:Number, y:Number ):void {
-			if(x < minBounds.x)
-			{
-				minBounds.x = x;
-			}
-			else if(x > maxBounds.x)
-			{
-				maxBounds.x = x;
-			}
-
-			if(y < minBounds.y)
-			{
-				minBounds.y = y;
-			}
-			else if(y > maxBounds.y)
-			{
-				maxBounds.y = y;
-			}
-
-			if ( maxBounds.x == Number.NEGATIVE_INFINITY )
-				maxBounds.x = x;
-			if ( maxBounds.y == Number.NEGATIVE_INFINITY )
-				maxBounds.y = y;
 		}
 
 		[Inline]
@@ -252,8 +170,7 @@ package starling.display.graphics
 
 		[Inline]
 		private final function addPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number,
-									r0:Number, g0:Number, b0:Number, r1:Number, g1:Number,
-									b1:Number, alpha0:Number, alpha1:Number, u:Number ):void {
+									r:Number, g:Number, b:Number, alpha:Number, u:Number ):void {
 			const c_u8MaxDivisor:Number = 1.0 / 255;
 			nX *= thickness;
 			nY *= thickness;
@@ -266,29 +183,51 @@ package starling.display.graphics
 			vertices[_numVertices++] = v1xPos;
 			vertices[_numVertices++] = v1yPos;
 			vertices[_numVertices++] = 0;
-			vertices[_numVertices++] = r1;
-			vertices[_numVertices++] = g1;
-			vertices[_numVertices++] = b1;
-			vertices[_numVertices++] = alpha1;
+			vertices[_numVertices++] = r;
+			vertices[_numVertices++] = g;
+			vertices[_numVertices++] = b;
+			vertices[_numVertices++] = alpha;
 			vertices[_numVertices++] = u;
 			vertices[_numVertices++] = 1;
 			vertices[_numVertices++] = v1xNeg;
 			vertices[_numVertices++] = v1yNeg;
 			vertices[_numVertices++] = 0;
-			vertices[_numVertices++] = r0;
-			vertices[_numVertices++] = g0;
-			vertices[_numVertices++] = b0;
-			vertices[_numVertices++] = alpha0;
+			vertices[_numVertices++] = r;
+			vertices[_numVertices++] = g;
+			vertices[_numVertices++] = b;
+			vertices[_numVertices++] = alpha;
 			vertices[_numVertices++] = u;
 			vertices[_numVertices++] = 0;
 		}
 
-		[Inline]
-		private final function addVertexInternal(x:Number, y:Number, thickness:Number = 1,
-											r0:Number = 1, g0:Number = 1, b0:Number = 1, alpha0:Number = 1,
-											r1:Number = 1, g1:Number = 1, b1:Number = 1, alpha1:Number = 1):void
+		public static var numLines:uint = 0;
+		public function lineToFast(	x:Number, y:Number, thickness:Number = 1, r:Number = 1, g:Number = 1, b:Number = 1,  alpha:Number = 1) : void
 		{
-			updateBounds(x,y);
+			numLines++;
+			if (_moved == true) {
+				move(_moveX, _moveY, _moveThickness, _moveR, _moveG, _moveB, _moveAlpha);
+			}
+			
+			// This could be made more accurate by taking the final vertices into account.
+			// Ideally it could be computed lazily, so that the cost can be avoided if
+			// unneeded by the client software.
+			if(x < minBounds.x) {
+				minBounds.x = x;
+			} else if(x > maxBounds.x) {
+				maxBounds.x = x;
+			}
+
+			if(y < minBounds.y) {
+				minBounds.y = y;
+			} else if(y > maxBounds.y) {
+				maxBounds.y = y;
+			}
+
+			if ( maxBounds.x == Number.NEGATIVE_INFINITY )
+				maxBounds.x = x;
+			if ( maxBounds.y == Number.NEGATIVE_INFINITY )
+				maxBounds.y = y;
+
 			var dX:Number = x - _prevX;
 			var dY:Number = y - _prevY;
 			var len:Number = Math.sqrt(dX * dX + dY * dY);
@@ -310,8 +249,8 @@ package starling.display.graphics
 			// add the first two points
 			if (_numInSegment == 0) {
 //				var mark1:Number = Telemetry.spanMarker;
-				addPoints(_prevX, _prevY, nX, nY, _prevThickness * 0.5, _prevR0, _prevG0, _prevB0,
-				          _prevR1, _prevG1, _prevB1, _prevAlpha0, _prevAlpha1, 0.0);
+				addPoints(_prevX, _prevY, nX, nY, _prevThickness * 0.5, 
+						  _prevR, _prevG, _prevB, _prevAlpha, 0.0);
 				_numInSegment++;
 //				Telemetry.sendSpanMetric("mark1", mark1);
 			}
@@ -389,19 +328,19 @@ package starling.display.graphics
 			vertices[_numVertices++] = v1xPos_;
 			vertices[_numVertices++] = v1yPos_;
 			vertices[_numVertices++] = 0;
-			vertices[_numVertices++] = r1;
-			vertices[_numVertices++] = g1;
-			vertices[_numVertices++] = b1;
-			vertices[_numVertices++] = alpha1;
+			vertices[_numVertices++] = r;
+			vertices[_numVertices++] = g;
+			vertices[_numVertices++] = b;
+			vertices[_numVertices++] = alpha;
 			vertices[_numVertices++] = u;
 			vertices[_numVertices++] = 1;
 			vertices[_numVertices++] = v1xNeg_;
 			vertices[_numVertices++] = v1yNeg_;
 			vertices[_numVertices++] = 0;
-			vertices[_numVertices++] = r0;
-			vertices[_numVertices++] = g0;
-			vertices[_numVertices++] = b0;
-			vertices[_numVertices++] = alpha0;
+			vertices[_numVertices++] = r;
+			vertices[_numVertices++] = g;
+			vertices[_numVertices++] = b;
+			vertices[_numVertices++] = alpha;
 			vertices[_numVertices++] = u;
 			vertices[_numVertices++] = 0;
 			_numInSegment++;
@@ -421,6 +360,7 @@ package starling.display.graphics
 			_prevThickness = thickness;
 			_numInSegment++;
 //			Telemetry.sendSpanMetric("mark3", mark3);
+			isInvalid = true;
 		}
 
 		public function getVertexPosition(index:int, prealloc:Point = null):Point

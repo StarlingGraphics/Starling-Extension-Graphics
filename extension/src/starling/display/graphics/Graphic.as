@@ -363,8 +363,8 @@ package starling.display.graphics
 					lastIBufferSize = numIndices;
 				}
 				// On iOS uploading less than the full vector is apparently very slow
-				vertexBuffer.uploadFromVector( vertexArray, 0, numVerts );
-				indexBuffer.uploadFromVector( indexArray, 0, numIndices );
+//				vertexBuffer.uploadFromVector( vertexArray, 0, numVerts );
+//				indexBuffer.uploadFromVector( indexArray, 0, numIndices );
 
 				isInvalid = uvsInvalid = false;
 			}

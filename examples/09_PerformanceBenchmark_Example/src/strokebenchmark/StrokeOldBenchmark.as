@@ -80,15 +80,17 @@ package strokebenchmark
 				stroke = allStrokeOlds[si];
 				stroke.clear();
 				stroke.addVertex( 100, 100, 1, 0, 1, 0, 1);
+				if ( currentRandom + 2 > maxRandom )
+					currentRandom = 0;
+				var color1:uint = randomArray[currentRandom++] * 0xFFFFFF;
+				var color2:uint = randomArray[currentRandom++] * 0xFFFFFF;
 				for ( var i:int = 0; i < numVerts; i++ )
 				{
-					if ( currentRandom + 4 > maxRandom )
+					if ( currentRandom + 2 > maxRandom )
 						currentRandom = 0;
 
 					var xVal:Number = STAGE_WIDTH * randomArray[currentRandom++];
 					var yVal:Number = STAGE_HEIGHT * randomArray[currentRandom++];
-					var color1:uint = randomArray[currentRandom++] * 0xFFFFFF;
-					var color2:uint = randomArray[currentRandom++] * 0xFFFFFF;
 
 					stroke.addVertex( xVal, yVal, 1, color1, 1, color2, 1);
 				}

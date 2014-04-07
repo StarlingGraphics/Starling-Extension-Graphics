@@ -80,16 +80,18 @@ package strokebenchmark
 				stroke = allStrokes[si];
 				stroke.clear();
 				stroke.moveToFast(100, 100);
+				if ( currentRandom + 3 > maxRandom )
+					currentRandom = 0;
+				var r0:Number = randomArray[currentRandom++];
+				var g0:Number = randomArray[currentRandom++];
+				var b0:Number = randomArray[currentRandom++];
 				for ( var i:int = 0; i < numVerts; i++ )
 				{
-					if ( currentRandom + 5 > maxRandom )
+					if ( currentRandom + 2 > maxRandom )
 						currentRandom = 0;
 
 					var xVal:Number = STAGE_WIDTH * randomArray[currentRandom++];
 					var yVal:Number = STAGE_HEIGHT * randomArray[currentRandom++];
-					var r0:Number = randomArray[currentRandom++];
-					var g0:Number = randomArray[currentRandom++];
-					var b0:Number = randomArray[currentRandom++];
 
 					stroke.lineToFast( xVal, yVal, 1, r0, g0, b0, 1);
 				}

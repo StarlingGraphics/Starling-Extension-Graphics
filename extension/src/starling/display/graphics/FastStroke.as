@@ -278,7 +278,7 @@ package starling.display.graphics
 					_verticesBufferAllocLen = numVertices;					
 				}
 				
-				vertexBuffer.uploadFromVector( vertices, 0, numVertices );
+//				vertexBuffer.uploadFromVector( vertices, 0, numVertices );
 				
 				if ( numIndices > _indicesBufferAllocLen )
 				{
@@ -288,7 +288,7 @@ package starling.display.graphics
 					_indicesBufferAllocLen = numIndices;
 				}
 				
-				indexBuffer.uploadFromVector( indices, 0, numIndices );
+//				indexBuffer.uploadFromVector( indices, 0, numIndices );
 				
 				isInvalid = uvsInvalid = false;
 			}
