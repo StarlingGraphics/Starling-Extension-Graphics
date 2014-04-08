@@ -163,14 +163,12 @@ package starling.display.graphics
 		[Inline]
 		private final function addPoints( x:Number, y:Number, nX:Number, nY:Number, thickness:Number,
 									r:Number, g:Number, b:Number, alpha:Number, u:Number ):void {
-			const c_u8MaxDivisor:Number = 1.0 / 255;
 			nX *= thickness;
 			nY *= thickness;
 			var v1xPos:Number = x + nX;
 			var v1yPos:Number = y + nY;
 			var v1xNeg:Number = x - nX;
 			var v1yNeg:Number = y - nY;
-
 
 			vertices[_numVertices++] = v1xPos;
 			vertices[_numVertices++] = v1yPos;
@@ -311,9 +309,8 @@ package starling.display.graphics
 
 			// Add two vertices as if it is the end
 			// Manual inline: addPoints(..)
-			const c_u8MaxDivisor:Number = 1.0 / 255;
-			nOX *= thickness;
-			nOY *= thickness;
+			nOX *= thickness * 0.5;
+			nOY *= thickness * 0.5;
 			var v1xPos_:Number = x + nOX;
 			var v1yPos_:Number = y + nOY;
 			var v1xNeg_:Number = x - nOX;

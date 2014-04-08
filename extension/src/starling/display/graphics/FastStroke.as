@@ -243,8 +243,8 @@ package starling.display.graphics
 			
 			if ( vertexBuffer && (isInvalid || uvsInvalid) )
 			{
-		//		vertexBuffer.dispose();
-		//		indexBuffer.dispose();
+				vertexBuffer.dispose();
+				indexBuffer.dispose();
 			}
 			
 			if ( isInvalid )
@@ -278,7 +278,7 @@ package starling.display.graphics
 					_verticesBufferAllocLen = numVertices;					
 				}
 				
-//				vertexBuffer.uploadFromVector( vertices, 0, numVertices );
+				vertexBuffer.uploadFromVector( vertices, 0, numVertices );
 				
 				if ( numIndices > _indicesBufferAllocLen )
 				{
@@ -288,7 +288,7 @@ package starling.display.graphics
 					_indicesBufferAllocLen = numIndices;
 				}
 				
-//				indexBuffer.uploadFromVector( indices, 0, numIndices );
+				indexBuffer.uploadFromVector( indices, 0, numIndices );
 				
 				isInvalid = uvsInvalid = false;
 			}
@@ -302,7 +302,7 @@ package starling.display.graphics
 			if (context == null) throw new MissingContextError();
 			
 			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-//			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, _numVertIndex / 3 );
+			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, _numVertIndex / 3 );
 			
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);

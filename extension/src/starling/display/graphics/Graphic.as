@@ -363,8 +363,8 @@ package starling.display.graphics
 					lastIBufferSize = numIndices;
 				}
 				// On iOS uploading less than the full vector is apparently very slow
-//				vertexBuffer.uploadFromVector( vertexArray, 0, numVerts );
-//				indexBuffer.uploadFromVector( indexArray, 0, numIndices );
+				vertexBuffer.uploadFromVector( vertexArray, 0, numVerts );
+				indexBuffer.uploadFromVector( indexArray, 0, numIndices );
 
 				isInvalid = uvsInvalid = false;
 			}
@@ -377,7 +377,7 @@ package starling.display.graphics
 			if (context == null) throw new MissingContextError();
 
 			RenderSupport.setBlendFactors(false, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-//			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, numTriangles );
+			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha, numTriangles );
 
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);
