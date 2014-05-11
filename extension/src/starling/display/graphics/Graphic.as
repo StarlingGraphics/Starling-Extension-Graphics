@@ -96,6 +96,13 @@ package starling.display.graphics
 			isInvalid = true;
 			uvsInvalid = true;
 			_material.restoreOnLostContext();
+			
+			onGraphicLostContext();
+		}
+		
+		protected function onGraphicLostContext() : void
+		{
+			
 		}
 		
 		override public function dispose():void

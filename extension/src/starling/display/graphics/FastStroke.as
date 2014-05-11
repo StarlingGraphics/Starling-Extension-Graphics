@@ -34,6 +34,9 @@ package starling.display.graphics
 		
 		protected const INDEX_STRIDE_FOR_QUAD:int = 6;
 		
+		protected var _lostContext:Boolean = false;
+		
+		
 		public function FastStroke()
 		{
 			clear();
@@ -270,7 +273,7 @@ package starling.display.graphics
 				// Upload vertex/index buffers.
 				
 				var numVertices:int = (_numControlPoints * 2);
-				if ( numVertices > _verticesBufferAllocLen )
+				if ( numVertices > _verticesBufferAllocLen || _lostContext )
 				{
 					if ( vertexBuffer != null )
 						vertexBuffer.dispose();
@@ -280,7 +283,7 @@ package starling.display.graphics
 				
 				vertexBuffer.uploadFromVector( vertices, 0, numVertices );
 				
-				if ( numIndices > _indicesBufferAllocLen )
+				if ( numIndices > _indicesBufferAllocLen || _lostContext )
 				{
 					if ( indexBuffer != null )
 						indexBuffer.dispose();
@@ -290,7 +293,7 @@ package starling.display.graphics
 				
 				indexBuffer.uploadFromVector( indices, 0, numIndices );
 				
-				isInvalid = uvsInvalid = false;
+				_lostContext = isInvalid = uvsInvalid = false;
 			}
 			
 			
@@ -338,6 +341,10 @@ package starling.display.graphics
 			
 		}
 		
+		override protected function onGraphicLostContext() : void
+		{
+			_lostContext = true;
+		}
 		
 	}
 }
