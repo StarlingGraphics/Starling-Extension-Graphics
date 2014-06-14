@@ -152,7 +152,10 @@ package starling.display.graphics
 			
 			// Based upon the input values, choose from
 			// 4 primitive types. Each more complex than the next.
-			var isSegment:Boolean = sa != 0 || ea != 0;
+			var isSegment:Boolean = (sa != 0 || ea != 0);
+			if ( isSegment == false )
+				isSegment = ( sa == ea); // if sa and ea are equal, treat that as a segment, not a full lap around a circle.
+				
 			if ( innerRadius == 0 && !isSegment )
 			{
 				buildSimpleNGon(radius, _numSides, vertices, indices, _uvMatrix , _color);
