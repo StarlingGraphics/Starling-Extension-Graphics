@@ -304,7 +304,12 @@ package starling.display.graphics
 		private static function buildFan( radius:Number, startAngle:Number, endAngle:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint):void
 		{
 			var numVertices:int = 0;
-			vertices.push( 0, 0, 0, 1, 1, 1, 1, 0.5, 0.5 );
+			
+			var r:Number = (color >> 16) / 255;
+			var g:Number = ((color & 0x00FF00) >> 8) / 255;
+			var b:Number = (color & 0x0000FF) / 255;
+			
+			vertices.push( 0, 0, 0, r, g, b, 1, 0.5, 0.5 );
 			numVertices++;
 			
 			var radiansPerDivision:Number = (Math.PI * 2) / numSides;
@@ -312,9 +317,7 @@ package starling.display.graphics
 			startRadians = startRadians < 0 ? -Math.ceil(-startRadians) : int(startRadians);
 			startRadians *= radiansPerDivision;
 			
-			var r:Number = (color >> 16) / 255;
-			var g:Number = ((color & 0x00FF00) >> 8) / 255;
-			var b:Number = (color & 0x0000FF) / 255;
+			
 			
 			for ( var i:int = 0; i <= numSides+1; i++ )
 			{
