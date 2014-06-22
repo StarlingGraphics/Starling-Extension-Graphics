@@ -127,6 +127,7 @@ package starling.display.graphics
 			// between them.
 			var sa:Number = _startAngle;
 			var ea:Number = _endAngle;
+			var isEqual:Boolean = sa == ea;
 			var sSign:int = sa < 0 ? -1 : 1;
 			var eSign:int = ea < 0 ? -1 : 1;
 			sa *= sSign;
@@ -154,7 +155,7 @@ package starling.display.graphics
 			// 4 primitive types. Each more complex than the next.
 			var isSegment:Boolean = (sa != 0 || ea != 0);
 			if ( isSegment == false )
-				isSegment = ( sa == ea); // if sa and ea are equal, treat that as a segment, not a full lap around a circle.
+				isSegment = isEqual; // if sa and ea are equal, treat that as a segment, not a full lap around a circle.
 				
 			if ( innerRadius == 0 && !isSegment )
 			{
