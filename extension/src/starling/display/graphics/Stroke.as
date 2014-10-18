@@ -158,26 +158,28 @@ package starling.display.graphics
 			v.degenerate = 0;
 			_numVertices++;
 			
-			if(x < minBounds.x) 
+			var halfThickness:Number = 0.5 * thickness;
+			
+			if((x-halfThickness) < minBounds.x) 
 			{
-				minBounds.x = x;
+				minBounds.x = (x-halfThickness);
 			}
-			else if(x > maxBounds.x)
+			else if((x+halfThickness) > maxBounds.x)
 			{
-				maxBounds.x = x;
+				maxBounds.x = (x+halfThickness);
 			}
 			
-			if(y < minBounds.y)
+			if((y-halfThickness) < minBounds.y)
 			{
-				minBounds.y = y;
+				minBounds.y = (y-halfThickness);
 			}
-			else if(y > maxBounds.y)
+			else if((y+halfThickness) > maxBounds.y)
 			{
-				maxBounds.y = y;
+				maxBounds.y = (y+halfThickness);
 			}
 			
 			if ( maxBounds.x == Number.NEGATIVE_INFINITY )
-				maxBounds.x = x;
+				maxBounds.x = y;
 			if ( maxBounds.y == Number.NEGATIVE_INFINITY )	
 				maxBounds.y = y;
 			if ( isInvalid == false )
