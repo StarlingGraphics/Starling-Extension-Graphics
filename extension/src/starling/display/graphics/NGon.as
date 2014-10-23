@@ -26,16 +26,19 @@ package starling.display.graphics
 		private var _endAngle		:Number;
 		private var _numSides		:int;
 		private var _color			:uint = 0xFFFFFF;
+		private var _textureAlongPath:Boolean = false;
 		
 		private static var _uv		:Point;
 		
-		public function NGon( radius:Number = 100, numSides:int = 10, innerRadius:Number = 0, startAngle:Number = 0, endAngle:Number = 360 )
+		public function NGon( radius:Number = 100, numSides:int = 10, innerRadius:Number = 0, startAngle:Number = 0, endAngle:Number = 360, textureAlongPath:Boolean = false )
 		{
 			this.radius = radius;
 			this.numSides = numSides;
 			this.innerRadius = innerRadius;
 			this.startAngle = startAngle;
 			this.endAngle = endAngle;
+			
+			this._textureAlongPath = textureAlongPath;
 			
 			minBounds.x = minBounds.y = -radius;
 			maxBounds.x = maxBounds.y = radius;
@@ -163,7 +166,7 @@ package starling.display.graphics
 			}
 			else if ( innerRadius != 0 && !isSegment )
 			{
-				buildHoop(innerRadius, radius, _numSides, vertices, indices, _uvMatrix , _color);
+				buildHoop(innerRadius, radius, _numSides, vertices, indices, _uvMatrix , _color, _textureAlongPath);
 			}
 			else if ( innerRadius == 0 )
 			{
@@ -171,7 +174,7 @@ package starling.display.graphics
 			}
 			else
 			{
-				buildArc( innerRadius, radius, sa, ea, _numSides, vertices, indices, _uvMatrix , _color);
+				buildArc( innerRadius, radius, sa, ea, _numSides, vertices, indices, _uvMatrix , _color, _textureAlongPath);
 			}
 		}
 		
@@ -253,7 +256,7 @@ package starling.display.graphics
 			}
 		}
 		
-		private static function buildHoop( innerRadius:Number, radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint):void
+		private static function buildHoop( innerRadius:Number, radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint, textureAlongPath:Boolean):void
 		{
 			var numVertices:int = 0;
 			
@@ -271,8 +274,16 @@ package starling.display.graphics
 			{
 				var x:Number = s * radius;
 				var y:Number = -c * radius;
-				_uv.x = x;
-				_uv.y = y;
+				if ( textureAlongPath )
+				{
+					_uv.x = i / numSides;
+					_uv.y = 0;
+				}
+				else
+				{
+					_uv.x = x;
+					_uv.y = y;
+				}
 				if ( uvMatrix ) 
 					_uv = uvMatrix.transformPoint(_uv);
 				
@@ -281,8 +292,16 @@ package starling.display.graphics
 				
 				x = s * innerRadius;
 				y = -c * innerRadius;
-				_uv.x = x;
-				_uv.y = y;
+				if ( textureAlongPath )
+				{
+					_uv.x = i / numSides;
+					_uv.y = 1;
+				}
+				else
+				{
+					_uv.x = x;
+					_uv.y = y;
+				}
 				if ( uvMatrix ) 
 					_uv = uvMatrix.transformPoint(_uv);
 				
@@ -372,7 +391,7 @@ package starling.display.graphics
 			}
 		}
 		
-		private static function buildArc( innerRadius:Number, radius:Number, startAngle:Number, endAngle:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint):void
+		private static function buildArc( innerRadius:Number, radius:Number, startAngle:Number, endAngle:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint, textureAlongPath:Boolean):void
 		{
 			var nv:int = 0;
 			var radiansPerDivision:Number = (Math.PI * 2) / numSides;
@@ -429,17 +448,31 @@ package starling.display.graphics
 					x2 = prevX2 + t * (x2-prevX2);
 					y2 = prevY2 + t * (y2-prevY2);
 				}
-				
-				_uv.x = x;
-				_uv.y = y;
+				if ( textureAlongPath )
+				{
+					_uv.x = i / numSides;
+					_uv.y = 0;
+				}
+				else
+				{
+					_uv.x = x;
+					_uv.y = y;
+				}
 				if ( uvMatrix ) 
 					_uv = uvMatrix.transformPoint(_uv);
 				
 				vertices.push( x, y, 0, r, g, b, 1, _uv.x, _uv.y );
 				nv++;
-				
-				_uv.x = x2;
-				_uv.y = y2;
+				if ( textureAlongPath )
+				{
+					_uv.x = i / numSides;
+					_uv.y = 1;
+				}
+				else
+				{
+					_uv.x = x2;
+					_uv.y = y2;
+				}
 				if ( uvMatrix ) 
 					_uv = uvMatrix.transformPoint(_uv);
 				

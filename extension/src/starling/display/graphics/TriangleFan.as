@@ -41,7 +41,7 @@ package starling.display.graphics
 				setGeometryInvalid();
 		}
 		
-		public function modifyVertexColor(index:int, r:Number = 1, g:Number = 1, b:Number = 1, a:Number = 1)
+		public function modifyVertexColor(index:int, r:Number = 1, g:Number = 1, b:Number = 1, a:Number = 1) : void
 		{
 			vertices[index * 9 + 3] = r;
 			vertices[index * 9 + 4] = g;
