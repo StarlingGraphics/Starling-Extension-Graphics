@@ -122,8 +122,8 @@ package starling.display
 			endFill();
 			
 			_fillStyleSet 	= true;
-			_fillColor 		= 0xFFFFFF;
-			_fillAlpha 		= 1;
+			_fillColor 		= material.color;
+			_fillAlpha 		= material.alpha;
 			_fillTexture 	= null;
 			_fillMaterial 	= material;
 			if ( uvMatrix )
@@ -194,8 +194,8 @@ package starling.display
 			
 			_strokeStyleSet			= !isNaN(thickness) && thickness > 0 && material;
 			_strokeThickness		= thickness;
-			_strokeColor			= 0xFFFFFF;
-			_strokeAlpha			= 1;
+			_strokeColor			= material != null ? material.color : 0xFFFFFF;
+			_strokeAlpha			= material != null ? material.alpha : 1;
 			_strokeTexture			= null;
 			_strokeMaterial			= material;
 		}
