@@ -470,7 +470,7 @@ package starling.display
 				lineTo( x + width, y );
 				lineTo( x + width, y + height );
 				lineTo( x, y + height );
-				lineTo( x, y );
+				lineTo( x, y - (_strokeThickness * 0.5)); // adding this to solve upper left corner being misshapen. Issue https://github.com/StarlingGraphics/Starling-Extension-Graphics/issues/109
 				
 				_currentFill = storedFill;
 			}
