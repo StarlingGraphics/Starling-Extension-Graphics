@@ -387,17 +387,6 @@ package starling.display.graphics
 				vertices[vertCounter++] = v1.u;
 				vertices[vertCounter++] = 0;
 				
-			/*	if ( i < numVertices - 1 )
-				{
-					var i2:int = (i << 1);
-					indices[indiciesCounter++] = i2;
-					indices[indiciesCounter++] = i2+2;
-					indices[indiciesCounter++] = i2+1;
-					indices[indiciesCounter++] = i2+1;
-					indices[indiciesCounter++] = i2+2;
-					indices[indiciesCounter++] = i2+3;
-				} */
-				
 				if ( i < numVertices - 1 )
 				{
 					var i2:int = (i << 1);
