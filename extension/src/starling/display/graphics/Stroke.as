@@ -200,26 +200,7 @@ package starling.display.graphics
 		
 		override protected function buildGeometry():void
 		{
-			//buildGeometryOriginal();
 			buildGeometryPreAllocatedVectors();
-		}
-		
-		protected function buildGeometryOriginal() : void
-		{
-			if ( _line == null || _line.length == 0 )
-				return; // block against odd cases.
-				
-			// This is the original (slower) code that does not preallocate the vectors for vertices and indices.	
-			vertices = new Vector.<Number>();
-			indices = new Vector.<uint>();
-				
-			var indexOffset:int = 0;
-					
-			var oldVerticesLength:int = vertices.length;
-			const oneOverVertexStride:Number = 1 / VERTEX_STRIDE;	
-			_numVertices = fixUpPolyLine( _line );
-			createPolyLine( _line, vertices, indices, indexOffset);
-			indexOffset += (vertices.length - oldVerticesLength) * oneOverVertexStride;
 		}
 		
 		protected function buildGeometryPreAllocatedVectors() : void
@@ -406,7 +387,7 @@ package starling.display.graphics
 				vertices[vertCounter++] = v1.u;
 				vertices[vertCounter++] = 0;
 				
-				if ( i < numVertices - 1 )
+			/*	if ( i < numVertices - 1 )
 				{
 					var i2:int = (i << 1);
 					indices[indiciesCounter++] = i2;
@@ -415,121 +396,22 @@ package starling.display.graphics
 					indices[indiciesCounter++] = i2+1;
 					indices[indiciesCounter++] = i2+2;
 					indices[indiciesCounter++] = i2+3;
+				} */
+				
+				if ( i < numVertices - 1 )
+				{
+					var i2:int = (i << 1);
+					indices[indiciesCounter++] = i2;
+					indices[indiciesCounter++] = i2+1;
+					indices[indiciesCounter++] = i2+2;
+					indices[indiciesCounter++] = i2+3;
+					indices[indiciesCounter++] = i2+2;
+					indices[indiciesCounter++] = i2+1;
 				}
 				
 			}
 		}
 		
-		///////////////////////////////////
-		// Static helper methods - Old version of createPolyLine that does not use pre allocated vectors. Slower.
-		///////////////////////////////////
-		[inline]
-		protected static function createPolyLine( vertices:Vector.<StrokeVertex>, 
-												outputVertices:Vector.<Number>, 
-												outputIndices:Vector.<uint>, 
-												indexOffset:int ):void
-		{
-			
-			var sqrt:Function = Math.sqrt;
-			var sin:Function = Math.sin;
-			const numVertices:int = vertices.length;
-			const PI:Number = Math.PI;
-			
-			for ( var i:int = 0; i < numVertices; i++ )
-			{
-				var degenerate:uint = vertices[i].degenerate;
-				var idx:uint = i;
-				if ( degenerate != 0 ) {
-					idx = ( degenerate == c_degenerateUseLast ) ? ( i - 1 ) : ( i + 1 );
-				}
-				var treatAsFirst:Boolean = ( idx == 0 ) || ( vertices[ idx - 1 ].degenerate > 0 );
-				var treatAsLast:Boolean = ( idx == numVertices - 1 ) || ( vertices[ idx + 1 ].degenerate > 0 );
-				var idx0:uint = treatAsFirst ? idx : ( idx - 1 );
-				var idx2:uint = treatAsLast ? idx : ( idx + 1 );
-				
-				var v0:StrokeVertex = vertices[idx0];
-				var v1:StrokeVertex = vertices[idx];
-				var v2:StrokeVertex = vertices[idx2];
-				
-				var v0x:Number = v0.x;
-				var v0y:Number = v0.y;
-				var v1x:Number = v1.x;
-				var v1y:Number = v1.y;
-				var v2x:Number = v2.x;
-				var v2y:Number = v2.y;
-				
-				var d0x:Number = v1x - v0x;
-				var d0y:Number = v1y - v0y;
-				var d1x:Number = v2x - v1x;
-				var d1y:Number = v2y - v1y;
-				
-				if ( treatAsLast )
-				{
-					v2x += d0x;
-					v2y += d0y;
-					
-					d1x = v2x - v1x;
-					d1y = v2y - v1y;
-				}
-				
-				if ( treatAsFirst )
-				{
-					v0x -= d1x;
-					v0y -= d1y;
-					
-					d0x = v1x - v0x;
-					d0y = v1y - v0y;
-				}
-				
-				var d0:Number = sqrt( d0x*d0x + d0y*d0y );
-				var d1:Number = sqrt( d1x*d1x + d1y*d1y );
-				
-				var elbowThickness:Number = v1.thickness*0.5;
-				if ( !(treatAsFirst || treatAsLast) )
-				{
-					// Thanks to Tom Clapham for spotting this relationship.
-					var dot:Number = (d0x*d1x+d0y*d1y) / (d0*d1);
-					elbowThickness /= sin((PI-Math.acos(dot)) * 0.5);
-					
-					if ( elbowThickness > v1.thickness * 4 )
-					{
-						elbowThickness = v1.thickness * 4;
-					}
-					
-					if ( isNaN( elbowThickness ) )
-					{
-						elbowThickness = v1.thickness*0.5;
-					}
-				}
-				
-				var n0x:Number = -d0y / d0;
-				var n0y:Number =  d0x / d0;
-				var n1x:Number = -d1y / d1;
-				var n1y:Number =  d1x / d1;
-				
-				var cnx:Number = n0x + n1x;
-				var cny:Number = n0y + n1y;
-				var c:Number = (1/sqrt( cnx*cnx + cny*cny )) * elbowThickness;
-				cnx *= c;
-				cny *= c;
-				
-				var v1xPos:Number = v1x + cnx;
-				var v1yPos:Number = v1y + cny;
-				var v1xNeg:Number = ( degenerate ) ? v1xPos : ( v1x - cnx );
-				var v1yNeg:Number = ( degenerate ) ? v1yPos : ( v1y - cny );
-			
-				
-				outputVertices.push( v1xPos, v1yPos, 0, v1.r2, v1.g2, v1.b2, v1.a2, v1.u, 1,
-								 v1xNeg, v1yNeg, 0, v1.r1, v1.g1, v1.b1, v1.a1, v1.u, 0 );
-				
-				
-				if ( i < numVertices - 1 )
-				{
-					var i2:int = indexOffset + (i << 1);
-					outputIndices.push(i2, i2 + 2, i2 + 1, i2 + 1, i2 + 2, i2 + 3);
-				}
-			}
-		}
 		
 		protected static function fixUpPolyLine( vertices:Vector.<StrokeVertex> ): int
 		{
