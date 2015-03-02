@@ -579,6 +579,16 @@ package starling.display
 					{
 						moveTo(x + strokePoints[i], y + strokePoints[i + 1]);
 					}
+					else if ( i == strokePoints.length - 2 )
+					{
+						var lastYPointOffset:Number = 0;
+						if ( topLeftRadius < _strokeThickness )
+							lastYPointOffset = topLeftRadius * 0.5;
+						else
+							lastYPointOffset = _strokeThickness * 0.5;
+							
+						lineTo(x + strokePoints[i], y + strokePoints[i + 1] - lastYPointOffset);
+					}
 					else
 					{
 						lineTo(x + strokePoints[i], y + strokePoints[i + 1]);
