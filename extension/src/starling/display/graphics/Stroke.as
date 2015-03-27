@@ -179,7 +179,7 @@ package starling.display.graphics
 			}
 			
 			if ( maxBounds.x == Number.NEGATIVE_INFINITY )
-				maxBounds.x = y;
+				maxBounds.x = x;
 			if ( maxBounds.y == Number.NEGATIVE_INFINITY )	
 				maxBounds.y = y;
 			if ( isInvalid == false )
