@@ -17,12 +17,14 @@ package starling.display.materials
 	{
 		private var program	:Program3D;
 		
-		private var _vertexShader	:IShader;
-		private var _fragmentShader	:IShader;
-		private var _alpha			:Number = 1;
-		private var _color			:uint;
-		private var colorVector		:Vector.<Number>;
-		private var _textures		:Vector.<Texture>;
+		private var _vertexShader		:IShader;
+		private var _fragmentShader		:IShader;
+		private var _alpha				:Number = 1;
+		private var _color				:uint;
+		private var colorVector			:Vector.<Number>;
+		private var _textures			:Vector.<Texture>;
+		
+		protected var _premultipliedAlpha:Boolean = false;
 		
 		public function StandardMaterial( vertexShader:IShader = null, fragmentShader:IShader = null )
 		{
@@ -115,7 +117,6 @@ package starling.display.materials
 			colorVector[1] = ((_color & 0x00FF00) >> 8) / 255;
 			colorVector[2] = (_color & 0x0000FF) / 255;
 		}
-
 		
 		public function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1, numTriangles:int = -1 ):void
 		{
@@ -141,6 +142,16 @@ package starling.display.materials
 			_fragmentShader.setConstants(context, 1);
 			
 			context.drawTriangles(indexBuffer, 0, numTriangles);
+		}
+		
+		public function get premultipliedAlpha():Boolean 
+		{
+			return _premultipliedAlpha;
+		}
+		
+		public function set premultipliedAlpha(value:Boolean):void 
+		{
+			_premultipliedAlpha = value;
 		}
 	}
 }

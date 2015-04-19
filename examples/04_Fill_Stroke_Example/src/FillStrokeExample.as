@@ -2,6 +2,7 @@ package
 {
 	import flash.display.GradientType;
 	import flash.geom.Matrix;
+	import starling.display.materials.TextureMaterial;
 	
 	import starling.display.Shape;
 	import starling.display.Sprite;
@@ -88,8 +89,7 @@ package
 			landFill.material.fragmentShader = new TextureVertexColorFragmentShader();
 			landFill.material.textures[0] = rockTexture;
 			var landStroke:Stroke = new Stroke();
-			landStroke.material.fragmentShader = new TextureVertexColorFragmentShader();
-			landStroke.material.textures[0] = grassTexture;
+			landStroke.material = new TextureMaterial(grassTexture);
 			
 			var landHeight:Number = 200;
 			var landDetail:int = 30;
