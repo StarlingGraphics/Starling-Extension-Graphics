@@ -28,7 +28,9 @@ package starling.display.graphicsEx
 		
 		public function invalidate() : void
 		{
-			isInvalid = true;
+			if ( isInvalid == false )
+				setGeometryInvalid();
+			
 		}
 		
 		public function strokeLength() : Number
