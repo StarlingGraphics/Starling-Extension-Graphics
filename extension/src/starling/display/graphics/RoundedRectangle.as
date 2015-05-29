@@ -5,6 +5,7 @@ package starling.display.graphics
 	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
+	import starling.geom.Polygon;
 
 	public class RoundedRectangle extends Graphic
 	{
@@ -293,6 +294,19 @@ package starling.display.graphics
 			
 			strokePoints.push( 0, _height-blr );
 			strokePoints.push( 0, tlr );
+		}
+		
+		override public function exportToPolygon(polygon:Polygon) : Boolean
+		{
+			validateNow();
+			
+			var len:int = strokePoints.length;
+			
+			for (var i:int = 0; i < len; i++) 
+			{
+				polygon.addVertices(strokePoints[i]);
+			}
+			return true;
 		}
 	}
 }
