@@ -7,6 +7,7 @@ package starling.display.graphics
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
+	import starling.display.geom.GraphicsPolygon;
 	import starling.geom.Polygon;
 	
 	import starling.core.RenderSupport;
@@ -367,9 +368,23 @@ package starling.display.graphics
 			context.setVertexBufferAt(2, null);
 		}
 		
-		public function exportToPolygon(polygon:Polygon) : Boolean
+		
+		public function exportToPolygon() : GraphicsPolygon
 		{
-			return false;
+			validateNow();
+			
+			var stupidArray:Array = new Array();
+			var vertLen:int = vertices.length;
+			
+			for ( var i:int = 0; i < vertLen; i += VERTEX_STRIDE )
+			{
+				stupidArray.push(vertices[i + 0]);
+				stupidArray.push(vertices[i + 1]);
+			}
+			var retval:GraphicsPolygon = new GraphicsPolygon(stupidArray, indices);
+			
+			
+			return retval;
 		}
 	}
 }

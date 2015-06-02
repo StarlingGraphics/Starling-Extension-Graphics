@@ -2,6 +2,7 @@ package starling.display.graphics
 {
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import starling.display.geom.GraphicsPolygon;
 	
 	import starling.core.RenderSupport;
 	import starling.core.Starling;
@@ -296,17 +297,6 @@ package starling.display.graphics
 			strokePoints.push( 0, tlr );
 		}
 		
-		override public function exportToPolygon(polygon:Polygon) : Boolean
-		{
-			validateNow();
-			
-			var len:int = strokePoints.length;
-			
-			for (var i:int = 0; i < len; i++) 
-			{
-				polygon.addVertices(strokePoints[i]);
-			}
-			return true;
-		}
+		
 	}
 }

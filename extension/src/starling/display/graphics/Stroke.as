@@ -340,15 +340,15 @@ package starling.display.graphics
 					var arcCosDot:Number = Math.acos(dot);
 					elbowThickness /= Math.sin( (PI-arcCosDot) * 0.5);
 					
-					if ( elbowThickness > vThickness * 4 )
-					{
-						elbowThickness = vThickness * 4;
-					}
-					
 					if ( elbowThickness != elbowThickness ) // faster NaN comparison
 					{
 						elbowThickness = vThickness*0.5;
 					}
+					else if ( elbowThickness > vThickness * 4 )
+					{
+						elbowThickness = vThickness * 4;
+					}
+					
 				}
 				
 				var n0x:Number = -d0y / d0;

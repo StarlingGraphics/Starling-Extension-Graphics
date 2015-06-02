@@ -493,19 +493,6 @@ package starling.display.graphics
 			}
 		}
 		
-		override public function exportToPolygon(polygon:Polygon) : Boolean
-		{
-			validateNow();
-			
-			var len:int = vertices.length / 9;
-			
-			for (var i:int = 0; i < len; i++) 
-			{
-				polygon.addVertices(vertices[9 * i + 0]);
-				polygon.addVertices(vertices[9 * i + 1]);
-				
-			}
-			return true;
-		}
+		
 	}
 }
