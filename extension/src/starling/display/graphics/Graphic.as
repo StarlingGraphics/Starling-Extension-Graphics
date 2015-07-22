@@ -129,7 +129,7 @@ package starling.display.graphics
 			
 			if ( material )
 			{
-				material.dispose();
+	//			material.dispose(); Material should NOT be disposed here. It can be used elsewhere - Graphic is NOT owner of Material.
 				material = null;
 			}
 			
