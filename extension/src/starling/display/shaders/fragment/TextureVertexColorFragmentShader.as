@@ -2,7 +2,8 @@ package starling.display.shaders.fragment
 {
 	import flash.display3D.Context3D;
 	import flash.display3D.Context3DProgramType;
-	import flash.display3D.textures.Texture;
+	import starling.textures.Texture;
+	import starling.core.RenderSupport;
 	
 	import starling.display.shaders.AbstractShader;
 	
@@ -11,12 +12,17 @@ package starling.display.shaders.fragment
 	*/
 	public class TextureVertexColorFragmentShader extends AbstractShader
 	{
-		public function TextureVertexColorFragmentShader()
+		public function TextureVertexColorFragmentShader(texture:Texture = null, mipmapping:Boolean = false, repeat:Boolean = false, smoothing:String = "bilinear")
 		{
-			var agal:String =
-			"tex ft1, v1, fs0 <2d, repeat, linear> \n" +
-			"mul ft2, v0, fc0 \n" +
-			"mul oc, ft1, ft2"
+			var shouldRepeat:Boolean = texture == null ? repeat : ( texture.repeat ? repeat : false);
+			var textureFormat:String = texture != null ? texture.format : "";
+			
+			var flags:String = RenderSupport.getTextureLookupFlags(textureFormat, mipmapping, shouldRepeat, smoothing); 
+						
+			var agal:String = "tex ft1, v1, fs0 "; 
+			agal += flags + "\n";
+			agal += "mul ft2, v0, fc0 \n" +
+					"mul oc, ft1, ft2";
 			
 			compileAGAL( Context3DProgramType.FRAGMENT, agal );
 		}

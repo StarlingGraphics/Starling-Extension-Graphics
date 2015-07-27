@@ -11,7 +11,7 @@ package starling.display.materials
 	{
 		public function TextureMaterial(texture:Texture, color:uint = 0xFFFFFF, premultipliedAlpha:Boolean = true)
 		{
-			super(new StandardVertexShader(), new TextureVertexColorFragmentShader());
+			super(new StandardVertexShader(), new TextureVertexColorFragmentShader(texture));
 			textures[0] = texture;
 			this.color = color;
 			
