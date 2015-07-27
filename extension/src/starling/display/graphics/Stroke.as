@@ -13,6 +13,7 @@ package starling.display.graphics
 	{
 		protected var _line			:Vector.<StrokeVertex>;
 		protected var _numVertices		:int;
+		protected var _indexOfLastRenderedVertex:int = -1;
 		
 		protected static const c_degenerateUseNext:uint = 1;
 		protected static const c_degenerateUseLast:uint = 2;
@@ -51,10 +52,11 @@ package starling.display.graphics
 			}
 			else
 				_line = new Vector.<StrokeVertex>;
-				
+			
 			_numVertices = 0;
 			setGeometryInvalid();
 			_hasDegenerates = false;
+			_indexOfLastRenderedVertex = -1;
 		}
 		
 		public function addDegenerates(destX:Number, destY:Number):void
@@ -219,21 +221,31 @@ package starling.display.graphics
 			
 			// In special cases, there is some time to save here. 
 			// If the new number of vertices is the same as in the previous list of vertices, there's no need to recreate the buffer of vertices and indices
-			if ( vertices == null || numVerts != vertices.length )
+			if ( _indexOfLastRenderedVertex == -1 )
 			{
-				vertices = new Vector.<Number>(numVerts, true);
+				if ( vertices == null || numVerts != vertices.length )
+				{
+					vertices = new Vector.<Number>(numVerts, true);
+				}
+				if ( indices == null || numIndices != indices.length )
+				{
+					indices = new Vector.<uint>(numIndices, true);
+				}	
+			} 
+			else
+			{
+				if ( vertices.fixed )
+					vertices = vertices.slice(); // need to do this to change fixed length into dynamic
+				if ( indices.fixed )
+					indices = indices.slice();// need to do this to change fixed length into dynamic
 			}
-			if ( indices == null || numIndices != indices.length )
-			{
-				indices = new Vector.<uint>(numIndices, true);
-			}	
 			
-			createPolyLinePreAlloc( _line, vertices, indices, _hasDegenerates);
+			createPolyLinePreAlloc( _line, vertices, indices, _hasDegenerates, _indexOfLastRenderedVertex);
 		
 			var oldVerticesLength:int = 0; // this is always zero in the old code, even if we use vertices.length in the original code. Not sure why it is here.
 			const oneOverVertexStride:Number = 1 / VERTEX_STRIDE;	
 			indexOffset += (vertices.length - oldVerticesLength) * oneOverVertexStride;
-			
+			_indexOfLastRenderedVertex = _line.length -1;
 		}
 		
 		///////////////////////////////////
@@ -243,21 +255,23 @@ package starling.display.graphics
 		protected static function createPolyLinePreAlloc( _line:Vector.<StrokeVertex>, 
 												vertices:Vector.<Number>, 
 												indices:Vector.<uint>, 
-												_hasDegenerates:Boolean):void 
+												_hasDegenerates:Boolean,
+												indexOfLastRenderedVertex:int):void 
 		{
 		
 			const numVertices:int = _line.length;
 			const PI:Number = Math.PI;
-			var vertCounter:int = 0;
-			var indiciesCounter:int = 0;
 			var lastD0:Number = 0;
 			var lastD1:Number = 0;
 			var degenerate:uint = 0;
 			var idx:uint = 0;
 			var treatAsFirst:Boolean;
 			var treatAsLast:Boolean;
+			var startIndex : int = indexOfLastRenderedVertex == -1 ? 0 : indexOfLastRenderedVertex - 1;
+			var vertCounter:int = startIndex * 18;
+			var indiciesCounter:int = startIndex * 6;
 			
-			for ( var i:int = 0; i < numVertices; i++ )
+			for ( var i:int = startIndex; i < numVertices; i++ )
 			{
 				idx = i;
 				if ( _hasDegenerates )
