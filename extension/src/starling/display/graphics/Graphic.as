@@ -41,6 +41,7 @@ package starling.display.graphics
 		protected var _uvMatrix		:Matrix;
 		protected var isInvalid		:Boolean = false;
 		protected var uvsInvalid	:Boolean = false;
+		protected var isGeometryScaled:Boolean = false;
 		
 		protected var hasValidatedGeometry:Boolean = false;
 				
@@ -309,7 +310,7 @@ package starling.display.graphics
 			
 			hasValidatedGeometry = true;
 			
-			if ( vertexBuffer && (isInvalid || uvsInvalid) )
+			if ( vertexBuffer && (isInvalid || uvsInvalid || isGeometryScaled ) )
 			{
 				vertexBuffer.dispose();
 				indexBuffer.dispose();
@@ -338,7 +339,7 @@ package starling.display.graphics
 			
 			if ( indices == null || indices.length < 3 ) return; 
 			
-			if ( isInvalid || uvsInvalid )
+			if ( isInvalid || uvsInvalid || isGeometryScaled)
 			{
 				// Upload vertex/index buffers.
 				var numVertices:int = vertices.length / VERTEX_STRIDE;
@@ -347,7 +348,7 @@ package starling.display.graphics
 				indexBuffer = Starling.context.createIndexBuffer( indices.length );
 				indexBuffer.uploadFromVector( indices, 0, indices.length );
 				
-				isInvalid = uvsInvalid = false;
+				isInvalid = uvsInvalid = isGeometryScaled = false;
 			}
 			
 			

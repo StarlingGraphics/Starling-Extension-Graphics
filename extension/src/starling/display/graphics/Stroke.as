@@ -7,6 +7,8 @@ package starling.display.graphics
 	import starling.display.graphics.StrokeVertex;
 	import starling.textures.Texture;
 	import starling.display.graphics.util.TriangleUtil;
+	import starling.display.util.StrokeVertexUtil;
+	
 	import starling.utils.MatrixUtil;
 		
 	public class Stroke extends Graphic
@@ -20,6 +22,8 @@ package starling.display.graphics
 		protected var _hasDegenerates:Boolean = false;
 		
 		protected static var sCollissionHelper:StrokeCollisionHelper = null;
+		protected var _cullDistanceSquared:Number = 0.0;
+		protected var _lastScale:Number = 1.0;
 		
 		public function Stroke()
 		{
@@ -36,7 +40,13 @@ package starling.display.graphics
 			clear();
 			super.dispose();
 		}
-
+		
+		public function setPointCullDistance(cullDistance:Number = 0.0) : void
+		{
+			_cullDistanceSquared = cullDistance * cullDistance;
+		}
+		
+		
 		public function clear():void
 		{
 			if(minBounds)
@@ -214,6 +224,8 @@ package starling.display.graphics
 			var indexOffset:int = 0;
 			// First remove all deformed things in _line
 			_numVertices = fixUpPolyLine( _line );
+			if ( _cullDistanceSquared > 0.1 )
+				_numVertices = cullPolyLineByDistance(_line, _cullDistanceSquared, _indexOfLastRenderedVertex);
 			
 			// Then use the line lenght to pre allocate the vertex vectors
 			var numVerts:int = _line.length * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
@@ -270,6 +282,13 @@ package starling.display.graphics
 			var startIndex : int = indexOfLastRenderedVertex == -1 ? 0 : indexOfLastRenderedVertex - 1;
 			var vertCounter:int = startIndex * 18;
 			var indiciesCounter:int = startIndex * 6;
+			var prevV1xPos:Number = 0.0;
+			var prevV1xNeg:Number = 0.0;
+			var prevV1yPos:Number = 0.0;
+			var prevV1yNeg:Number = 0.0;
+			var usePreviousVertPositionsOnNextLoop:Boolean = false;
+			var usePreviousVertPositions:Boolean = false;
+			
 			
 			for ( var i:int = startIndex; i < numVertices; i++ )
 			{
@@ -288,6 +307,13 @@ package starling.display.graphics
 					treatAsFirst = (idx == 0);
 					treatAsLast = ( idx == numVertices - 1 )
 				}
+				if ( usePreviousVertPositionsOnNextLoop )
+				{
+					usePreviousVertPositionsOnNextLoop = false;
+					usePreviousVertPositions = true;
+				}
+				else 
+					usePreviousVertPositions = false;
 				
 				var treatAsRegular:Boolean = treatAsFirst == false && treatAsLast == false;
 				
@@ -362,7 +388,10 @@ package starling.display.graphics
 					{
 						elbowThickness = vThickness * 4;
 					}
-					
+					if ( dot <= 0 && d1 < vThickness * 0.5)
+					{
+						usePreviousVertPositionsOnNextLoop = true;
+					}
 				}
 				
 				var n0x:Number = -d0y / d0;
@@ -382,8 +411,8 @@ package starling.display.graphics
 				var v1xNeg:Number = ( degenerate ) ? v1xPos : ( v1x - cnx );
 				var v1yNeg:Number = ( degenerate ) ? v1yPos : ( v1y - cny );
 			
-				vertices[vertCounter++] = v1xPos;
-				vertices[vertCounter++] = v1yPos;
+				vertices[vertCounter++] = usePreviousVertPositions == false ? v1xPos : prevV1xPos;
+				vertices[vertCounter++] = usePreviousVertPositions == false ? v1yPos : prevV1yPos;
 				vertices[vertCounter++] = 0;
 				vertices[vertCounter++] = v1.r2;
 				vertices[vertCounter++] = v1.g2;
@@ -393,6 +422,7 @@ package starling.display.graphics
 				vertices[vertCounter++] = 1;
 				vertices[vertCounter++] = v1xNeg;
 				vertices[vertCounter++] = v1yNeg;
+			
 				vertices[vertCounter++] = 0;
 				vertices[vertCounter++] = v1.r1;
 				vertices[vertCounter++] = v1.g1;
@@ -400,6 +430,11 @@ package starling.display.graphics
 				vertices[vertCounter++] = v1.a1;
 				vertices[vertCounter++] = v1.u;
 				vertices[vertCounter++] = 0;
+				
+				prevV1xPos = v1xPos;
+				prevV1xNeg = v1xNeg;
+				prevV1yPos = v1yPos;
+				prevV1yNeg = v1yNeg;
 				
 				if ( i < numVertices - 1 )
 				{
@@ -418,9 +453,9 @@ package starling.display.graphics
 		
 		protected static function fixUpPolyLine( vertices:Vector.<StrokeVertex> ): int
 		{
-			
 			if ( vertices.length > 0 && vertices[0].degenerate > 0 ) { throw ( new Error("Degenerate on first line vertex") ); }
 			var idx:int = vertices.length - 1;
+			
 			while ( idx > 0 && vertices[idx].degenerate > 0 )
 			{
 				vertices.pop();
@@ -428,6 +463,41 @@ package starling.display.graphics
 			}
 			return vertices.length;
 		}
+		
+		protected static function cullPolyLineByDistance(line:Vector.<StrokeVertex>, cullDistanceSquared:Number, indexOfLastRenderedVertex:int ) : int
+		{
+			if ( line == null )
+				return 0;
+				
+			if ( line.length < 2 )
+				return line.length;
+			
+			var num:int = line.length;
+			var startIndex:int = indexOfLastRenderedVertex < 2 ? 1 : indexOfLastRenderedVertex -1;
+			var prevIndex:int = startIndex -1;
+			for ( var i:int = startIndex; i < num; i++ )
+			{
+				var xDist:Number = line[prevIndex].x - line[i].x;
+				var yDist:Number = line[prevIndex].y - line[i].y;
+				var distanceFromLast:Number = xDist * xDist + yDist * yDist;
+				if ( distanceFromLast < cullDistanceSquared )
+				{
+					StrokeVertexUtil.removeStrokeVertexAt(line, i);
+					num--;
+					if ( i > num)
+						return num;
+					i--;	
+				}
+				else
+				{
+					prevIndex = i;
+				}
+				
+			}
+			return line.length;
+		}
+		
+
 		
 		override protected function shapeHitTestLocalInternal( localX:Number, localY:Number ):Boolean
 		{
@@ -608,6 +678,59 @@ package starling.display.graphics
 			
 			return hasHit;
 		}
+		
+		public function scaleGeometry(newScale:Number) : void
+		{
+			if ( newScale == _lastScale )
+				return;
+				
+			adjustThicknessOfGeometry(vertices, _lastScale, newScale );	
+			isGeometryScaled = true;
+			
+			_lastScale = newScale;
+			
+		}
+		
+		protected static function adjustThicknessOfGeometry(vertices:Vector.<Number>, oldScale:Number, newScale:Number) : void
+		{
+			
+			var numVerts:int = vertices.length;
+			for ( var i: int = 0; i < numVerts; i += 18 )
+			{
+				var posX:Number = vertices[i];
+				var posY:Number = vertices[i + 1];
+				var negX:Number = vertices[i+9];
+				var negY:Number = vertices[i + 10];
+				
+				var helpPointA_x:Number = posX;
+				var helpPointA_y:Number  = posY;
+				var helpPointB_x:Number  = negX;
+				var helpPointB_y:Number  = negY;
+				
+				var distance_x:Number = helpPointB_x - helpPointA_x;
+				var distance_y:Number = helpPointB_y - helpPointA_y;
+				
+				var halfDistance_x:Number = distance_x * 0.5;
+				var halfDistance_y:Number = distance_y * 0.5;
+				
+				var midPoint_x:Number = helpPointA_x + halfDistance_x;
+				var midPoint_y:Number = helpPointA_y + halfDistance_y;
+				
+				halfDistance_x *= oldScale/newScale;
+				halfDistance_y *= oldScale/newScale;
+				
+				posX = midPoint_x + halfDistance_x;
+				posY = midPoint_y + halfDistance_y;
+				negX = midPoint_x - halfDistance_x;
+				negY = midPoint_y - halfDistance_y;
+				
+				vertices[i] = posX;
+				vertices[i + 1] = posY;
+				vertices[i+9] = negX;
+				vertices[i+10] = negY;
+			}
+		}
+
 	}
 }
 
