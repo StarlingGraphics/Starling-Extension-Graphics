@@ -681,7 +681,7 @@ package starling.display.graphics
 		
 		public function scaleGeometry(newScale:Number) : void
 		{
-			if ( newScale == _lastScale )
+			if ( newScale == _lastScale || newScale <= 0 )
 				return;
 				
 			adjustThicknessOfGeometry(vertices, _lastScale, newScale );	
@@ -693,9 +693,9 @@ package starling.display.graphics
 		
 		protected static function adjustThicknessOfGeometry(vertices:Vector.<Number>, oldScale:Number, newScale:Number) : void
 		{
-			
 			var numVerts:int = vertices.length;
 			var scaleFactor:Number = oldScale / newScale;
+
 			for ( var i: int = 0; i < numVerts; i += 18 )
 			{
 				var posX:Number = vertices[i];
@@ -714,9 +714,9 @@ package starling.display.graphics
 				var halfDistance_x:Number = distance_x * 0.5;
 				var halfDistance_y:Number = distance_y * 0.5;
 				
-				var midPoint_x:Number = helpPointA_x + halfDistance_x * 0.5;
-				var midPoint_y:Number = helpPointA_y + halfDistance_y * 0.5;
-				
+				var midPoint_x:Number = helpPointA_x + halfDistance_x;
+				var midPoint_y:Number = helpPointA_y + halfDistance_y;
+			
 				halfDistance_x *= scaleFactor;
 				halfDistance_y *= scaleFactor;
 				
@@ -731,7 +731,6 @@ package starling.display.graphics
 				vertices[i+10] = negY;
 			}
 		}
-
 	}
 }
 
