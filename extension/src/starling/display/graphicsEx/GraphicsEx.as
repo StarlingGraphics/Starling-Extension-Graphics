@@ -1,6 +1,8 @@
 package starling.display.graphicsEx
 {
 	import flash.geom.Point;
+	import starling.display.geom.GraphicsPolygon;
+	import starling.display.graphics.Graphic;
 	import starling.display.graphics.Stroke;
 	import starling.display.graphics.StrokeVertex;
 	import starling.display.IGraphicsData;
@@ -22,6 +24,7 @@ package starling.display.graphicsEx
 	import starling.display.materials.IMaterial;
 	import starling.display.DisplayObjectContainer;
 	import starling.display.util.CurveUtil;
+	import starling.display.graphics.Fill;
 
 	public class GraphicsEx extends Graphics
 	{
@@ -520,8 +523,29 @@ package starling.display.graphicsEx
 			return C;
 		}
 		
+		public function exportStrokesToPolygons() : Vector.<GraphicsPolygon>
+		{
+			var retval:Vector.<GraphicsPolygon> = new Vector.<GraphicsPolygon>();
+			for ( var i:int = 0; i < _container.numChildren; i++)
+			{
+				if ( _container.getChildAt(i) is Stroke )
+					retval.push((Stroke(_container.getChildAt(i))).exportToPolygon());
+			}
+			
+			return retval;
+		}
 		
-
+		public function exportFillsToPolygons() : Vector.<GraphicsPolygon>
+		{
+			var retval:Vector.<GraphicsPolygon> = new Vector.<GraphicsPolygon>();
+			for ( var i:int = 0; i < _container.numChildren; i++)
+			{
+				if ( _container.getChildAt(i) is Fill)
+					retval.push((Fill(_container.getChildAt(i))).exportToPolygon());
+			}
+			
+			return retval;
+		}
 
 	}
 
