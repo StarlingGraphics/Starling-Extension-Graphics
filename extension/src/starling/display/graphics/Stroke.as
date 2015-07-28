@@ -695,6 +695,7 @@ package starling.display.graphics
 		{
 			
 			var numVerts:int = vertices.length;
+			var scaleFactor:Number = oldScale / newScale;
 			for ( var i: int = 0; i < numVerts; i += 18 )
 			{
 				var posX:Number = vertices[i];
@@ -713,11 +714,11 @@ package starling.display.graphics
 				var halfDistance_x:Number = distance_x * 0.5;
 				var halfDistance_y:Number = distance_y * 0.5;
 				
-				var midPoint_x:Number = helpPointA_x + halfDistance_x;
-				var midPoint_y:Number = helpPointA_y + halfDistance_y;
+				var midPoint_x:Number = helpPointA_x + halfDistance_x * 0.5;
+				var midPoint_y:Number = helpPointA_y + halfDistance_y * 0.5;
 				
-				halfDistance_x *= oldScale/newScale;
-				halfDistance_y *= oldScale/newScale;
+				halfDistance_x *= scaleFactor;
+				halfDistance_y *= scaleFactor;
 				
 				posX = midPoint_x + halfDistance_x;
 				posY = midPoint_y + halfDistance_y;
