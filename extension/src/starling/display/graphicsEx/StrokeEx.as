@@ -2,6 +2,7 @@ package starling.display.graphicsEx
 {
 	import flash.geom.Point;
 	import flash.display.GraphicsStroke;
+	import starling.display.util.StrokeExEvaluationData;
 	import starling.textures.Texture;
 	import starling.display.graphics.Stroke;
 	import starling.display.graphics.StrokeVertex;
@@ -71,35 +72,113 @@ package starling.display.graphicsEx
 			return _lineLength;
 		}
 		
-		public function evaluate(t:Number, position:Point) : Boolean
+		public function evaluate(t:Number, position:Point, evaluationData:StrokeExEvaluationData = null ) : Boolean
 		{
 			if ( t < 0 || t > 1.0)
 				return false;
-			var distanceAlongLine:Number = t * strokeLength();
-			var remainingLength:Number = distanceAlongLine;
+				
+			if ( evaluationData && evaluationData.stroke != this)
+			{
+				throw new Error("StrokeEx: evaluate method called with evaluationData pointing to wrong stroke" );
+			}
+			
+			var lineTotalLength:Number = strokeLength();
+			var querydistanceAlongLine:Number = t * lineTotalLength;
+			var remainingUntilQueryDistance:Number = querydistanceAlongLine;
 			
 			var prevVertex:StrokeVertex = _line[0];
 			var thisVertex:StrokeVertex = null;
 			var accumulatedLength:Number = 0;	
-			for ( var i:int = 1 ; i < _numVertices; ++i )
+			var startIndex:int = 1;
+			var evaluateForward:Boolean = true;
+			
+			var debugNumLoops:int = 0;
+			
+			if ( evaluationData && evaluationData.startVertSearchIndex >= 1 )
 			{
-				thisVertex = _line[i];
+				startIndex = evaluationData.startVertSearchIndex;
+				accumulatedLength = evaluationData.distanceToPrevVert;
+				remainingUntilQueryDistance -= evaluationData.distanceToPrevVert;
 				
-				var dx:Number = thisVertex.x - prevVertex.x;
-				var dy:Number = thisVertex.y - prevVertex.y;
-				var d:Number = Math.sqrt(dx * dx + dy * dy);
-				if ( accumulatedLength + d > distanceAlongLine )
+				if ( t < evaluationData.lastT )
+					evaluateForward = false;
+			}
+				
+			var dx:Number;
+			var dy:Number;
+			var d:Number;
+			var i:int;
+			var dt:Number;
+			
+			if ( evaluateForward )
+			{
+				for ( i = startIndex ; i < _numVertices; ++i )
 				{
-					var dt:Number = remainingLength / d;
-					position.x = (1.0-dt) * prevVertex.x + dt * thisVertex.x;
-					position.y = (1.0-dt) * prevVertex.y + dt * thisVertex.y;
-					return true;
+					thisVertex = _line[i];
+					prevVertex = _line[i - 1];
+				
+					dx = thisVertex.x - prevVertex.x;
+					dy = thisVertex.y - prevVertex.y;
+					d  = Math.sqrt(dx * dx + dy * dy);
+					
+					if ( accumulatedLength + d > querydistanceAlongLine )
+					{
+						dt = remainingUntilQueryDistance / d;
+						position.x = (1.0-dt) * prevVertex.x + dt * thisVertex.x;
+						position.y = (1.0 - dt) * prevVertex.y + dt * thisVertex.y;
+						if ( evaluationData )
+						{
+							evaluationData.lastT = t;
+							evaluationData.startVertSearchIndex = i ;
+							evaluationData.distanceToPrevVert = accumulatedLength;
+						}
+						return true;
+					}
+					else
+					{
+						accumulatedLength += d;
+						remainingUntilQueryDistance -= d;
+					}
 				}
-				else
+			}
+			else
+			{
+				for ( i = startIndex ; i > 0; --i )
 				{
-					accumulatedLength += d;
-					remainingLength -= d;
-					prevVertex = thisVertex;
+					thisVertex = _line[i];
+					prevVertex = _line[i - 1];
+				
+					dx = thisVertex.x - prevVertex.x;
+					dy = thisVertex.y - prevVertex.y;
+					d  = Math.sqrt(dx * dx + dy * dy);
+					
+					if ( accumulatedLength < querydistanceAlongLine && accumulatedLength + d > querydistanceAlongLine )
+					{
+						dt = (querydistanceAlongLine - accumulatedLength ) / d;
+						position.x = (1.0 - dt) * prevVertex.x + dt * thisVertex.x;
+						position.y = (1.0 - dt) * prevVertex.y + dt * thisVertex.y;
+						
+						if ( evaluationData )
+						{
+							evaluationData.lastT = t;
+							evaluationData.startVertSearchIndex = i ;
+							evaluationData.distanceToPrevVert = accumulatedLength;
+						}
+						return true;
+					}
+					else
+					{
+						if ( i - 2 >= 0)
+						{
+							var prevPrevVertex:StrokeVertex = _line[i - 2];
+							dx = prevVertex.x - prevPrevVertex.x;
+							dy = prevVertex.y - prevPrevVertex.y;
+							d  = Math.sqrt(dx * dx + dy * dy);
+							accumulatedLength -= d;
+						}
+						else
+							accumulatedLength = 0;
+					}
 				}
 			}
 			return false;
