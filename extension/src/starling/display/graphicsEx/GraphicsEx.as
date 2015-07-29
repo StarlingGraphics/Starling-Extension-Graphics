@@ -58,7 +58,10 @@ package starling.display.graphicsEx
 				return 0;
 		}
 		
-			
+		public function currentStroke() : StrokeEx
+		{
+			return _currentStrokeEx;
+		}
 		
 		public function drawGraphicsData(graphicsData:Vector.<flash.display.IGraphicsData>):void
 		{

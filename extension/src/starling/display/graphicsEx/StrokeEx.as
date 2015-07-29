@@ -1,5 +1,6 @@
 package starling.display.graphicsEx
 {
+	import flash.geom.Point;
 	import flash.display.GraphicsStroke;
 	import starling.textures.Texture;
 	import starling.display.graphics.Stroke;
@@ -69,6 +70,41 @@ package starling.display.graphicsEx
 			}
 			return _lineLength;
 		}
+		
+		public function evaluate(t:Number, position:Point) : Boolean
+		{
+			if ( t < 0 || t > 1.0)
+				return false;
+			var distanceAlongLine:Number = t * strokeLength();
+			var remainingLength:Number = distanceAlongLine;
+			
+			var prevVertex:StrokeVertex = _line[0];
+			var thisVertex:StrokeVertex = null;
+			var accumulatedLength:Number = 0;	
+			for ( var i:int = 1 ; i < _numVertices; ++i )
+			{
+				thisVertex = _line[i];
+				
+				var dx:Number = thisVertex.x - prevVertex.x;
+				var dy:Number = thisVertex.y - prevVertex.y;
+				var d:Number = Math.sqrt(dx * dx + dy * dy);
+				if ( accumulatedLength + d > distanceAlongLine )
+				{
+					var dt:Number = remainingLength / d;
+					position.x = (1.0-dt) * prevVertex.x + dt * thisVertex.x;
+					position.y = (1.0-dt) * prevVertex.y + dt * thisVertex.y;
+					return true;
+				}
+				else
+				{
+					accumulatedLength += d;
+					remainingLength -= d;
+					prevVertex = thisVertex;
+				}
+			}
+			return false;
+		}
+
 	}
 		
 }
