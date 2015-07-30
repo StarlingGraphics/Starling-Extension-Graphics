@@ -16,13 +16,17 @@ package starling.display.graphics
 		private var _numVerticesY	:uint;
 		private var _vertexFunction	:Function;
 		
-		public function Plane( width:Number = 100, height:Number = 100, numVerticesX:uint = 2, numVerticesY:uint = 2 )
+		public function Plane( width:Number = 100, height:Number = 100, numVerticesX:uint = 2, numVerticesY:uint = 2, vertexFunction:Function = null )
 		{
 			_width = width;
 			_height = height;
 			_numVerticesX = numVerticesX;
 			_numVerticesY = numVerticesY;
-			_vertexFunction = defaultVertexFunction;
+			if ( vertexFunction == null )
+				_vertexFunction = defaultVertexFunction;
+			else
+				_vertexFunction = vertexFunction;
+				
 			setGeometryInvalid();
 		}
 		
@@ -35,6 +39,48 @@ package starling.display.graphics
 							segmentHeight * row,		// y
 							0,							// z
 							1,1,1,1,					// rgba
+							column / (numVerticesX-1), 	// u
+							row / (numVerticesY-1) );	// v
+		}
+		
+		public static function alphaFadeVertically( column:int, row:int, width:Number, height:Number, numVerticesX:int, numVerticesY:int, output:Vector.<Number>, uvMatrix:Matrix = null ):void
+		{
+			var segmentWidth:Number = width / (numVerticesX-1);
+			var segmentHeight:Number = height / (numVerticesY-1);
+			
+			output.push( 	segmentWidth * column, 		// x
+							segmentHeight * row,		// y
+							0,							// z
+							1, 1, 1,					// rgb
+							(row == 0 || row == numVerticesY-1) ? 0 : 1, // a
+							column / (numVerticesX-1), 	// u
+							row / (numVerticesY-1) );	// v
+		}
+		
+		public static function alphaFadeHorizontally( column:int, row:int, width:Number, height:Number, numVerticesX:int, numVerticesY:int, output:Vector.<Number>, uvMatrix:Matrix = null ):void
+		{
+			var segmentWidth:Number = width / (numVerticesX-1);
+			var segmentHeight:Number = height / (numVerticesY-1);
+			
+			output.push( 	segmentWidth * column, 		// x
+							segmentHeight * row,		// y
+							0,							// z
+							1, 1, 1,					// rgb
+							(column == 0 || column == numVerticesX-1) ? 0 : 1,	// a
+							column / (numVerticesX-1), 	// u
+							row / (numVerticesY-1) );	// v
+		}
+		
+		public static function alphaFadeAllSides( column:int, row:int, width:Number, height:Number, numVerticesX:int, numVerticesY:int, output:Vector.<Number>, uvMatrix:Matrix = null ):void
+		{
+			var segmentWidth:Number = width / (numVerticesX-1);
+			var segmentHeight:Number = height / (numVerticesY-1);
+			
+			output.push( 	segmentWidth * column, 		// x
+							segmentHeight * row,		// y
+							0,							// z
+							1, 1, 1,					// rgb
+							(column == 0 || column == numVerticesX-1 || row == 0 || row == numVerticesY-1) ? 0 : 1,	// a
 							column / (numVerticesX-1), 	// u
 							row / (numVerticesY-1) );	// v
 		}
@@ -71,18 +117,29 @@ package starling.display.graphics
 			
 			// Generate indices
 			var qn:int = 0; //quad number
-			for (var n:int = 0; n <_numVerticesX-1; n++) //create quads out of the vertices
+			for (var m:int = 0; m <_numVerticesY - 1; m++)
 			{               
-				for (var m:int = 0; m <_numVerticesY - 1; m++)
+				for (var n:int = 0; n <_numVerticesX-1; n++) //create quads out of the vertices				
 				{
-					
-					indices.push(qn, qn + 1, qn + _numVerticesX ); //upper face
-					indices.push(qn + _numVerticesX, qn + _numVerticesX  + 1, qn+1); //lower face
-					
+					if ( m == 0 && n == 0 )
+					{
+						indices.push(qn, qn+1, qn + _numVerticesX  + 1 ); //upper face
+						indices.push(qn + _numVerticesX, qn + _numVerticesX  + 1, qn); //lower face
+					}
+					else if ( m == _numVerticesY - 2 && n == _numVerticesX - 2 )
+					{
+						indices.push(qn, qn + _numVerticesX  + 1, qn + 1); //upper face
+						indices.push(qn, qn + _numVerticesX, qn + _numVerticesX  + 1); //lower face
+					}
+					else
+					{
+						indices.push(qn, qn + 1, qn + _numVerticesX ); //upper face
+						indices.push(qn + _numVerticesX, qn + _numVerticesX  + 1, qn + 1); //lower face
+					}
 					qn++; //jumps to next quad
 				}
 				qn++; // jumps to next row
-			}
+			} 
 		}
 		
 		public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
