@@ -393,6 +393,11 @@ package starling.display.graphics
 						usePreviousVertPositionsOnNextLoop = true;
 					}
 				}
+				else
+				{
+					lastD0 = d0;
+					lastD1 = d1;
+				}
 				
 				var n0x:Number = -d0y / d0;
 				var n0y:Number =  d0x / d0;
