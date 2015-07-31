@@ -72,7 +72,7 @@ package starling.display.graphicsEx
 			return _lineLength;
 		}
 		
-		public function evaluate(t:Number, position:Point, evaluationData:StrokeExEvaluationData = null ) : Boolean
+		public function evaluate(t:Number, position:Point, evaluationData:StrokeExEvaluationData = null, tangent:Point = null, normal:Point = null ) : Boolean
 		{
 			if ( t < 0 || t > 1.0)
 				return false;
@@ -109,6 +109,7 @@ package starling.display.graphicsEx
 			var d:Number;
 			var i:int;
 			var dt:Number;
+			var invD:Number;
 			
 			if ( evaluateForward )
 			{
@@ -120,10 +121,14 @@ package starling.display.graphicsEx
 					dx = thisVertex.x - prevVertex.x;
 					dy = thisVertex.y - prevVertex.y;
 					d  = Math.sqrt(dx * dx + dy * dy);
-					
+						
 					if ( accumulatedLength + d > querydistanceAlongLine )
 					{
-						dt = remainingUntilQueryDistance / d;
+						if ( d < 0.000001 )
+							continue;
+
+						invD = 1.0 / d;
+						dt = remainingUntilQueryDistance * invD;
 						position.x = (1.0-dt) * prevVertex.x + dt * thisVertex.x;
 						position.y = (1.0 - dt) * prevVertex.y + dt * thisVertex.y;
 						if ( evaluationData )
@@ -131,6 +136,21 @@ package starling.display.graphicsEx
 							evaluationData.lastT = t;
 							evaluationData.startVertSearchIndex = i ;
 							evaluationData.distanceToPrevVert = accumulatedLength;
+						}
+						if ( tangent )
+						{
+							tangent.x = dx * invD;
+							tangent.y = dy * invD;
+							if ( normal )
+							{
+								normal.x = -tangent.y;
+								normal.y =  tangent.x;
+							}
+						}
+						else if ( normal )
+						{
+							normal.x = -dy * invD;
+							normal.y =  dx * invD;
 						}
 						return true;
 					}
@@ -154,7 +174,11 @@ package starling.display.graphicsEx
 					
 					if ( accumulatedLength < querydistanceAlongLine && accumulatedLength + d > querydistanceAlongLine )
 					{
-						dt = (querydistanceAlongLine - accumulatedLength ) / d;
+						if ( d < 0.000001 )
+							continue;
+
+						invD = 1.0 / d;
+						dt = (querydistanceAlongLine - accumulatedLength ) * invD;
 						position.x = (1.0 - dt) * prevVertex.x + dt * thisVertex.x;
 						position.y = (1.0 - dt) * prevVertex.y + dt * thisVertex.y;
 						
@@ -164,6 +188,22 @@ package starling.display.graphicsEx
 							evaluationData.startVertSearchIndex = i ;
 							evaluationData.distanceToPrevVert = accumulatedLength;
 						}
+						if ( tangent )
+						{
+							tangent.x = dx * invD;
+							tangent.y = dy * invD;
+							if ( normal )
+							{
+								normal.x = -tangent.y;
+								normal.y =  tangent.x;
+							}
+						}
+						else if ( normal )
+						{
+							normal.x = -dy * invD;
+							normal.y =  dx * invD;
+						}
+
 						return true;
 					}
 					else
