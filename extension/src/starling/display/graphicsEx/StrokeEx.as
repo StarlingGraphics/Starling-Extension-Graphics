@@ -30,7 +30,7 @@ package starling.display.graphicsEx
 		
 		public function invalidate() : void
 		{
-			if ( isInvalid == false )
+			if ( buffersInvalid == false )
 				setGeometryInvalid();
 			
 		}

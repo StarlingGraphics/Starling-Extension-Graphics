@@ -40,11 +40,14 @@ package starling.display.graphics
 		protected var vertices		:Vector.<Number>;
 		protected var indices		:Vector.<uint>;
 		protected var _uvMatrix		:Matrix;
-		protected var isInvalid		:Boolean = false;
+		
+		protected var buffersInvalid		:Boolean = false;
+		protected var geometryInvalid		:Boolean = false;
 		protected var uvsInvalid	:Boolean = false;
+		
 		protected var isGeometryScaled:Boolean = false;
 		
-		protected var hasValidatedGeometry:Boolean = false;
+	//	protected var hasValidatedGeometry:Boolean = false;
 				
 		private static var sGraphicHelperRect:Rectangle = new Rectangle();
 		private static var sGraphicHelperPoint:Point = new Point();
@@ -95,9 +98,9 @@ package starling.display.graphics
 		
 		private function onContextCreated( event:Event ):void
 		{
-			hasValidatedGeometry = false;
+			geometryInvalid = true;
 			
-			isInvalid = true;
+			buffersInvalid = true;
 			uvsInvalid = true;
 			_material.restoreOnLostContext();
 			
@@ -141,7 +144,7 @@ package starling.display.graphics
 			minBounds = null;
 			maxBounds = null;
 			
-			hasValidatedGeometry = false;
+			geometryInvalid = true;
 		}
 		
 		public function set material( value:IMaterial ):void
@@ -164,7 +167,7 @@ package starling.display.graphics
 		{
 			_uvMatrix = value;
 			uvsInvalid = true;
-			hasValidatedGeometry = false;
+			geometryInvalid = true;
 		}
 		
 		
@@ -226,12 +229,16 @@ package starling.display.graphics
 			if (resultRect == null) 
 				resultRect = new Rectangle();
 			
+			super.getBounds(targetSpace, resultRect);
+			
 			if (targetSpace == this) // optimization
 			{
-				resultRect.x = minBounds.x;
-				resultRect.y = minBounds.y;
-				resultRect.right = maxBounds.x;
-				resultRect.bottom = maxBounds.y;
+				
+				
+				resultRect.x += minBounds.x;
+				resultRect.y += minBounds.y;
+				resultRect.right += maxBounds.x;
+				resultRect.bottom += maxBounds.y;
 				if ( _precisionHitTest )
 				{	
 					resultRect.x -= _precisionHitTestDistance;
@@ -240,9 +247,9 @@ package starling.display.graphics
 					resultRect.height += _precisionHitTestDistance * 2;
 				}
 				
-				return super.getBounds(targetSpace, resultRect);;
+				return resultRect;
 			}
-			
+						
 			getTransformationMatrix(targetSpace, sHelperMatrix);
 			var m:Matrix = sHelperMatrix;
 			
@@ -281,7 +288,7 @@ package starling.display.graphics
 				resultRect.width += _precisionHitTestDistance * 2;
 				resultRect.height += _precisionHitTestDistance * 2;
 			}
-			return super.getBounds(targetSpace, resultRect);;
+			return resultRect;
 		}
 		
 		protected function buildGeometry():void
@@ -307,18 +314,16 @@ package starling.display.graphics
 		
 		public function validateNow():void
 		{
-			if ( hasValidatedGeometry )
+			if ( geometryInvalid == false )
 				return;
 			
-			hasValidatedGeometry = true;
-			
-			if ( vertexBuffer && (isInvalid || uvsInvalid || isGeometryScaled ) )
+			if ( vertexBuffer && (buffersInvalid || uvsInvalid || isGeometryScaled ) )
 			{
 				vertexBuffer.dispose();
 				indexBuffer.dispose();
 			}
 			
-			if ( isInvalid )
+			if ( buffersInvalid || geometryInvalid )
 			{
 				buildGeometry();
 				applyUVMatrix();
@@ -329,10 +334,11 @@ package starling.display.graphics
 			}
 		}
 		
-		protected function setGeometryInvalid() : void
+		protected function setGeometryInvalid(invalidateBuffers:Boolean = true) : void
 		{
-			isInvalid = true;
-			hasValidatedGeometry = false;
+			if ( invalidateBuffers )
+				buffersInvalid = true;
+			geometryInvalid = true;
 		}
 		
 		override public function render( renderSupport:RenderSupport, parentAlpha:Number ):void
@@ -341,7 +347,7 @@ package starling.display.graphics
 			
 			if ( indices == null || indices.length < 3 ) return; 
 			
-			if ( isInvalid || uvsInvalid || isGeometryScaled)
+			if ( buffersInvalid || uvsInvalid || isGeometryScaled)
 			{
 				// Upload vertex/index buffers.
 				var numVertices:int = vertices.length / VERTEX_STRIDE;
@@ -350,7 +356,13 @@ package starling.display.graphics
 				indexBuffer = Starling.context.createIndexBuffer( indices.length );
 				indexBuffer.uploadFromVector( indices, 0, indices.length );
 				
-				isInvalid = uvsInvalid = isGeometryScaled = false;
+				buffersInvalid = uvsInvalid = isGeometryScaled = geometryInvalid = false;
+			}
+			else if ( geometryInvalid )
+			{
+				vertexBuffer.uploadFromVector( vertices, 0, vertices.length / VERTEX_STRIDE )
+				indexBuffer.uploadFromVector( indices, 0, indices.length );
+				geometryInvalid = false;
 			}
 			
 			

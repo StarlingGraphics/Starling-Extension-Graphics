@@ -37,7 +37,7 @@ package starling.display.graphics
 			vertices[index * 9] = x;
 			vertices[index * 9 + 1] = y;
 			
-			if ( isInvalid == false )
+			if ( buffersInvalid == false )
 				setGeometryInvalid();
 		}
 		
@@ -48,7 +48,7 @@ package starling.display.graphics
 			vertices[index * 9 + 5] = b;
 			vertices[index * 9 + 6] = a;
 			
-			if ( isInvalid == false )
+			if ( buffersInvalid == false )
 				setGeometryInvalid();
 		}
 		

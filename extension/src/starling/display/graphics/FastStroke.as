@@ -150,7 +150,7 @@ package starling.display.graphics
 			_numControlPoints += 2;
 			_numVerts += 18 * 2;
 			
-			if ( isInvalid == false )
+			if ( buffersInvalid == false )
 				setGeometryInvalid();
 		}
 		
@@ -239,18 +239,17 @@ package starling.display.graphics
 		
 		override public function validateNow():void
 		{
-			if ( hasValidatedGeometry )
+			if ( geometryInvalid == false )
 				return;
 			
-			hasValidatedGeometry = true;
 			
-			if ( vertexBuffer && (isInvalid || uvsInvalid) )
+			if ( vertexBuffer && (buffersInvalid || uvsInvalid) )
 			{
 		//		vertexBuffer.dispose();
 		//		indexBuffer.dispose();
 			}
 			
-			if ( isInvalid )
+			if ( buffersInvalid || geometryInvalid )
 			{
 				buildGeometry();
 				applyUVMatrix();
@@ -268,7 +267,7 @@ package starling.display.graphics
 			if ( indices.length < 3 ) return;
 			
 			var numIndices:int = _numVertIndex;
-			if ( isInvalid || uvsInvalid )
+			if ( buffersInvalid || uvsInvalid )
 			{
 				// Upload vertex/index buffers.
 				
@@ -293,7 +292,7 @@ package starling.display.graphics
 				
 				indexBuffer.uploadFromVector( indices, 0, numIndices );
 				
-				_lostContext = isInvalid = uvsInvalid = false;
+				_lostContext = buffersInvalid = uvsInvalid = false;
 			}
 			
 			

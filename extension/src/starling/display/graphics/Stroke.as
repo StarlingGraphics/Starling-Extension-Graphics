@@ -14,7 +14,8 @@ package starling.display.graphics
 	public class Stroke extends Graphic
 	{
 		protected var _line			:Vector.<StrokeVertex>;
-		protected var _numVertices		:int;
+		protected var _numVertices			:int;
+		protected var _numAllocedVertices	:int;
 		protected var _indexOfLastRenderedVertex:int = -1;
 		
 		protected static const c_degenerateUseNext:uint = 1;
@@ -24,6 +25,7 @@ package starling.display.graphics
 		protected static var sCollissionHelper:StrokeCollisionHelper = null;
 		protected var _cullDistanceSquared:Number = 0.0;
 		protected var _lastScale:Number = 1.0;
+		protected var _isReusingLine:Boolean = false;
 		
 		public function Stroke()
 		{
@@ -46,7 +48,28 @@ package starling.display.graphics
 			_cullDistanceSquared = cullDistance * cullDistance;
 		}
 		
-		
+		// clearForReuse is only valid when adding exactly the same amount of vertices as existed before the clear call.
+		// This method avoids the overhead of returning StrokeVertices to the pool
+		public function clearForReuse() : void
+		{
+			if ( _line == null || _line.length == 0 )
+			{
+				clear();
+				return;
+			}
+				
+			if(minBounds)
+			{
+				minBounds.x = minBounds.y = Number.POSITIVE_INFINITY; 
+				maxBounds.x = maxBounds.y = Number.NEGATIVE_INFINITY;
+			}
+			_numVertices = 0;
+			setGeometryInvalid(false);
+			_hasDegenerates = false;
+			_indexOfLastRenderedVertex = -1;
+			_isReusingLine = true;
+			
+		}
 		public function clear():void
 		{
 			if(minBounds)
@@ -64,9 +87,11 @@ package starling.display.graphics
 				_line = new Vector.<StrokeVertex>;
 			
 			_numVertices = 0;
+			_numAllocedVertices = 0;
 			setGeometryInvalid();
 			_hasDegenerates = false;
 			_indexOfLastRenderedVertex = -1;
+			_isReusingLine = false;
 		}
 		
 		public function addDegenerates(destX:Number, destY:Number):void
@@ -104,7 +129,7 @@ package starling.display.graphics
 			var v:StrokeVertex = _line[index];
 			v.x = x;
 			v.y = y;
-			if ( isInvalid == false )
+			if ( buffersInvalid == false )
 				setGeometryInvalid();
 		}
 		
@@ -135,10 +160,9 @@ package starling.display.graphics
 									
 			var u:Number = 0;
 			var textures:Vector.<Texture> = _material.textures;
-			if ( textures.length > 0 && _line.length > 0 )
+			if ( textures.length > 0 && _numVertices > 0 )
 			{
-			
-				var prevVertex:StrokeVertex = _line[_line.length - 1];
+				var prevVertex:StrokeVertex = _line[_numVertices - 1];
 				var dx:Number = x - prevVertex.x;
 				var dy:Number = y - prevVertex.y;
 				var d:Number = Math.sqrt(dx*dx+dy*dy);
@@ -152,8 +176,14 @@ package starling.display.graphics
 			var g1:Number = ((color1 & 0x00FF00) >> 8) / 255;
 			var b1:Number = (color1 & 0x0000FF) / 255;
 			
-			var v:StrokeVertex = StrokeVertex.getInstance();
-			_line[_numVertices] = v;
+			var v:StrokeVertex;
+			if ( _isReusingLine )
+				v = _line[_numVertices];
+			else
+			{
+				v = StrokeVertex.getInstance();
+				_line[_numVertices] = v;
+			}
 			v.x = x;
 			v.y = y;
 			v.r1 = r0;
@@ -168,6 +198,9 @@ package starling.display.graphics
 			v.v = 0;
 			v.thickness = thickness;
 			v.degenerate = 0;
+			if ( _numAllocedVertices == _numVertices )
+				_numAllocedVertices++
+				
 			_numVertices++;
 			
 			var halfThickness:Number = 0.5 * thickness;
@@ -194,7 +227,8 @@ package starling.display.graphics
 				maxBounds.x = x;
 			if ( maxBounds.y == Number.NEGATIVE_INFINITY )	
 				maxBounds.y = y;
-			if ( isInvalid == false )
+				
+			if ( _isReusingLine == false && buffersInvalid == false )
 				setGeometryInvalid();
 		}
 		
@@ -219,6 +253,8 @@ package starling.display.graphics
 		{
 			if ( _line == null || _line.length == 0 )
 				return; // block against odd cases.
+			if ( _numAllocedVertices != _numVertices )
+				throw new Error("Stroke: Only use clearForReuse() when adding exactly the right number of vertices");
 				
 			// This is the code that uses the preAllocated code path for createPolyLinePreAlloc
 			var indexOffset:int = 0;
