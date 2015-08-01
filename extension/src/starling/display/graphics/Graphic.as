@@ -14,7 +14,6 @@ package starling.display.graphics
 	import starling.core.Starling;
 	import starling.display.BlendMode;
 	import starling.display.DisplayObject;
-	import starling.display.DisplayObjectContainer;
 	import starling.display.materials.IMaterial;
 	import starling.display.materials.StandardMaterial;
 	import starling.display.shaders.fragment.VertexColorFragmentShader;
@@ -27,7 +26,7 @@ package starling.display.graphics
 	 * Abstract, do not instantiate directly
 	 * Used as a base-class for all the drawing API sub-display objects (Like Fill and Stroke).
 	 */
-	public class Graphic extends DisplayObjectContainer
+	public class Graphic extends DisplayObject
 	{
 		protected static const VERTEX_STRIDE		:int = 9;
 		protected static var sHelperMatrix			:Matrix = new Matrix();
@@ -220,7 +219,7 @@ package starling.display.graphics
 					return this;
 			}
 				
-			return super.hitTest(localPoint, forTouch);
+			return null;
 			
         }
 		
@@ -229,16 +228,12 @@ package starling.display.graphics
 			if (resultRect == null) 
 				resultRect = new Rectangle();
 			
-			super.getBounds(targetSpace, resultRect);
-			
 			if (targetSpace == this) // optimization
 			{
-				
-				
 				resultRect.x += minBounds.x;
 				resultRect.y += minBounds.y;
 				resultRect.right += maxBounds.x;
-				resultRect.bottom += maxBounds.y;
+				resultRect.bottom += maxBounds.y; 
 				if ( _precisionHitTest )
 				{	
 					resultRect.x -= _precisionHitTestDistance;
@@ -381,8 +376,7 @@ package starling.display.graphics
 			context.setVertexBufferAt(0, null);
 			context.setVertexBufferAt(1, null);
 			context.setVertexBufferAt(2, null);
-			
-			super.render(renderSupport, parentAlpha * alpha);
+		
 		}
 		
 		
