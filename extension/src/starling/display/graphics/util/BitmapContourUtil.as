@@ -5,6 +5,7 @@ package starling.display.graphics.util
 	import flash.display.BitmapData;
 	import starling.utils.ArrayUtil;
 	import starling.display.graphics.Stroke;
+	import flash.utils.ByteArray;
 	
 	public class BitmapContourUtil 
 	{
@@ -16,61 +17,82 @@ package starling.display.graphics.util
 
 		public static function createContourFromBitmap(inputBitmap:Bitmap, stroke:Stroke, alphaThreshold:int = 0, thickness:Number = 1, color:uint = 0xFFFFFF, alpha:Number = 1 ) : void
 		{
-			var pointArray:Array = scanCountours(inputBitmap.bitmapData, alphaThreshold);
-			var sortedArray:Array = new Array();
+			var pointArray:Vector.<Point> = scanCountours(inputBitmap.bitmapData, alphaThreshold);
+			var sortedArray:Vector.<Point> = new Vector.<Point>(pointArray.length+1, true);
 			sortPointArray(pointArray, 0, sortedArray, pointArray[0]);
 			
 			for ( var i:int = 0; i < sortedArray.length; i++ )
 			{
 				stroke.lineTo(sortedArray[i].x, sortedArray[i].y, thickness, color, alpha);
 			}
+
 		}
 		
-		private static function sortPointArray(pointArray:Array, index:int, sortedArray:Array, startPoint:Point) : void
+		private static function sortPointArray(pointArray:Vector.<Point>, index:int, sortedArray:Vector.<Point>, startPoint:Point) : void
 		{
-			var currentPt:Point = pointArray[index];
-			sortedArray.push(currentPt);
-			ArrayUtil.removeAt(pointArray, index);
-			
 			var len:int = pointArray.length;
-			if ( len == 0 )
+			var startSearchPoint:int = 0;
+			var sortedIndex:int = 0;
+			while ( len > 0 )
 			{
-				sortedArray.push(startPoint.clone());
-				return;
-			}
+				var currentPt:Point = pointArray[index];
+				sortedArray[sortedIndex++] = currentPt;
 				
-			var closestDistanceSq:Number = 6666666;
-			var closestDistanceIndex:int = -1;
-			
-			for ( var i:int = 0; i < len; i++ )
-			{
-				var pt:Point = pointArray[i];
-				var dx:Number = pt.x - currentPt.x;
-				var dy:Number = pt.y - currentPt.y;
-				var d:int = dx * dx + dy * dy;
-				if ( d < closestDistanceSq )
+				pointArray.splice(index, 1);
+				
+				len = pointArray.length;
+				if ( len == 0 )
 				{
-					closestDistanceSq = d;
-					closestDistanceIndex = i;
+					sortedArray[sortedIndex] = startPoint;
+					return;
 				}
-			}
-			if ( closestDistanceIndex != -1 )
-			{
-				sortPointArray(pointArray, closestDistanceIndex, sortedArray, startPoint);
+				
+				var closestDistanceSq:Number = 6666666;
+				var closestDistanceIndex:int = -1;				
+				
+				for ( var i:int = startSearchPoint; i < len; i++ )
+				{
+					var pt:Point = pointArray[i];
+					var dx:Number = pt.x - currentPt.x;
+					var dy:Number = pt.y - currentPt.y;
+					var dx2:Number = dx * dx;
+					var dy2:Number = dy * dy;
+					if ( dx2 > closestDistanceSq && dy2 > closestDistanceSq)
+						break;
+					
+					var d:Number = dx2 + dy2;
+					if ( d < closestDistanceSq )
+					{
+						closestDistanceSq = d;
+						closestDistanceIndex = i;
+					}
+				}
+				
+				index = closestDistanceIndex;
+				var numSteps:int = 20;
+				if ( index < numSteps )
+					startSearchPoint = 0;
+				else
+					startSearchPoint = index - numSteps;
 			}
 			
 		}
 		
-		private static function scanCountours(bitmapData:BitmapData, alphaThreshold:int = 0) : Array
+		private static function scanCountours(bitmapData:BitmapData, alphaThreshold:int = 0) : Vector.<Point>
 		{
-			var retval:Array = new Array();
+			var retval:Vector.<Point> = new Vector.<Point>();
+			var pixels:ByteArray = bitmapData.getPixels(bitmapData.rect);
+			pixels.position = 0;
+			var bmdWidth:int = bitmapData.width;
+			var bmdHeight:int = bitmapData.height;
 			
-			for ( var y:int = 0; y < bitmapData.height; y++ )
+			for ( var y:int = 0; y < bmdHeight; y++ )
 			{
 				var isScanningPixels:Boolean = false;
-				for ( var x:int = 0; x < bitmapData.width; x++ )
+				for ( var x:int = 0; x < bmdWidth; x++ )
 				{
-					var a:int = (bitmapData.getPixel32(x, y) >> 24 & 0xFF);
+					var pixel:uint = pixels.readUnsignedInt();
+					var a:int = ( pixel >> 24 & 0xFF);
 					if ( isScanningPixels && a <= alphaThreshold )
 					{
 						isScanningPixels = false;
