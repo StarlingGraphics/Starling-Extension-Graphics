@@ -184,7 +184,7 @@ package starling.display.graphicsEx
 			if ( t < 0 || t > 1.0)
 				return false;
 				
-			if ( evaluationData && evaluationData.stroke != this)
+			if ( evaluationData && evaluationData.internalStroke != this)
 			{
 				throw new Error("StrokeEx: evaluate method called with evaluationData pointing to wrong stroke" );
 			}
@@ -201,13 +201,13 @@ package starling.display.graphicsEx
 			
 			var debugNumLoops:int = 0;
 			
-			if ( evaluationData && evaluationData.startVertSearchIndex >= 1 )
+			if ( evaluationData && evaluationData.internalStartVertSearchIndex >= 1 )
 			{
-				startIndex = evaluationData.startVertSearchIndex;
-				accumulatedLength = evaluationData.distanceToPrevVert;
-				remainingUntilQueryDistance -= evaluationData.distanceToPrevVert;
+				startIndex = evaluationData.internalStartVertSearchIndex;
+				accumulatedLength = evaluationData.internalDistanceToPrevVert;
+				remainingUntilQueryDistance -= evaluationData.internalDistanceToPrevVert;
 				
-				if ( t < evaluationData.lastT )
+				if ( t < evaluationData.internalLastT )
 					evaluateForward = false;
 			}
 				
@@ -240,9 +240,10 @@ package starling.display.graphicsEx
 						position.y = (1.0 - dt) * prevVertex.y + dt * thisVertex.y;
 						if ( evaluationData )
 						{
-							evaluationData.lastT = t;
-							evaluationData.startVertSearchIndex = i ;
-							evaluationData.distanceToPrevVert = accumulatedLength;
+							evaluationData.internalLastT = t;
+							evaluationData.internalStartVertSearchIndex = i ;
+							evaluationData.internalDistanceToPrevVert = accumulatedLength;
+							evaluationData.distance = querydistanceAlongLine;
 						}
 						if ( tangent )
 						{
@@ -291,9 +292,10 @@ package starling.display.graphicsEx
 						
 						if ( evaluationData )
 						{
-							evaluationData.lastT = t;
-							evaluationData.startVertSearchIndex = i ;
-							evaluationData.distanceToPrevVert = accumulatedLength;
+							evaluationData.internalLastT = t;
+							evaluationData.internalStartVertSearchIndex = i ;
+							evaluationData.internalDistanceToPrevVert = accumulatedLength;
+							evaluationData.distance = querydistanceAlongLine;
 						}
 						if ( tangent )
 						{

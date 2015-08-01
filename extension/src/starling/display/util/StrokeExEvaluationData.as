@@ -4,10 +4,13 @@ package starling.display.util
 	
 	public class StrokeExEvaluationData 
 	{
-		public var lastT:Number;
-		public var stroke:StrokeEx;
-		public var startVertSearchIndex:int;
-		public var distanceToPrevVert:Number;	
+		public var distance:Number; // Distance holds the distance along the curve that the 't' value represents. 
+		
+		// These are internal values, that should not be accessed by API users. 
+		public var internalLastT:Number;
+		public var internalStroke:StrokeEx;
+		public var internalStartVertSearchIndex:int;
+		public var internalDistanceToPrevVert:Number;	
 		
 		public function StrokeExEvaluationData(s:StrokeEx) 
 		{
@@ -16,9 +19,11 @@ package starling.display.util
 		
 		public function reset(s:StrokeEx) : void
 		{
-			stroke = s;
-			startVertSearchIndex = -1;
-			distanceToPrevVert = lastT = -1;
+			internalStroke = s;
+			internalStartVertSearchIndex = -1;
+			internalDistanceToPrevVert = internalLastT = -1;
+			
+			distance = 0;
 		}
 		
 	}
