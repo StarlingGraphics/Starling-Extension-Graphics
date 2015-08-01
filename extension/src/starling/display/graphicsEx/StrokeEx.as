@@ -10,6 +10,9 @@ package starling.display.graphicsEx
 	public class StrokeEx extends Stroke
 	{
 		protected var _lineLength:Number = 0;
+		static protected var sHelperPoint:Point = new Point();
+		static protected var sHelperTangentPoint:Point = new Point();
+		static protected var sHelperNormalPoint:Point = new Point();
 		
 		public function StrokeEx()
 		{
@@ -70,6 +73,110 @@ package starling.display.graphicsEx
 				}
 			}
 			return _lineLength;
+		}
+		
+		
+		public function evaluateGraphPoints(xValue:Number, positionArray:Vector.<Point>, tangentArray:Vector.<Point> = null, normalArray:Vector.<Point> = null  ) : Boolean
+		{
+			var dx:Number;
+			var dy:Number;
+			
+			var prevVertex:StrokeVertex = _line[0];
+			var thisVertex:StrokeVertex = null;
+			var invD:Number ;
+			
+			for ( var i:int = 1; i < _numVertices; ++i )
+			{
+				thisVertex = _line[i];
+				prevVertex = _line[i - 1];
+				if ( thisVertex.degenerate )
+					continue;
+					
+				if (( prevVertex.x < xValue && thisVertex.x >= xValue) ||  ( thisVertex.x < xValue && prevVertex.x >= xValue))
+				{
+					
+					dx = thisVertex.x - prevVertex.x;
+					dy = thisVertex.y - prevVertex.y;
+					
+					var lerp:Number = (( xValue - prevVertex.x  ) / (thisVertex.x - prevVertex.x));
+					sHelperPoint.x = xValue;
+					sHelperPoint.y = prevVertex.y + dy  * lerp;
+					positionArray.push(sHelperPoint.clone());
+					
+					if ( tangentArray )
+					{
+						invD = 1.0 / Math.sqrt(dx * dx + dy * dy);	
+						sHelperTangentPoint.x = dx * invD;
+						sHelperTangentPoint.y = dy * invD;
+						tangentArray.push(sHelperTangentPoint.clone());
+						if ( normalArray )
+						{
+							sHelperNormalPoint.x = -sHelperTangentPoint.y;
+							sHelperNormalPoint.y =  sHelperTangentPoint.x;
+							normalArray.push(sHelperNormalPoint.clone());
+						}
+					}
+					else if ( normalArray )
+					{
+						invD = 1.0 / Math.sqrt(dx * dx + dy * dy);	
+						sHelperNormalPoint.x = -dy * invD;
+						sHelperNormalPoint.y =  dx * invD;
+						normalArray.push(sHelperNormalPoint.clone());
+					}
+				}
+			}
+			return positionArray.length > 0;
+		}
+		
+		
+		public function evaluateGraphPoint(xValue:Number, position:Point, tangent:Point = null, normal:Point = null  ) : Boolean
+		{
+			var dx:Number;
+			var dy:Number;
+			
+			var prevVertex:StrokeVertex = _line[0];
+			var thisVertex:StrokeVertex = null;
+			var invD:Number ;
+			
+			for ( var i:int = 1; i < _numVertices; ++i )
+			{
+				thisVertex = _line[i];
+				prevVertex = _line[i - 1];
+				if ( thisVertex.degenerate )
+					continue;
+				
+				if (( prevVertex.x < xValue && thisVertex.x >= xValue) ||  ( thisVertex.x < xValue && prevVertex.x >= xValue))
+				{
+					dx = thisVertex.x - prevVertex.x;
+					dy = thisVertex.y - prevVertex.y;
+						
+					var lerp:Number = (( xValue - prevVertex.x  ) / (thisVertex.x - prevVertex.x));
+					position.x = xValue;
+					position.y = prevVertex.y + dy  * lerp;
+					
+				
+					if ( tangent )
+					{
+						invD = 1.0 / Math.sqrt(dx * dx + dy * dy);	
+						tangent.x = dx * invD;
+						tangent.y = dy * invD;
+						if ( normal )
+						{
+							normal.x = -tangent.y;
+							normal.y =  tangent.x;
+						}
+					}
+					else if ( normal )
+					{
+						invD = 1.0 / Math.sqrt(dx * dx + dy * dy);	
+						normal.x = -dy * invD;
+						normal.y =  dx * invD;
+					}
+					return true;
+				}
+			}
+				
+			return false;
 		}
 		
 		public function evaluate(t:Number, position:Point, evaluationData:StrokeExEvaluationData = null, tangent:Point = null, normal:Point = null ) : Boolean
