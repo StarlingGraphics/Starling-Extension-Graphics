@@ -230,10 +230,10 @@ package starling.display.graphics
 			
 			if (targetSpace == this) // optimization
 			{
-				resultRect.x += minBounds.x;
-				resultRect.y += minBounds.y;
-				resultRect.right += maxBounds.x;
-				resultRect.bottom += maxBounds.y; 
+				resultRect.x = minBounds.x;
+				resultRect.y = minBounds.y;
+				resultRect.right = maxBounds.x;
+				resultRect.bottom = maxBounds.y; 
 				if ( _precisionHitTest )
 				{	
 					resultRect.x -= _precisionHitTestDistance;
