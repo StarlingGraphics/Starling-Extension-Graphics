@@ -364,6 +364,7 @@ package starling.display.graphics
 			// always call this method when you write custom rendering code!
 			// it causes all previously batched quads/images to render.
 			renderSupport.finishQuadBatch();
+			renderSupport.raiseDrawCount();
 			
 			var context:Context3D = Starling.context;
 			if (context == null) throw new MissingContextError();
