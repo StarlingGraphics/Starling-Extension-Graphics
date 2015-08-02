@@ -251,7 +251,7 @@ package starling.display.graphics
 		
 		protected function buildGeometryPreAllocatedVectors() : void
 		{
-			if ( _line == null || _line.length == 0 )
+			if ( _line == null || _line.length <= 1 )
 				return; // block against odd cases.
 			if ( _numAllocedVertices != _numVertices )
 				throw new Error("Stroke: Only use clearForReuse() when adding exactly the right number of vertices");
@@ -315,7 +315,7 @@ package starling.display.graphics
 			var idx:uint = 0;
 			var treatAsFirst:Boolean;
 			var treatAsLast:Boolean;
-			var startIndex : int = indexOfLastRenderedVertex == -1 ? 0 : indexOfLastRenderedVertex - 1;
+			var startIndex : int = indexOfLastRenderedVertex <= 0 ? 0 : indexOfLastRenderedVertex - 1;
 			var vertCounter:int = startIndex * 18;
 			var indiciesCounter:int = startIndex * 6;
 			var prevV1xPos:Number = 0.0;

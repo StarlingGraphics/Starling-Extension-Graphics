@@ -380,22 +380,39 @@ package starling.display.graphics
 		}
 		
 		
-		public function exportToPolygon() : GraphicsPolygon
+		public function exportToPolygon(prevPolygon:GraphicsPolygon = null) : GraphicsPolygon
 		{
 			validateNow();
 			
-			var stupidArray:Array = new Array();
+			var startIndex:int = 0;
+			var startIndices:int = 0;
+			
+			if ( prevPolygon )
+			{
+				startIndex = prevPolygon.lastVertexIndex <= 0 ? 0 : prevPolygon.lastVertexIndex * VERTEX_STRIDE;
+				startIndices = prevPolygon.lastIndexIndex <= 0 ? 0 : prevPolygon.lastIndexIndex * VERTEX_STRIDE;
+			}
+			
+			var newVertArray:Array = new Array();
 			var vertLen:int = vertices.length;
 			
-			for ( var i:int = 0; i < vertLen; i += VERTEX_STRIDE )
+			for ( var i:int = startIndex; i < vertLen; i += VERTEX_STRIDE )
 			{
-				stupidArray.push(vertices[i + 0]);
-				stupidArray.push(vertices[i + 1]);
+				newVertArray.push(vertices[i + 0]);
+				newVertArray.push(vertices[i + 1]);
 			}
-			var retval:GraphicsPolygon = new GraphicsPolygon(stupidArray, indices);
 			
+			if ( prevPolygon == null )
+			{
+				var retval:GraphicsPolygon = new GraphicsPolygon(newVertArray, indices);
+				return retval;
+			}
+			else
+			{
+				prevPolygon.append(newVertArray, indices);
+				return prevPolygon;
+			}
 			
-			return retval;
 		}
 	}
 }
