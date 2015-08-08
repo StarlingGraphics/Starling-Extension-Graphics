@@ -29,9 +29,11 @@ package starling.display.graphicsEx
 	public class GraphicsEx extends Graphics
 	{
 		protected var _currentStrokeEx:StrokeEx;
-		
-		public function GraphicsEx(displayObjectContainer:DisplayObjectContainer)
+		protected var _strokeCullDistance:Number;
+		public function GraphicsEx(displayObjectContainer:DisplayObjectContainer, strokeCullDistance:Number = 0)
 		{
+			_strokeCullDistance = strokeCullDistance;
+			
 			super(displayObjectContainer);
 		}
 
@@ -386,7 +388,7 @@ package starling.display.graphicsEx
 		override protected function getStrokeInstance():Stroke
 		{// Created to be able to extend class with different strokes for different folks.
 			_currentStrokeEx = new StrokeEx();
-			
+			_currentStrokeEx.setPointCullDistance(_strokeCullDistance);
 			return _currentStrokeEx as Stroke;
 		}
 		

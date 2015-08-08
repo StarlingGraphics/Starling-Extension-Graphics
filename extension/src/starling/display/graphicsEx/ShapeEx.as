@@ -7,9 +7,9 @@ package starling.display.graphicsEx
 	{
 		private var _graphics :GraphicsEx;
 		
-		public function ShapeEx()
+		public function ShapeEx(strokeCullDistance:Number = 0)
 		{
-			_graphics = new GraphicsEx(this);
+			_graphics = new GraphicsEx(this, strokeCullDistance);
 		}
 		
 		public function get graphics():GraphicsEx

@@ -320,11 +320,17 @@ package starling.display
 				
 				if ( _strokeInterrupted || _currentStroke.numVertices == 0  )
 				{
-					_currentStroke.lineTo( _penPosX, _penPosY, _strokeThickness );
+					if ( _strokeMaterial )  // If we have a material, we don't set the vertex color here, relying on material color during rendering
+						_currentStroke.lineTo( _penPosX, _penPosY, _strokeThickness );
+					else
+						_currentStroke.lineTo( _penPosX, _penPosY, _strokeThickness, _strokeColor, _strokeAlpha );
+						
 					_strokeInterrupted  = false;
 				}
-				
-				_currentStroke.lineTo( x, y, _strokeThickness );
+				if ( _strokeMaterial ) // If we have a material, we don't set the vertex color here, relying on material color during rendering
+					_currentStroke.lineTo( x, y, _strokeThickness );
+				else
+					_currentStroke.lineTo( x, y, _strokeThickness, _strokeColor, _strokeAlpha );
 			}
 						
 			if ( _fillStyleSet ) 

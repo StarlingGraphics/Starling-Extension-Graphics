@@ -772,6 +772,8 @@ package starling.display.graphics
 				vertices[i+10] = negY;
 			}
 		}
+		
+		
 	}
 }
 

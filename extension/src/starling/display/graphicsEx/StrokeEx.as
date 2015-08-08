@@ -10,9 +10,10 @@ package starling.display.graphicsEx
 	public class StrokeEx extends Stroke
 	{
 		protected var _lineLength:Number = 0;
-		static protected var sHelperPoint:Point = new Point();
-		static protected var sHelperTangentPoint:Point = new Point();
-		static protected var sHelperNormalPoint:Point = new Point();
+		
+		static protected var sHelperPoint1:Point = new Point();
+		static protected var sHelperPoint2:Point = new Point();
+		static protected var sHelperPoint3:Point = new Point();
 		
 		public function StrokeEx()
 		{
@@ -23,6 +24,12 @@ package starling.display.graphicsEx
 		public function get strokeVertices() : Vector.<StrokeVertex>
 		{
 			return _line;
+		}
+		
+		override public function clearForReuse() : void
+		{
+			super.clearForReuse();
+			_lineLength = 0;
 		}
 		
 		override public function clear() : void
@@ -99,29 +106,29 @@ package starling.display.graphicsEx
 					dy = thisVertex.y - prevVertex.y;
 					
 					var lerp:Number = (( xValue - prevVertex.x  ) / (thisVertex.x - prevVertex.x));
-					sHelperPoint.x = xValue;
-					sHelperPoint.y = prevVertex.y + dy  * lerp;
-					positionArray.push(sHelperPoint.clone());
+					sHelperPoint1.x = xValue;
+					sHelperPoint1.y = prevVertex.y + dy  * lerp;
+					positionArray.push(sHelperPoint1.clone());
 					
 					if ( tangentArray )
 					{
 						invD = 1.0 / Math.sqrt(dx * dx + dy * dy);	
-						sHelperTangentPoint.x = dx * invD;
-						sHelperTangentPoint.y = dy * invD;
-						tangentArray.push(sHelperTangentPoint.clone());
+						sHelperPoint2.x = dx * invD;
+						sHelperPoint2.y = dy * invD;
+						tangentArray.push(sHelperPoint2.clone());
 						if ( normalArray )
 						{
-							sHelperNormalPoint.x = -sHelperTangentPoint.y;
-							sHelperNormalPoint.y =  sHelperTangentPoint.x;
-							normalArray.push(sHelperNormalPoint.clone());
+							sHelperPoint3.x = -sHelperPoint2.y;
+							sHelperPoint3.y =  sHelperPoint2.x;
+							normalArray.push(sHelperPoint3.clone());
 						}
 					}
 					else if ( normalArray )
 					{
 						invD = 1.0 / Math.sqrt(dx * dx + dy * dy);	
-						sHelperNormalPoint.x = -dy * invD;
-						sHelperNormalPoint.y =  dx * invD;
-						normalArray.push(sHelperNormalPoint.clone());
+						sHelperPoint3.x = -dy * invD;
+						sHelperPoint3.y =  dx * invD;
+						normalArray.push(sHelperPoint3.clone());
 					}
 				}
 			}
@@ -129,16 +136,28 @@ package starling.display.graphicsEx
 		}
 		
 		
-		public function evaluateGraphPoint(xValue:Number, position:Point, tangent:Point = null, normal:Point = null  ) : Boolean
+		public function evaluateGraphPoint(xValue:Number, position:Point, evaluationData:StrokeExEvaluationData = null, tangent:Point = null, normal:Point = null  ) : Boolean
 		{
+			if ( evaluationData && evaluationData.internalStroke != this)
+			{
+				throw new Error("StrokeEx: evaluateGraphPoint method called with evaluationData pointing to wrong stroke" );
+			}
+				
 			var dx:Number;
 			var dy:Number;
 			
 			var prevVertex:StrokeVertex = _line[0];
 			var thisVertex:StrokeVertex = null;
 			var invD:Number ;
+			var startIndex:int = 1;
 			
-			for ( var i:int = 1; i < _numVertices; ++i )
+			if ( evaluationData && evaluationData.internalStartVertSearchIndex > 0 )
+			{
+				if ( xValue >= evaluationData.internalLastX )
+					startIndex = evaluationData.internalStartVertSearchIndex; // Go forward
+			}
+				
+			for ( var i:int = startIndex; i < _numVertices; ++i )
 			{
 				thisVertex = _line[i];
 				prevVertex = _line[i - 1];
@@ -172,6 +191,11 @@ package starling.display.graphicsEx
 						normal.x = -dy * invD;
 						normal.y =  dx * invD;
 					}
+					if ( evaluationData )
+					{
+						evaluationData.internalLastX = xValue;
+						evaluationData.internalStartVertSearchIndex = i - 1; // Set prev index as last vertex
+					}
 					return true;
 				}
 			}
@@ -201,14 +225,20 @@ package starling.display.graphicsEx
 			
 			var debugNumLoops:int = 0;
 			
-			if ( evaluationData && evaluationData.internalStartVertSearchIndex >= 1 )
+			if ( evaluationData )
 			{
-				startIndex = evaluationData.internalStartVertSearchIndex;
-				accumulatedLength = evaluationData.internalDistanceToPrevVert;
-				remainingUntilQueryDistance -= evaluationData.internalDistanceToPrevVert;
+				if ( evaluationData.internalStartVertSearchIndex >= 1 )
+				{
+					startIndex = evaluationData.internalStartVertSearchIndex;
+					accumulatedLength = evaluationData.internalDistanceToPrevVert;
+					accumulatedLength *= lineTotalLength / evaluationData.internalLastStrokeLength;
+						
+					remainingUntilQueryDistance -= evaluationData.internalDistanceToPrevVert;
 				
-				if ( t < evaluationData.internalLastT )
-					evaluateForward = false;
+					if ( t < evaluationData.internalLastT )
+						evaluateForward = false;
+				}
+				evaluationData.internalLastStrokeLength = lineTotalLength;
 			}
 				
 			var dx:Number;
@@ -217,6 +247,7 @@ package starling.display.graphicsEx
 			var i:int;
 			var dt:Number;
 			var invD:Number;
+			var oneMinusDT:Number;
 			
 			if ( evaluateForward )
 			{
@@ -231,19 +262,27 @@ package starling.display.graphicsEx
 						
 					if ( accumulatedLength + d > querydistanceAlongLine )
 					{
+						
 						if ( d < 0.000001 )
 							continue;
 
 						invD = 1.0 / d;
+						
 						dt = remainingUntilQueryDistance * invD;
-						position.x = (1.0-dt) * prevVertex.x + dt * thisVertex.x;
-						position.y = (1.0 - dt) * prevVertex.y + dt * thisVertex.y;
+						oneMinusDT = (1.0 - dt);
+						position.x = oneMinusDT * prevVertex.x + dt * thisVertex.x;
+						position.y = oneMinusDT * prevVertex.y + dt * thisVertex.y;
 						if ( evaluationData )
 						{
 							evaluationData.internalLastT = t;
 							evaluationData.internalStartVertSearchIndex = i ;
 							evaluationData.internalDistanceToPrevVert = accumulatedLength;
 							evaluationData.distance = querydistanceAlongLine;
+							evaluationData.thickness = oneMinusDT * prevVertex.thickness + dt * thisVertex.thickness; 
+							evaluationData.r = oneMinusDT * prevVertex.r1 + dt * thisVertex.r1; 
+							evaluationData.g = oneMinusDT * prevVertex.g1 + dt * thisVertex.g1; 
+							evaluationData.b = oneMinusDT * prevVertex.b1 + dt * thisVertex.b1; 
+							evaluationData.a = oneMinusDT * prevVertex.a1 + dt * thisVertex.a1; 
 						}
 						if ( tangent )
 						{
@@ -286,9 +325,11 @@ package starling.display.graphicsEx
 							continue;
 
 						invD = 1.0 / d;
+						
 						dt = (querydistanceAlongLine - accumulatedLength ) * invD;
-						position.x = (1.0 - dt) * prevVertex.x + dt * thisVertex.x;
-						position.y = (1.0 - dt) * prevVertex.y + dt * thisVertex.y;
+						oneMinusDT = (1.0 - dt);
+						position.x = oneMinusDT * prevVertex.x + dt * thisVertex.x;
+						position.y = oneMinusDT * prevVertex.y + dt * thisVertex.y;
 						
 						if ( evaluationData )
 						{
@@ -296,6 +337,11 @@ package starling.display.graphicsEx
 							evaluationData.internalStartVertSearchIndex = i ;
 							evaluationData.internalDistanceToPrevVert = accumulatedLength;
 							evaluationData.distance = querydistanceAlongLine;
+							evaluationData.thickness = oneMinusDT * prevVertex.thickness + dt * thisVertex.thickness; 
+							evaluationData.r = oneMinusDT * prevVertex.r1 + dt * thisVertex.r1; 
+							evaluationData.g = oneMinusDT * prevVertex.g1 + dt * thisVertex.g1; 
+							evaluationData.b = oneMinusDT * prevVertex.b1 + dt * thisVertex.b1; 
+							evaluationData.a = oneMinusDT * prevVertex.a1 + dt * thisVertex.a1; 
 						}
 						if ( tangent )
 						{
@@ -333,6 +379,68 @@ package starling.display.graphicsEx
 			return false;
 		}
 
+		public static function blendStrokes(strokeA:StrokeEx, strokeB:StrokeEx, blendValue:Number, blendColor:Boolean, outputStroke:StrokeEx, minSamplePoints:int = -1) : void
+		{
+			var numPointsA:int = strokeA.numVertices;
+			var numPointsB:int = strokeB.numVertices;
+			var numPoints:int = Math.max(numPointsA, numPointsB);
+			
+			outputStroke.clearForReuse();
+			var i:int;
+			var oneMinusBlendValue:Number = (1.0 - blendValue);
+			var newX:Number;
+			var newY:Number;
+			var newThickness:Number;
+			var newR:int;
+			var newG:int
+			var newB:int;
+			var newA : Number;
+			
+			if ( numPointsA == numPointsB )
+			{
+				for ( i = 0; i < numPoints; i++ )
+				{
+					newX = strokeA._line[i].x * oneMinusBlendValue + strokeB._line[i].x * blendValue;
+					newY = strokeA._line[i].y * oneMinusBlendValue + strokeB._line[i].y * blendValue;
+					newThickness = strokeA._line[i].thickness * oneMinusBlendValue + strokeB._line[i].thickness * blendValue;
+					
+					newR = strokeA._line[i].r1 * oneMinusBlendValue + strokeB._line[i].r1 * blendValue;
+					newG = strokeA._line[i].g1 * oneMinusBlendValue + strokeB._line[i].g1 * blendValue;
+					newB = strokeA._line[i].b1 * oneMinusBlendValue + strokeB._line[i].b1 * blendValue;
+					newA = strokeA._line[i].a1 * oneMinusBlendValue + strokeB._line[i].a1 * blendValue;
+					
+					outputStroke.addVertex(newX, newY, newThickness, (newR << 16) + (newG << 8 ) + newB, newA, (newR << 16) + (newG << 8 ) + newB, newA);
+				}
+			}
+			else
+			{
+				var evalContextA:StrokeExEvaluationData = new StrokeExEvaluationData(strokeA);
+				var evalContextB:StrokeExEvaluationData = new StrokeExEvaluationData(strokeB);
+				var t:Number = 0.0;
+				
+				if ( minSamplePoints > numPoints )
+					numPoints = minSamplePoints;
+				
+				var invNumPoints:Number = 1.0 / numPoints;
+				
+				for ( i = 0; i <= numPoints; i++ )
+				{
+					strokeA.evaluate(t, sHelperPoint1, evalContextA);
+					strokeB.evaluate(t, sHelperPoint2, evalContextB);
+					
+					newX = sHelperPoint1.x * oneMinusBlendValue + sHelperPoint2.x * blendValue;
+					newY = sHelperPoint1.y * oneMinusBlendValue + sHelperPoint2.y * blendValue;
+					newThickness = evalContextA.thickness * oneMinusBlendValue + evalContextB.thickness * blendValue;
+					
+					newR = 255 * (evalContextA.r * oneMinusBlendValue + evalContextB.r * blendValue);
+					newG = 255 * (evalContextA.g * oneMinusBlendValue + evalContextB.g * blendValue);
+					newB = 255 * (evalContextA.b * oneMinusBlendValue + evalContextB.b * blendValue);
+					newA = evalContextA.a * oneMinusBlendValue + evalContextB.a * blendValue;
+					outputStroke.addVertex(newX, newY, newThickness, (newR << 16) + (newG << 8 ) + newB, newA, (newR << 16) + (newG << 8 ) + newB, newA);
+					t += invNumPoints;
+				}
+			}
+		}
 	}
 		
 }
