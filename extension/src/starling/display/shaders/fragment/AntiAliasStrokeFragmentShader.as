@@ -16,8 +16,8 @@ package starling.display.shaders.fragment
 				"sub ft0 fc1.xxxx ft0 \n" + // Invert the value, 1-v : 1 comes from constant fc.x
 				"mul ft0 ft0 fc1.yyyy \n" + // Multiply with PI from constants, we want a value between 0 and 3.1415. PI comes from fc.y
 				"sin ft2.wwww ft0 \n" + // Take sine of this value, creating a ramp from 0 to 1 back to 0 again
-				"mul ft1 fc0, v0 \n" +
-				"mul oc, ft1, ft2.wwww n"; // Multiply original color with sine ramp value in alpha channel
+				"mul ft1 fc0, v0 \n" +  // Multiply the material color in fc0 with the vertex color value
+				"mul oc, ft1, ft2.wwww n"; // Multiply the color result above with sine ramp value in alpha channel
 			
 			
 			compileAGAL( Context3DProgramType.FRAGMENT, agal );		
