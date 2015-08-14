@@ -175,7 +175,13 @@ package starling.display.graphics
 			var r1:Number = (color1 >> 16) / 255;
 			var g1:Number = ((color1 & 0x00FF00) >> 8) / 255;
 			var b1:Number = (color1 & 0x0000FF) / 255;
-			
+			if ( _cullDistanceSquared > 0 && _numVertices > 0 )
+			{
+				var cullDX:Number = (x - _line[_numVertices - 1].x) * (x - _line[_numVertices - 1].x);
+				var cullDY:Number = (y - _line[_numVertices - 1].y) * (y - _line[_numVertices - 1].y);
+				if ( (cullDY + cullDX) < _cullDistanceSquared )
+					return;
+			}
 			var v:StrokeVertex;
 			if ( _isReusingLine )
 				v = _line[_numVertices];
@@ -261,7 +267,10 @@ package starling.display.graphics
 			// First remove all deformed things in _line
 			_numVertices = fixUpPolyLine( _line );
 			if ( _cullDistanceSquared > 0.1 )
+			{
 				_numVertices = cullPolyLineByDistance(_line, _cullDistanceSquared, _indexOfLastRenderedVertex);
+				_numAllocedVertices = _numVertices;
+			}
 			
 			// Then use the line lenght to pre allocate the vertex vectors
 			var numVerts:int = _line.length * 18; // this looks odd, but for each StrokeVertex, we generate 18 verts in createPolyLine
