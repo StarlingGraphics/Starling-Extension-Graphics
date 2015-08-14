@@ -8,6 +8,7 @@ package starling.display.graphics
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
 	import starling.display.geom.GraphicsPolygon;
+	import starling.display.graphics.util.IGraphicDrawHelper;
 	import starling.geom.Polygon;
 	
 	import starling.core.RenderSupport;
@@ -21,6 +22,10 @@ package starling.display.graphics
 	import starling.errors.AbstractMethodError;
 	import starling.errors.MissingContextError;
 	import starling.events.Event;
+	import starling.utils.getNextPowerOfTwo;
+	import starling.textures.Texture;
+	import starling.textures.SubTexture;
+	
 	
 	/**
 	 * Abstract, do not instantiate directly
@@ -43,8 +48,9 @@ package starling.display.graphics
 		protected var buffersInvalid		:Boolean = false;
 		protected var geometryInvalid		:Boolean = false;
 		protected var uvsInvalid	:Boolean = false;
-		
+		protected var uvMappingsChanged:Boolean = false;
 		protected var isGeometryScaled:Boolean = false;
+		
 		
 	//	protected var hasValidatedGeometry:Boolean = false;
 				
@@ -63,6 +69,9 @@ package starling.display.graphics
 		protected var _precisionHitTest:Boolean = false;
 		protected var _precisionHitTestDistance:Number = 0; // This is added to the thickness of the line when doing precisionHitTest to make it easier to hit 1px lines etc
 		
+		// Attempt to allow partial rendering of graphics. Mostly useful for Strokes, I would guess.
+		protected var _graphicDrawHelper:IGraphicDrawHelper = null;
+					
 		public function Graphic()
 		{
 			indices = new Vector.<uint>();
@@ -307,9 +316,44 @@ package starling.display.graphics
 			}
 		}
 		
+		public function adjustUVMappings(x:Number, y:Number, texture:Texture) : void
+		{
+			
+			var w:Number = getNextPowerOfTwo(texture.nativeWidth);
+			var h:Number = getNextPowerOfTwo(texture.nativeHeight);
+			
+			var invW:Number = 1.0 / w;
+			var invH:Number = 1.0 / h;
+			
+			var vertX:Number;
+			var vertY:Number;
+			var u:Number;
+			var v:Number;
+			
+			if ( vertices == null || vertices.length == 0 )
+				return;
+			var numVerts:int = vertices.length;	
+			for ( var i:int = 0; i < numVerts; i += VERTEX_STRIDE )
+			{
+				vertX = vertices[i];
+				vertY = vertices[i+1];
+				
+				u = (x + vertX) * invW;
+				v = (y + vertY) * invH;
+				
+				vertices[i+7] = u;
+				vertices[i+8] = v;
+			}
+			
+			uvMappingsChanged = true;
+			_uvMatrix = null;
+			
+		}
+		
+		
 		public function validateNow():void
 		{
-			if ( geometryInvalid == false )
+			if ( geometryInvalid == false && uvMappingsChanged == false )
 				return;
 			
 			if ( vertexBuffer && (buffersInvalid || uvsInvalid || isGeometryScaled ) )
@@ -342,7 +386,7 @@ package starling.display.graphics
 			
 			if ( indices == null || indices.length < 3 ) return; 
 			
-			if ( buffersInvalid || uvsInvalid || isGeometryScaled)
+			if ( buffersInvalid || uvsInvalid || isGeometryScaled )
 			{
 				// Upload vertex/index buffers.
 				var numVertices:int = vertices.length / VERTEX_STRIDE;
@@ -350,34 +394,43 @@ package starling.display.graphics
 				vertexBuffer.uploadFromVector( vertices, 0, numVertices )
 				indexBuffer = Starling.context.createIndexBuffer( indices.length );
 				indexBuffer.uploadFromVector( indices, 0, indices.length );
-				
 				buffersInvalid = uvsInvalid = isGeometryScaled = geometryInvalid = false;
 			}
-			else if ( geometryInvalid )
+			else if ( geometryInvalid || uvMappingsChanged )
 			{
 				vertexBuffer.uploadFromVector( vertices, 0, vertices.length / VERTEX_STRIDE )
 				indexBuffer.uploadFromVector( indices, 0, indices.length );
 				geometryInvalid = false;
+				uvMappingsChanged = false;
 			}
-			
-			
-			// always call this method when you write custom rendering code!
-			// it causes all previously batched quads/images to render.
-			renderSupport.finishQuadBatch();
-			renderSupport.raiseDrawCount();
 			
 			var context:Context3D = Starling.context;
 			if (context == null) throw new MissingContextError();
 			
-			RenderSupport.setBlendFactors(_material.premultipliedAlpha, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
-			_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha*this.alpha );
+			// always call this method when you write custom rendering code!
+			// it causes all previously batched quads/images to render.
+			renderSupport.finishQuadBatch();
+			
+			if ( _graphicDrawHelper )
+			{
+				_graphicDrawHelper.onDrawTriangles(_material, renderSupport, vertexBuffer, indexBuffer, parentAlpha * this.alpha);
+			}
+			else
+			{
+				RenderSupport.setBlendFactors(_material.premultipliedAlpha, this.blendMode == BlendMode.AUTO ? renderSupport.blendMode : this.blendMode);
+				_material.drawTriangles( Starling.context, renderSupport.mvpMatrix3D, vertexBuffer, indexBuffer, parentAlpha * this.alpha);
+				renderSupport.raiseDrawCount();
+			}
+
+			
+			
 			
 			context.setTextureAt(0, null);
 			context.setTextureAt(1, null);
 			context.setVertexBufferAt(0, null);
 			context.setVertexBufferAt(1, null);
 			context.setVertexBufferAt(2, null);
-		
+			
 		}
 		
 		
@@ -415,5 +468,19 @@ package starling.display.graphics
 			}
 			
 		}
+		
+
+		public function set graphicDrawHelper(gdh:IGraphicDrawHelper) : void
+		{
+			validateNow();
+			_graphicDrawHelper = gdh;
+			_graphicDrawHelper.initialize(vertices.length / VERTEX_STRIDE);
+		}
+		
+		public function get graphicDrawHelper() : IGraphicDrawHelper
+		{
+			return _graphicDrawHelper;
+		}
+		
 	}
 }

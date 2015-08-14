@@ -120,6 +120,11 @@ package starling.display.materials
 		
 		public function drawTriangles( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1, numTriangles:int = -1 ):void
 		{
+			drawTrianglesEx(context, matrix, vertexBuffer, indexBuffer, alpha, numTriangles, 0);
+		}
+		
+		public function drawTrianglesEx( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1, numTriangles:int = -1 , startTriangle:int = 0 ):void
+		{
 			context.setVertexBufferAt( 0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3 );
 			context.setVertexBufferAt( 1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_4 );
 			context.setVertexBufferAt( 2, vertexBuffer, 7, Context3DVertexBufferFormat.FLOAT_2 );
@@ -141,8 +146,9 @@ package starling.display.materials
 			context.setProgramConstantsFromVector( Context3DProgramType.FRAGMENT, 0, colorVector );
 			_fragmentShader.setConstants(context, 1);
 			
-			context.drawTriangles(indexBuffer, 0, numTriangles);
+			context.drawTriangles(indexBuffer, startTriangle, numTriangles);
 		}
+		
 		
 		public function get premultipliedAlpha():Boolean 
 		{
