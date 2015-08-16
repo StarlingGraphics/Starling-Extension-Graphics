@@ -26,6 +26,7 @@ package starling.display.shaders.fragment
 				"mul ft0 ft0 fc1.xxxx \n" + // Multiply the new value with PI from constants, we want a value between 0 and 3.1415. PI comes from fc.y
 				"sin ft2.wwww ft0 \n" + // Take sine of this value, creating a ramp from 0 to 1 back to 0 again
 				"mul ft2.wwww ft2.wwww fc1.zzzz \n" + // Multiply with the midAreaBoost value
+				"sat ft2.wwww ft2.wwww \n" + // clamp alpha between 0 and 1
 				"mul ft1 fc0, v0 \n" +  // Multiply the material color in fc0 with the vertex color value
 				"mul oc, ft1, ft2.wwww n"; // Multiply the color result above with sine ramp value in alpha channel
 			
@@ -42,6 +43,8 @@ package starling.display.shaders.fragment
 				"sin ft4.wwww ft3 \n" + // Take sine of this value, creating a ramp from 0 to 1 back to 0 again
 				"mul ft2.wwww ft2.wwww fc1.zzzz \n" + // Multiply with the midAreaBoost value
 				"mul ft4.wwww ft4.wwww fc1.zzzz \n" + // Multiply with the midAreaBoost value
+				"sat ft2.wwww ft2.wwww \n" + // clamp alpha between 0 and 1
+				"sat ft4.wwww ft4.wwww \n" + // clamp alpha between 0 and 1
 				"mul ft2.wwww ft2.wwww ft4.wwww \n" + 
 				"mul ft1 fc0, v0 \n" +  // Multiply the material color in fc0 with the vertex color value
 				"mul oc, ft1, ft2.wwww n"; // Multiply the color result above with sine ramp value in alpha channel
@@ -53,6 +56,7 @@ package starling.display.shaders.fragment
 				"mul ft0 ft0 fc1.xxxx \n" + // Multiply the new value with PI from constants, we want a value between 0 and 3.1415. PI comes from fc.y
 				"sin ft2.wwww ft0 \n" + // Take sine of this value, creating a ramp from 0 to 1 back to 0 again
 				"mul ft2.wwww ft2.wwww fc1.zzzz \n" + // Multiply with the midAreaBoost value
+				"sat ft2.wwww ft2.wwww \n" + // clamp alpha between 0 and 1
 				"mul ft1 fc0, v0 \n" +  // Multiply the material color in fc0 with the vertex color value
 				"mul oc, ft1, ft2.wwww n"; // Multiply the color result above with sine ramp value in alpha channel
 			
