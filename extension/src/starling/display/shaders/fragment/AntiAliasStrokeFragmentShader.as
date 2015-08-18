@@ -22,7 +22,7 @@ package starling.display.shaders.fragment
 			var agalBothSides:String = 
 				"mov ft2 v0 \n" + // copy color values over verted into ft2
 				"mov ft0 v1.yyyy \n" + // copy v position from UVs 
-				"sub ft0 fc0.yyyy ft0 \n" + // Create 1-v from constants
+				"sub ft0 fc1.yyyy ft0 \n" + // Create 1-v from constants
 				"mul ft0 ft0 fc1.xxxx \n" + // Multiply the new value with PI from constants, we want a value between 0 and 3.1415. PI comes from fc.y
 				"sin ft2.wwww ft0 \n" + // Take sine of this value, creating a ramp from 0 to 1 back to 0 again
 				"mul ft2.wwww ft2.wwww fc1.zzzz \n" + // Multiply with the midAreaBoost value
@@ -35,8 +35,8 @@ package starling.display.shaders.fragment
 				"mov ft4 v0 \n" + // copy color values over verted into ft2
 				"mov ft0 v1.yyyy \n" + // copy v position from UVs 
 				"mov ft3 v1.xxxx \n" + // copy u position from UVs 
-				"sub ft0 fc0.yyyy ft0 \n" + // Create 1-v from constants
-				"sub ft3 fc0.yyyy ft3 \n" + // Create 1-v from constants
+				"sub ft0 fc1.yyyy ft0 \n" + // Create 1-v from constants
+				"sub ft3 fc1.yyyy ft3 \n" + // Create 1-v from constants
 				"mul ft0 ft0 fc1.xxxx \n" + // Multiply the new value with PI from constants, we want a value between 0 and 3.1415. PI comes from fc.y
 				"mul ft3 ft3 fc1.xxxx \n" + // Multiply the new value with PI from constants, we want a value between 0 and 3.1415. PI comes from fc.y
 				"sin ft2.wwww ft0 \n" + // Take sine of this value, creating a ramp from 0 to 1 back to 0 again
