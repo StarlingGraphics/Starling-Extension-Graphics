@@ -28,6 +28,7 @@ package starling.display.graphics
 		private var _numSides		:int;
 		private var _color			:uint = 0xFFFFFF;
 		private var _textureAlongPath:Boolean = false;
+		private var _forceTexturedCircle:Boolean = false;
 		
 		private static var _uv		:Point;
 		
@@ -50,6 +51,13 @@ package starling.display.graphics
 			}
 		}
 		
+		public static function createTexturedCircle(radius:Number = 100, numSides:int = 10) : NGon
+		{
+			var retval:NGon = new NGon(radius, numSides, 0, 0, 360, false);
+			retval._forceTexturedCircle = true;
+			return retval;
+		}
+				
 		public function get endAngle():Number
 		{
 			return _endAngle;
@@ -163,7 +171,11 @@ package starling.display.graphics
 				
 			if ( innerRadius == 0 && !isSegment )
 			{
-				buildSimpleNGon(radius, _numSides, vertices, indices, _uvMatrix , _color);
+				if ( _forceTexturedCircle )
+					buildTexturedCircle(radius, numSides, vertices, indices, _uvMatrix , _color);
+				else
+					buildSimpleNGon(radius, _numSides, vertices, indices, _uvMatrix , _color);
+					
 			}
 			else if ( innerRadius != 0 && !isSegment )
 			{
@@ -256,6 +268,48 @@ package starling.display.graphics
 				s = ns;
 			}
 		}
+
+		private static function buildTexturedCircle( radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix, color:uint ):void
+		{
+			var numVertices:int = 0;
+			
+			_uv.x = 0.5;
+			_uv.y = 0.5;
+			if ( uvMatrix ) 
+				_uv = uvMatrix.transformPoint(_uv);
+			
+			var r:Number = (color >> 16) / 255;
+			var g:Number = ((color & 0x00FF00) >> 8) / 255;
+			var b:Number = (color & 0x0000FF) / 255;
+				
+			vertices.push( 0, 0, 0, r, g, b, 1, _uv.x, _uv.y );
+			numVertices++;
+			
+			var anglePerSide:Number = (Math.PI * 2) / numSides;
+			var cosA:Number = Math.cos(anglePerSide);
+			var sinB:Number = Math.sin(anglePerSide);
+			var s:Number = 0.0;
+			var c:Number = 1.0;
+			var halfInvRadius:Number = 0.5 * (1.0 / radius);
+			
+			for ( var i:int = 0; i < numSides; i++ )
+			{
+				var x:Number = s * radius;
+				var y:Number = -c * radius;
+				_uv.x = 0.5 + x * halfInvRadius;
+				_uv.y = 0.5 + y * halfInvRadius;
+				
+				vertices.push( x, y, 0, r, g, b, 1, _uv.x, _uv.y );
+				numVertices++;
+				indices.push( 0, numVertices-1, i == numSides-1 ? 1 : numVertices );
+				
+				const ns:Number = sinB*c + cosA*s;
+				const nc:Number = cosA*c - sinB*s;
+				c = nc;
+				s = ns;
+			}
+		}
+
 		
 		private static function buildHoop( innerRadius:Number, radius:Number, numSides:int, vertices:Vector.<Number>, indices:Vector.<uint>, uvMatrix:Matrix , color:uint, textureAlongPath:Boolean):void
 		{
