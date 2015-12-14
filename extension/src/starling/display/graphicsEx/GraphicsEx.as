@@ -298,7 +298,6 @@ package starling.display.graphicsEx
 		
 		private function postProcessThicknessColorInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData, colorData:GraphicsExColorData ):void 
 		{
-			var numVerts:int = endIndex - startIndex;
 			var invNumVerts:Number = 1.0 / Number(numVerts);
 			var lerp:Number = 0;	
 			var inv255:Number = 1.0 / 255.0;
@@ -369,7 +368,6 @@ package starling.display.graphicsEx
 
 		protected function postProcessThicknessInternal(numVerts:int, startIndex:int, endIndex:int, verts:Vector.<StrokeVertex> , thicknessData:GraphicsExThicknessData ):void 
 		{
-			var numVerts:int = endIndex - startIndex;
 			var invNumVerts:Number = 1.0 / Number(numVerts);
 			var lerp:Number = 0;	
 			var inv255:Number = 1.0 / 255.0;
