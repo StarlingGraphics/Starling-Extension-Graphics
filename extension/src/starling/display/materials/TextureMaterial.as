@@ -9,9 +9,9 @@ package starling.display.materials
 	
 	public class TextureMaterial extends StandardMaterial
 	{
-		public function TextureMaterial(texture:Texture, color:uint = 0xFFFFFF, premultipliedAlpha:Boolean = true)
+		public function TextureMaterial(texture:Texture, color:uint = 0xFFFFFF, premultipliedAlpha:Boolean = true, mipmapping:Boolean = false, repeat:Boolean = false, smoothing:String = "bilinear")
 		{
-			super(new StandardVertexShader(), new TextureVertexColorFragmentShader(texture));
+			super(new StandardVertexShader(), new TextureVertexColorFragmentShader(texture,, mipmapping, repeat, smoothing ));
 			textures[0] = texture;
 			this.color = color;
 			
