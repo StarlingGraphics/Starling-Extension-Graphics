@@ -11,7 +11,7 @@ package starling.display.materials
 	{
 		public function TextureMaterial(texture:Texture, color:uint = 0xFFFFFF, premultipliedAlpha:Boolean = true, mipmapping:Boolean = false, repeat:Boolean = false, smoothing:String = "bilinear")
 		{
-			super(new StandardVertexShader(), new TextureVertexColorFragmentShader(texture,, mipmapping, repeat, smoothing ));
+			super(new StandardVertexShader(), new TextureVertexColorFragmentShader(texture, mipmapping, repeat, smoothing ));
 			textures[0] = texture;
 			this.color = color;
 			
