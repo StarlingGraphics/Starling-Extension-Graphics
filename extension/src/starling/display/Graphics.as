@@ -462,7 +462,7 @@ package starling.display
 				
 				var halfWidth:Number = width*0.5;
 				var halfHeight:Number = height*0.5;
-				var anglePerSide:Number = ( Math.PI * 2 ) / (numSides-1);
+				var anglePerSide:Number = ( Math.PI * 2 ) / (numSides);
 				var a:Number = Math.cos( anglePerSide );
 				var b:Number = Math.sin( anglePerSide );
 				var s:Number = 0.0;
