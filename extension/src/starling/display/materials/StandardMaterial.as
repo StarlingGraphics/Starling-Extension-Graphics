@@ -34,6 +34,22 @@ package starling.display.materials
 			colorVector = new Vector.<Number>();
 			color = 0xFFFFFF;
 		}
+
+		public function addProgramRef() : void
+		{
+			if ( program )
+			{
+				Program3DCache.addRefProgram3D(program);
+			}
+		}
+		
+		public function releaseProgramRef():void
+		{
+			if ( program )
+			{
+				Program3DCache.releaseProgram3D(program);
+			}
+		}
 		
 		public function dispose():void
 		{

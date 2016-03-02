@@ -142,7 +142,8 @@ package starling.display.graphics
 			
 			if ( material )
 			{
-	//			material.dispose(); Material should NOT be disposed here. It can be used elsewhere - Graphic is NOT owner of Material.
+				//material.dispose(); Material should NOT be disposed here. It can be used elsewhere - Graphic is NOT owner of Material.
+				material.releaseProgramRef(); // However, the material needs to release a reference count in the program cache, through this new method.
 				material = null;
 			}
 			

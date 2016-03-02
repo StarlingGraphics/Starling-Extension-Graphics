@@ -44,11 +44,13 @@ package starling.display.materials
 				program3D = programByUIDTable[program3DUID] = context.createProgram();
 				uidByProgramTable[program3D] = program3DUID;
 				program3D.upload( vertexShader.opCode, fragmentShader.opCode );
-				numReferencesByProgramTable[program3D] = 0;
+				numReferencesByProgramTable[program3D] = 1;
 				cacheSize++;
 			}
-			
-			numReferencesByProgramTable[program3D]++;
+			else
+			{
+				addRefProgram3D(program3D);
+			}
 			
 			if ( cacheSize > LAZY_CACHE_SIZE )
 			{
@@ -58,9 +60,20 @@ package starling.display.materials
 			return program3D;
 		}
 		
+		public static function addRefProgram3D( program3D:Program3D ):void
+		{
+			if ( numReferencesByProgramTable[program3D] == null )
+			{
+				throw( new Error( "Program3D is not in cache" ) );
+				return;
+			}
+			
+			numReferencesByProgramTable[program3D]++;
+		}
+		
 		public static function releaseProgram3D( program3D:Program3D, forceFlush:Boolean = false ):void
 		{
-			if ( !numReferencesByProgramTable[program3D] )
+			if ( numReferencesByProgramTable[program3D] == null )
 			{
 				throw( new Error( "Program3D is not in cache" ) );
 				return;

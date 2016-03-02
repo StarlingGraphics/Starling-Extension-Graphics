@@ -25,6 +25,7 @@ package starling.display.materials
 		function drawTrianglesEx( context:Context3D, matrix:Matrix3D, vertexBuffer:VertexBuffer3D, indexBuffer:IndexBuffer3D, alpha:Number = 1, numTriangles:int = -1 , startTriangle:int = 0 ):void;
 		function restoreOnLostContext():void;
 		function get premultipliedAlpha():Boolean;
+		function releaseProgramRef() : void;
 	}
 	
 }
