@@ -459,7 +459,7 @@ package starling.display.graphics
 				var prevRadians:Number = radians-radiansPerDivision;
 				
 				var t:Number
-				if ( radians < startAngle && nextRadians > startAngle )
+				if ( radians < startAngle )
 				{
 					var nextX:Number = Math.sin(nextRadians) * radius;
 					var nextY:Number = -Math.cos(nextRadians) * radius;
@@ -467,7 +467,7 @@ package starling.display.graphics
 					x += t * (nextX-x);
 					y += t * (nextY-y);
 				}
-				else if ( radians > endAngle && prevRadians < endAngle )
+				else if ( radians > endAngle )
 				{
 					var prevX:Number = Math.sin(prevRadians) * radius;
 					var prevY:Number = -Math.cos(prevRadians) * radius;
@@ -525,7 +525,7 @@ package starling.display.graphics
 				var prevAngle:Number = angle-radiansPerDivision;
 				
 				var t:Number
-				if ( angle < startAngle && nextAngle > startAngle )
+				if ( angle < startAngle )
 				{
 					sin = Math.sin(nextAngle);
 					cos = Math.cos(nextAngle);
@@ -539,7 +539,7 @@ package starling.display.graphics
 					x2 += t * (nextX2-x2);
 					y2 += t * (nextY2-y2);
 				}
-				else if ( angle > endAngle && prevAngle < endAngle )
+				else if ( angle > endAngle )
 				{
 					sin = Math.sin(prevAngle);
 					cos = Math.cos(prevAngle);
